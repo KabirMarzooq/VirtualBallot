@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* Smooth scrollbar hide utility */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide:webkit-scrollbar {
+    display: none;
+}
+
+/* Smooth transitions across the app */
+* {
+    -webkit-tap-highlight-color: transparent;
+}

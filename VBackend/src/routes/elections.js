@@ -1,0 +1,201 @@
+import express from "express"
+import { query } from "../db/pool.js"
+import { requireAdmin, requireObserver, resolveOrg } from "../middleware/auth.js"
+import { ok, fail } from "../utils/index.js"
+
+const router = express.Router()
+
+// ─── GET /elections/:slug ─────────────────────────────────────────────────────
+// Public — returns election config + branding for the login page
+router.get("/:slug", resolveOrg, async (req, res) => {
+  try {
+    const electionResult = await query(
+      `SELECT e.*, o.name AS org_name, o.logo_url, o.slug
+       FROM elections e
+       JOIN organizations o ON o.id = e.org_id
+       WHERE e.org_id = $1
+       ORDER BY e.created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+
+    if (electionResult.rows.length === 0) {
+      return fail(res, "No election found for this organization", 404)
+    }
+
+    const e = electionResult.rows[0]
+
+    return ok(res, {
+      election: {
+        id:             e.id,
+        name:           e.name,
+        status:         e.status,
+        isPublished:    e.is_published,
+        registryLocked: e.registry_locked,
+        showCountdown:  e.show_countdown,
+        endsAt:         e.ends_at,
+      },
+      branding: {
+        electionName:    e.name,
+        institutionName: e.org_name,
+        logoUrl:         e.logo_url || "",
+        slug:            e.slug,
+      },
+    })
+  } catch (err) {
+    console.error("Get election error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── GET /elections/:slug/candidates ─────────────────────────────────────────
+// Public — returns all candidates for the ballot
+router.get("/:slug/candidates", resolveOrg, async (req, res) => {
+  try {
+    const electionResult = await query(
+      `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+    if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
+    const electionId = electionResult.rows[0].id
+
+    const candidatesResult = await query(
+      `SELECT id, name, position, image_url, manifesto, color, vote_count
+       FROM candidates WHERE election_id = $1
+       ORDER BY position, name`,
+      [electionId]
+    )
+
+    return ok(res, { candidates: candidatesResult.rows })
+  } catch (err) {
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── GET /elections/:slug/results ─────────────────────────────────────────────
+// Public but only returns data if election is published
+router.get("/:slug/results", resolveOrg, async (req, res) => {
+  try {
+    const electionResult = await query(
+      `SELECT id, status, is_published FROM elections
+       WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+    if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
+    const election = electionResult.rows[0]
+
+    // Only return full results if broadcast or ended
+    if (!election.is_published && election.status !== "ENDED") {
+      return ok(res, { published: false, candidates: [] })
+    }
+
+    const candidatesResult = await query(
+      `SELECT id, name, position, image_url, color, vote_count
+       FROM candidates WHERE election_id = $1
+       ORDER BY position, vote_count DESC`,
+      [election.id]
+    )
+
+    // Voter stats
+    const statsResult = await query(
+      `SELECT
+         COUNT(*) AS total,
+         COUNT(*) FILTER (WHERE has_voted = TRUE) AS voted
+       FROM voters WHERE election_id = $1`,
+      [election.id]
+    )
+
+    return ok(res, {
+      published:  true,
+      candidates: candidatesResult.rows,
+      stats: {
+        total: Number(statsResult.rows[0].total),
+        voted: Number(statsResult.rows[0].voted),
+      },
+    })
+  } catch (err) {
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── PATCH /elections/:slug/config — Admin: update election settings ──────────
+router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
+  const { status, isPublished, registryLocked, showCountdown, endsAt } = req.body
+
+  try {
+    const updates = []
+    const values  = []
+    let   idx     = 1
+
+    if (status         !== undefined) { updates.push(`status = $${idx++}`);          values.push(status) }
+    if (isPublished    !== undefined) { updates.push(`is_published = $${idx++}`);    values.push(isPublished) }
+    if (registryLocked !== undefined) { updates.push(`registry_locked = $${idx++}`); values.push(registryLocked) }
+    if (showCountdown  !== undefined) { updates.push(`show_countdown = $${idx++}`);  values.push(showCountdown) }
+    if (endsAt         !== undefined) { updates.push(`ends_at = $${idx++}`);         values.push(endsAt) }
+
+    if (status === "ACTIVE") {
+      updates.push(`started_at = $${idx++}`)
+      values.push(new Date())
+    }
+
+    updates.push(`updated_at = $${idx++}`)
+    values.push(new Date())
+
+    if (updates.length === 1) return fail(res, "No valid fields to update")
+
+    const electionResult = await query(
+      `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+    if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
+    const electionId = electionResult.rows[0].id
+
+    values.push(electionId)
+    await query(
+      `UPDATE elections SET ${updates.join(", ")} WHERE id = $${idx}`,
+      values
+    )
+
+    return ok(res, { message: "Election config updated" })
+  } catch (err) {
+    console.error("Update config error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── GET /elections/:slug/admin/overview — Admin: full dashboard data ─────────
+router.get("/:slug/admin/overview", resolveOrg, requireAdmin, async (req, res) => {
+  try {
+    const electionResult = await query(
+      `SELECT * FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+    if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
+    const election = electionResult.rows[0]
+
+    const [candidatesResult, votersResult, auditResult] = await Promise.all([
+      query(`SELECT * FROM candidates WHERE election_id = $1 ORDER BY position, name`, [election.id]),
+      query(`SELECT id, matric, name, email, has_voted, voted_at FROM voters WHERE election_id = $1 ORDER BY name`, [election.id]),
+      query(`SELECT * FROM audit_logs WHERE election_id = $1 ORDER BY created_at DESC LIMIT 100`, [election.id]),
+    ])
+
+    return ok(res, {
+      election: {
+        id:             election.id,
+        name:           election.name,
+        status:         election.status,
+        isPublished:    election.is_published,
+        registryLocked: election.registry_locked,
+        showCountdown:  election.show_countdown,
+        endsAt:         election.ends_at,
+        startedAt:      election.started_at,
+      },
+      candidates: candidatesResult.rows,
+      voters:     votersResult.rows,
+      auditLog:   auditResult.rows,
+    })
+  } catch (err) {
+    return fail(res, "Server error", 500)
+  }
+})
+
+export default router
