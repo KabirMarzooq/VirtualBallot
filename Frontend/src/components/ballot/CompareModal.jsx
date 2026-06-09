@@ -101,7 +101,7 @@ export default function CompareModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-80 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4 overflow-y-auto"
       style={{ background: "rgba(15,23,42,0.75)", backdropFilter: "blur(8px)" }}
     >
       <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden">

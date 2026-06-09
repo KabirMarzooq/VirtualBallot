@@ -9,12 +9,12 @@ import {
   Users,
   Vote,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { getMeta } from "../../constants";
 import { getPositions, getTurnout } from "../../utils";
 import { useApp } from "../../context/AppContext";
+import { useNavigate } from "react-router-dom";
 
-export default function OverviewTab() {
+export default function OverviewTab({ onSwitchTab }) {
   const {
     users,
     candidates,
@@ -170,13 +170,9 @@ export default function OverviewTab() {
                 {/* CTA button — only when not done and not locked */}
                 {!done && !locked && (
                   <button
-                    onClick={() => {
-                      // Dispatch a custom event that Admin.jsx listens to
-                      window.dispatchEvent(
-                        new CustomEvent("vb:switchtab", { detail: tab })
-                      );
-                    }}
+                    onClick={() => onSwitchTab?.(tab)}
                     className="text-xs font-bold text-blue-400 hover:text-blue-300 whitespace-nowrap flex items-center gap-1 cursor-pointer transition-colors"
+                    title={`Go to ${tab} tab`}
                   >
                     {cta} <ArrowRight className="w-3 h-3" />
                   </button>
@@ -266,7 +262,7 @@ export default function OverviewTab() {
         </div>
         <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
           <div
-            className="bg-linear-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all duration-700"
+            className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all duration-700"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -310,7 +306,7 @@ export default function OverviewTab() {
                       </div>
                       <div className="w-full bg-slate-700 rounded-full h-2">
                         <div
-                          className={`bg-linear-to-r ${c.color} h-2 rounded-full`}
+                          className={`bg-gradient-to-r ${c.color} h-2 rounded-full`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>

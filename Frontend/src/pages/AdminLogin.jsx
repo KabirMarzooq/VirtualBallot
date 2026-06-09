@@ -2,7 +2,6 @@ import { useState } from "react";
 import { ShieldAlert, Lock, Telescope, Mail, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import PageShell from "../components/layout/PageShell";
 import VBLoader from "../components/ui/VBLoader";
 import { adminLogin, fetchAdminOverview } from "../api";
 
@@ -115,33 +114,33 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <PageShell>
-      {justRegistered && (
-        <div className="mb-5 p-4 bg-green-900/30 border border-green-700/40 rounded-2xl space-y-2">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-            <div>
-              <p className="text-green-300 text-sm font-bold">
-                Organization registered!
-              </p>
-              <p className="text-green-600 text-xs">
-                Sign in to access your dashboard.
-              </p>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {justRegistered && (
+          <div className="mb-5 p-4 bg-green-900/30 border border-green-700/40 rounded-2xl space-y-2">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+              <div>
+                <p className="text-green-300 text-sm font-bold">
+                  Organization registered!
+                </p>
+                <p className="text-green-600 text-xs">
+                  Sign in to access your dashboard.
+                </p>
+              </div>
             </div>
+            {location.state?.slug && (
+              <div className="bg-slate-900/60 rounded-xl px-3 py-2 mt-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">
+                  Your voter URL
+                </p>
+                <p className="text-xs font-mono text-blue-400 break-all">
+                  {window.location.origin}/vote/{location.state.slug}
+                </p>
+              </div>
+            )}
           </div>
-          {location.state?.slug && (
-            <div className="bg-slate-900/60 rounded-xl px-3 py-2 mt-2">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">
-                Your voter URL
-              </p>
-              <p className="text-xs font-mono text-blue-400 break-all">
-                {window.location.origin}/vote/{location.state.slug}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-      <div className="max-w-sm mx-auto mt-20">
+        )}
         <div
           className={`bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl border border-slate-800 transition-transform ${
             shake ? "animate-bounce" : ""
@@ -224,16 +223,20 @@ export default function AdminLoginPage() {
             </button>
           </div>
 
-          <button
-            onClick={() => navigate("/")}
-            className="w-full mt-6 text-slate-600 hover:text-slate-400 text-sm font-bold text-center transition-colors"
-          >
-            ← Back to voter login
-          </button>
+          <p className="text-center mt-3">
+            <button
+              onClick={() => navigate("/")}
+              title="Back to Virtual Ballot home"
+              className="text-slate-600 hover:text-slate-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
+            >
+              <ShieldAlert className="w-3 h-3" /> Virtual Ballot Home
+            </button>
+          </p>
 
           <div className="mt-4 pt-4 border-t border-slate-800 text-center">
             <button
               onClick={() => navigate("/observer/login")}
+              title="Observer / Scrutineer access"
               className="text-teal-600 hover:text-teal-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
             >
               <Telescope className="w-3.5 h-3.5" /> Observer / Scrutineer Access
@@ -241,6 +244,6 @@ export default function AdminLoginPage() {
           </div>
         </div>
       </div>
-    </PageShell>
+    </div>
   );
 }

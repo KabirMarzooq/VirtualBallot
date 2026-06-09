@@ -73,7 +73,7 @@ export default function ConfirmModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-90 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[90] flex items-center justify-center p-4 overflow-y-auto">
       <div
         className="bg-white w-full max-w-lg my-4 shadow-2xl relative"
         style={{ fontFamily: "Georgia, serif" }}

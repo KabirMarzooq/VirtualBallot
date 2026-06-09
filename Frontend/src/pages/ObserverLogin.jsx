@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Telescope, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import PageShell from "../components/layout/PageShell";
 import VBLoader from "../components/ui/VBLoader";
 import { observerLogin } from "../api";
 
@@ -35,8 +34,8 @@ export default function ObserverLoginPage() {
   };
 
   return (
-    <PageShell>
-      <div className="max-w-sm mx-auto mt-20">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
         <div
           className={`bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl border border-teal-900/60 transition-transform ${
             shake ? "animate-bounce" : ""
@@ -83,6 +82,7 @@ export default function ObserverLoginPage() {
             <button
               onClick={submit}
               disabled={!pin || loading}
+              title="Authenticate as observer"
               className="w-full bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               {loading ? (
@@ -97,13 +97,14 @@ export default function ObserverLoginPage() {
           <div className="mt-6 pt-4 border-t border-slate-800 text-center">
             <button
               onClick={() => navigate("/admin/login")}
-              className="text-slate-600 hover:text-slate-400 text-sm font-bold transition-colors"
+              title="Back to admin commission portal"
+              className="text-slate-600 hover:text-slate-400 text-sm font-bold transition-colors cursor-pointer"
             >
               ← Back to commission portal
             </button>
           </div>
         </div>
       </div>
-    </PageShell>
+    </div>
   );
 }

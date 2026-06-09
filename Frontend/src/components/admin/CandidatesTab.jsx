@@ -112,15 +112,6 @@ export default function CandidatesTab() {
     }
   };
 
-  const previewImg =
-    img.trim() ||
-    (name.trim()
-      ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${name.replace(
-          /\s+/g,
-          ""
-        )}`
-      : null);
-
   return (
     <div className="space-y-6">
       {/* Add form */}
@@ -171,38 +162,44 @@ export default function CandidatesTab() {
           </div>
           <div>
             <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
-              Photo URL (optional)
+              Photo (optional)
             </label>
-            <div className="flex gap-3">
-              <input
-                value={img}
-                onChange={(e) => setImg(e.target.value)}
-                disabled={locked}
-                className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
-                placeholder="https://…"
-              />
-              {previewImg && !locked && (
+            <div className="flex gap-3 items-start">
+              <label className={`flex-1 flex items-center gap-3 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 transition-colors ${locked ? "opacity-50 cursor-not-allowed" : "hover:border-blue-500 cursor-pointer"}`}>
+                <Image className="w-4 h-4 text-slate-500 shrink-0" />
+                <span className="text-sm text-slate-400 truncate">
+                  {img ? "Photo selected ✓" : "Click to upload photo…"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={locked}
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { setImg(ev.target.result); setPreview(true); };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+              {img && !locked && (
                 <button
-                  onClick={() => setPreview((v) => !v)}
-                  className="px-4 py-2 bg-slate-700 text-slate-300 rounded-xl border border-slate-600 flex items-center gap-2 text-sm font-bold hover:bg-slate-600 transition-colors cursor-pointer"
+                  onClick={() => { setImg(""); setPreview(false); }}
+                  title="Remove photo"
+                  className="px-3 py-3 bg-slate-700 text-slate-400 rounded-xl border border-slate-600 text-sm font-bold hover:bg-red-900/30 hover:text-red-400 hover:border-red-700/40 transition-colors cursor-pointer shrink-0"
                 >
-                  <Image className="w-4 h-4" />
-                  {preview ? "Hide" : "Preview"}
+                  ✕
                 </button>
               )}
             </div>
-            {preview && previewImg && (
+            {preview && img && (
               <div className="mt-3 flex items-center gap-4 bg-slate-900/60 rounded-xl p-3 border border-slate-700">
-                <img
-                  src={previewImg}
-                  alt="preview"
-                  className="w-16 h-16 rounded-xl bg-slate-800"
-                />
+                <img src={img} alt="preview" className="w-16 h-16 rounded-xl bg-slate-800 object-cover shrink-0" />
                 <div>
                   <p className="font-bold text-white">{name || "Name"}</p>
-                  <p className="text-xs text-slate-400 uppercase">
-                    {pos || "Position"}
-                  </p>
+                  <p className="text-xs text-slate-400 uppercase">{pos || "Position"}</p>
                 </div>
               </div>
             )}
@@ -288,7 +285,7 @@ export default function CandidatesTab() {
                           )}
                         </div>
                         <div
-                          className={`w-3 h-8 rounded-full bg-linear-to-b ${c.color} opacity-60 shrink-0`}
+                          className={`w-3 h-8 rounded-full bg-gradient-to-b ${c.color} opacity-60 shrink-0`}
                         />
                         {!locked && (
                           <button

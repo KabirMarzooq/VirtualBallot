@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Telescope, LogOut, AlertTriangle } from "lucide-react";
+import { Telescope, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import PageShell from "../components/layout/PageShell";
 import { OBSERVER_TABS } from "../components/observer/ObserverTabs";
 import { getTurnout } from "../utils";
 
@@ -12,151 +11,111 @@ export default function ObserverPage() {
   const [activeTab, setActiveTab] = useState("tally");
 
   const { total, voted, pct } = getTurnout(users);
+  const ActiveComponent = OBSERVER_TABS.find((t) => t.id === activeTab)?.Component;
 
-  const ActiveComponent = OBSERVER_TABS.find(
-    (t) => t.id === activeTab
-  )?.Component;
+  const statusDot   = { ACTIVE: "bg-green-500 animate-pulse", ENDED: "bg-red-500", NOT_STARTED: "bg-amber-500" };
+  const statusColor = { ACTIVE: "text-green-400", ENDED: "text-red-400", NOT_STARTED: "text-amber-400" };
 
   return (
-    <PageShell>
-      <div className="max-w-4xl mx-auto mb-24 px-1">
-        {/* Observer banner */}
-        <div className="bg-teal-900/30 border border-teal-700/40 rounded-2xl px-5 py-3 mb-4 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-950">
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="border-b border-slate-800 px-4 md:px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+          {/* Brand */}
           <div className="flex items-center gap-3">
-            <Telescope className="w-4 h-4 text-teal-400 shrink-0" />
+            <div className="w-9 h-9 bg-teal-700 rounded-xl flex items-center justify-center shadow-lg">
+              <Telescope className="w-4 h-4 text-white" />
+            </div>
             <div>
-              <p className="text-teal-300 text-sm font-bold">Observer Mode</p>
-              <p className="text-teal-600 text-xs">
-                Read-only · No actions permitted
+              <h1 className="text-white font-black text-base leading-tight">
+                {branding?.electionName || "Election"} — Observer
+              </h1>
+              <p className="text-slate-600 text-xs">
+                {branding?.institutionName || "Virtual Ballot"} · Read-only · No actions permitted
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Election status pill */}
-            <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${
-                electionConfig.status === "ACTIVE"
-                  ? "bg-green-900/30 text-green-400 border-green-700/40"
-                  : electionConfig.status === "ENDED"
-                  ? "bg-red-900/30 text-red-400 border-red-700/40"
-                  : "bg-amber-900/30 text-amber-400 border-amber-700/40"
-              }`}
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  electionConfig.status === "ACTIVE"
-                    ? "bg-green-500 animate-pulse"
-                    : electionConfig.status === "ENDED"
-                    ? "bg-red-500"
-                    : "bg-amber-500"
-                }`}
-              />
-              {electionConfig.status.replace("_", " ")}
+
+          {/* Right */}
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {/* Status pill */}
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${statusDot[electionConfig.status] ?? "bg-slate-500"}`} />
+              <span className={`text-xs font-bold uppercase tracking-wider ${statusColor[electionConfig.status] ?? "text-slate-400"}`}>
+                {electionConfig.status.replace("_", " ")}
+              </span>
               {electionConfig.status === "ACTIVE" && (
-                <span className="font-mono ml-1">{timeLeft}</span>
+                <span className="font-mono text-teal-400 text-xs ml-1">{timeLeft}</span>
               )}
             </div>
+
             <button
               onClick={() => navigate("/")}
-              className="text-slate-500 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
               title="Exit observer mode"
+              className="flex items-center gap-2 text-slate-500 hover:text-white text-sm font-bold px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
+              <span className="hidden md:inline">Exit</span>
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="bg-slate-900 rounded-4xl overflow-hidden shadow-2xl border border-slate-800">
-          {/* Header */}
-          <div className="px-6 md:px-8 pt-6 pb-0">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-teal-700 rounded-xl flex items-center justify-center shrink-0">
-                <Telescope className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-black text-white leading-tight">
-                  {branding.electionName || "Election"} — Observer Dashboard
-                </h2>
-                <p className="text-xs text-slate-500">
-                  {branding.institutionName || "Virtual Ballot"} · Accredited
-                  observer view
-                </p>
-              </div>
+      {/* ── Content ─────────────────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
+        {/* KPI strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: "Registered", value: total,            color: "text-white",    bg: "bg-teal-700" },
+            { label: "Votes Cast", value: voted,            color: "text-green-300", bg: "bg-slate-900" },
+            { label: "Turnout",    value: `${pct}%`,        color: "text-amber-300", bg: "bg-slate-900" },
+            { label: "Candidates", value: candidates.length, color: "text-teal-300",  bg: "bg-slate-900" },
+          ].map((s) => (
+            <div key={s.label} className={`${s.bg} rounded-2xl p-5 border border-white/10`}>
+              <p className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1">{s.label}</p>
+              <p className={`text-4xl font-mono font-bold ${s.color}`}>{s.value}</p>
             </div>
+          ))}
+        </div>
 
-            {/* KPI strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-              {[
-                { label: "Registered", value: total, color: "text-white" },
-                { label: "Votes Cast", value: voted, color: "text-green-300" },
-                { label: "Turnout", value: `${pct}%`, color: "text-amber-300" },
-                {
-                  label: "Candidates",
-                  value: candidates.length,
-                  color: "text-teal-300",
-                },
-              ].map((s) => (
-                <div
-                  key={s.label}
-                  className="bg-slate-800 rounded-xl p-3 border border-slate-700 text-center"
-                >
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">
-                    {s.label}
-                  </p>
-                  <p className={`text-2xl font-black font-mono ${s.color}`}>
-                    {s.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Turnout bar */}
-            <div className="bg-slate-800 rounded-xl p-3 border border-slate-700 mb-5">
-              <div className="flex justify-between items-center mb-1.5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Turnout
-                </p>
-                <p className="text-xs font-mono font-bold text-white">
-                  {voted} / {total}
-                </p>
-              </div>
-              <div className="w-full bg-slate-700 rounded-full h-2">
-                <div
-                  className="bg-linear-to-r from-teal-500 to-teal-400 h-2 rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Tab bar */}
-            <div className="flex gap-1 overflow-x-auto">
-              {OBSERVER_TABS.map((t) => {
-                const Icon = t.icon;
-                const active = activeTab === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveTab(t.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-t-xl transition-all whitespace-nowrap shrink-0 ${
-                      active
-                        ? "bg-slate-800 text-white border-t border-l border-r border-slate-700"
-                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Turnout bar */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Turnout Progress</p>
+            <p className="text-xs font-mono font-bold text-white">{voted} / {total}</p>
           </div>
-
-          {/* Tab content */}
-          <div className="bg-slate-800/30 p-5 md:p-8 rounded-b-4xl">
-            {ActiveComponent && <ActiveComponent />}
+          <div className="w-full bg-slate-800 rounded-full h-3">
+            <div
+              className="bg-gradient-to-r from-teal-500 to-teal-400 h-3 rounded-full transition-all duration-700"
+              style={{ width: `${pct}%` }}
+            />
           </div>
         </div>
+
+        {/* Tab bar */}
+        <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 overflow-x-auto">
+          {OBSERVER_TABS.map((t) => {
+            const Icon   = t.icon;
+            const active = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                title={t.label}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center whitespace-nowrap cursor-pointer ${
+                  active ? "bg-slate-800 text-white shadow" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab content */}
+        {ActiveComponent && <ActiveComponent />}
       </div>
-    </PageShell>
+    </div>
   );
 }

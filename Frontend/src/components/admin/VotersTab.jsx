@@ -6,6 +6,8 @@ import {
   Search,
   UserCheck,
   UserX,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import {
@@ -19,10 +21,20 @@ import VBLoader from "../ui/VBLoader";
 
 export default function VotersTab() {
   const { users, setUsers, accessToken, orgSlug, showAlert, addLog } = useApp();
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [search, setSearch]       = useState("");
+  const [filter, setFilter]       = useState("all");
   const [uploading, setUploading] = useState(false);
   const [replaceMode, setReplaceMode] = useState(false);
+  const [copied, setCopied]       = useState(false);
+
+  const voterUrl = `${window.location.origin}/vote/${orgSlug}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(voterUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const voters = users.filter((u) => u.role !== "ADMIN");
   const voted = voters.filter((u) => u.hasVoted);
@@ -100,6 +112,26 @@ export default function VotersTab() {
 
   return (
     <div className="space-y-5">
+      {/* Org voter URL */}
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Voter URL</p>
+          <p className="text-sm font-mono text-blue-400 truncate">{voterUrl}</p>
+        </div>
+        <button
+          onClick={handleCopy}
+          title={copied ? "Copied!" : "Copy voter URL to clipboard"}
+          className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
+            copied
+              ? "bg-green-500/20 text-green-400 border-green-500/30"
+              : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+          }`}
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? "Copied!" : "Copy"}
+        </button>
+      </div>
+
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
@@ -132,7 +164,7 @@ export default function VotersTab() {
         </div>
         <div className="w-full bg-slate-700 rounded-full h-3">
           <div
-            className="bg-linear-to-r from-green-500 to-emerald-400 h-3 rounded-full transition-all duration-700"
+            className="bg-gradient-to-r from-green-500 to-emerald-400 h-3 rounded-full transition-all duration-700"
             style={{ width: `${pct}%` }}
           />
         </div>
