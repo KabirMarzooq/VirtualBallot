@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
       );
 
       setCurrentUser({
-        email: loginData.org.admin_email || email,
+        email: email,
         role: "ADMIN",
         name: "Admin",
       });
@@ -237,7 +237,8 @@ export default function AdminLoginPage() {
             <button
               onClick={() => navigate("/observer/login")}
               title="Observer / Scrutineer access"
-              className="text-teal-600 hover:text-teal-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
+              disabled={true}
+              className="text-teal-600 hover:text-teal-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Telescope className="w-3.5 h-3.5" /> Observer / Scrutineer Access
             </button>

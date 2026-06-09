@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Clock, CheckCircle, FileText, ChevronDown, SplitSquareHorizontal } from "lucide-react";
+import {
+  Clock,
+  CheckCircle,
+  FileText,
+  ChevronDown,
+  SplitSquareHorizontal,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import ProgressBar from "../components/ui/ProgressBar";
@@ -10,29 +16,43 @@ import { useSlug } from "../context/SlugContext";
 
 export default function BallotPage() {
   const {
-    electionConfig, timeLeft, candidates,
-    ballot, toggleBallotSelection,
-    showConfirmModal, setShowConfirmModal,
-    currentUser, showAlert, branding,
+    electionConfig,
+    timeLeft,
+    candidates,
+    ballot,
+    toggleBallotSelection,
+    showConfirmModal,
+    setShowConfirmModal,
+    currentUser,
+    showAlert,
+    branding,
   } = useApp();
   const navigate = useNavigate();
-  const [expanded, setExpanded]       = useState({});
+  const [expanded, setExpanded] = useState({});
   const [compareState, setCompareState] = useState(null);
   const slug = useSlug();
 
   useEffect(() => {
-    if (!currentUser) { navigate(`/vote/${slug}`); return; }
-    const t = setTimeout(() => {
-      showAlert("Session Expired", "Your session expired due to inactivity.");
+    if (!currentUser) {
       navigate(`/vote/${slug}`);
-    }, 120_000);
+      return;
+    }
+    const t = setTimeout(() => {
+      showAlert(
+        "Session Expired",
+        "Your voting session expired. Please log in again to vote."
+      );
+      navigate(`/vote/${slug}`);
+    }, 12 * 60 * 1000); // 12 min — JWT is 15 min, this warns before expiry
     return () => clearTimeout(t);
   }, []);
 
   if (electionConfig.status === "ENDED") {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4">
-        <p className="text-2xl font-bold text-slate-400">Voting is now closed.</p>
+        <p className="text-2xl font-bold text-slate-400">
+          Voting is now closed.
+        </p>
         <button
           onClick={() => navigate(`/vote/${slug}`)}
           title="Go to voter home"
@@ -46,7 +66,7 @@ export default function BallotPage() {
 
   if (!currentUser) return null;
 
-  const positions   = getPositions(candidates);
+  const positions = getPositions(candidates);
   const allSelected = positions.every((p) => ballot[p]);
 
   const toggleExpand = (e, id) => {
@@ -56,7 +76,9 @@ export default function BallotPage() {
 
   const openCompare = (e, pos, thisId) => {
     e.stopPropagation();
-    const others   = candidates.filter((c) => c.position === pos && c.id !== thisId);
+    const others = candidates.filter(
+      (c) => c.position === pos && c.id !== thisId
+    );
     const opponent = others.find((c) => c.id !== ballot[pos]) ?? others[0];
     if (!opponent) return;
     setCompareState({ pos, idA: thisId, idB: opponent.id });
@@ -64,17 +86,21 @@ export default function BallotPage() {
 
   return (
     <>
-      {compareState && (() => {
-        const cA = candidates.find((c) => c.id === compareState.idA);
-        const cB = candidates.find((c) => c.id === compareState.idB);
-        return cA && cB ? (
-          <CompareModal
-            pos={compareState.pos} candidateA={cA} candidateB={cB}
-            ballot={ballot} onSelect={toggleBallotSelection}
-            onClose={() => setCompareState(null)}
-          />
-        ) : null;
-      })()}
+      {compareState &&
+        (() => {
+          const cA = candidates.find((c) => c.id === compareState.idA);
+          const cB = candidates.find((c) => c.id === compareState.idB);
+          return cA && cB ? (
+            <CompareModal
+              pos={compareState.pos}
+              candidateA={cA}
+              candidateB={cB}
+              ballot={ballot}
+              onSelect={toggleBallotSelection}
+              onClose={() => setCompareState(null)}
+            />
+          ) : null;
+        })()}
 
       {showConfirmModal && <ConfirmModal />}
 
@@ -94,32 +120,38 @@ export default function BallotPage() {
                 {branding.electionName || "The Ballot"}
               </h1>
               <p className="text-slate-500 mt-1 text-sm">
-                Select your candidates — read manifestos or <span className="font-bold text-slate-400">compare</span> side by side
+                Select your candidates — read manifestos or{" "}
+                <span className="font-bold text-slate-400">compare</span> side
+                by side
               </p>
             </div>
             <div className="bg-slate-800 border border-slate-700 px-4 py-2 rounded-full flex items-center gap-2 shrink-0">
               <Clock className="w-4 h-4 text-blue-400" />
-              <span className="font-mono font-bold text-white text-sm">{timeLeft}</span>
+              <span className="font-mono font-bold text-white text-sm">
+                {timeLeft}
+              </span>
             </div>
           </header>
 
           {/* Positions */}
           {positions.map((pos) => {
             const posCandidates = candidates.filter((c) => c.position === pos);
-            const canCompare    = posCandidates.length >= 2;
+            const canCompare = posCandidates.length >= 2;
 
             return (
               <section key={pos} className="mb-10">
                 <div className="flex items-center gap-3 mb-6 px-1">
                   <div className="h-px bg-slate-800 flex-1" />
-                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">{pos}</h3>
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+                    {pos}
+                  </h3>
                   <div className="h-px bg-slate-800 flex-1" />
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-5">
                   {posCandidates.map((candidate) => {
-                    const sel          = ballot[pos] === candidate.id;
-                    const open         = !!expanded[candidate.id];
+                    const sel = ballot[pos] === candidate.id;
+                    const open = !!expanded[candidate.id];
                     const hasManifesto = !!candidate.manifesto?.trim();
 
                     return (
@@ -133,7 +165,9 @@ export default function BallotPage() {
                       >
                         {/* Selection row */}
                         <div
-                          onClick={() => toggleBallotSelection(pos, candidate.id)}
+                          onClick={() =>
+                            toggleBallotSelection(pos, candidate.id)
+                          }
                           className="flex items-center gap-5 p-6 cursor-pointer group"
                         >
                           <img
@@ -142,7 +176,9 @@ export default function BallotPage() {
                             className="w-16 h-16 rounded-2xl object-cover bg-slate-700 shadow-lg shrink-0 group-hover:rotate-3 transition-transform"
                           />
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-white text-lg leading-tight">{candidate.name}</h4>
+                            <h4 className="font-bold text-white text-lg leading-tight">
+                              {candidate.name}
+                            </h4>
                             <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mt-0.5">
                               {candidate.position}
                             </p>
@@ -159,7 +195,11 @@ export default function BallotPage() {
                           {hasManifesto && (
                             <button
                               onClick={(e) => toggleExpand(e, candidate.id)}
-                              title={open ? "Hide manifesto" : "Read candidate manifesto"}
+                              title={
+                                open
+                                  ? "Hide manifesto"
+                                  : "Read candidate manifesto"
+                              }
                               className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                                 open
                                   ? "bg-blue-600/20 text-blue-400 border-blue-600/30"
@@ -168,7 +208,11 @@ export default function BallotPage() {
                             >
                               <FileText className="w-3.5 h-3.5" />
                               {open ? "Hide" : "Read manifesto"}
-                              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+                              <ChevronDown
+                                className={`w-3 h-3 transition-transform duration-200 ${
+                                  open ? "rotate-180" : ""
+                                }`}
+                              />
                             </button>
                           )}
 
@@ -178,7 +222,8 @@ export default function BallotPage() {
                               title="Compare with another candidate side by side"
                               className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700 hover:bg-violet-600/20 hover:text-violet-400 hover:border-violet-600/30 transition-all cursor-pointer"
                             >
-                              <SplitSquareHorizontal className="w-3.5 h-3.5" /> Compare
+                              <SplitSquareHorizontal className="w-3.5 h-3.5" />{" "}
+                              Compare
                             </button>
                           )}
 
@@ -193,10 +238,16 @@ export default function BallotPage() {
                         {hasManifesto && open && (
                           <div className="mx-4 mb-5 p-4 bg-slate-800/60 rounded-2xl border border-slate-700">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className={`w-1.5 h-4 rounded-full bg-gradient-to-b ${candidate.color}`} />
-                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Manifesto</p>
+                              <div
+                                className={`w-1.5 h-4 rounded-full bg-gradient-to-b ${candidate.color}`}
+                              />
+                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                Manifesto
+                              </p>
                             </div>
-                            <p className="text-sm text-slate-300 leading-relaxed">{candidate.manifesto}</p>
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                              {candidate.manifesto}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -212,7 +263,11 @@ export default function BallotPage() {
             <button
               onClick={() => setShowConfirmModal(true)}
               disabled={!allSelected}
-              title={allSelected ? "Review your selections and submit" : `Select all ${positions.length} positions to continue`}
+              title={
+                allSelected
+                  ? "Review your selections and submit"
+                  : `Select all ${positions.length} positions to continue`
+              }
               className={`max-w-md w-full py-4 rounded-full font-bold text-lg shadow-2xl transition-all cursor-pointer ${
                 allSelected
                   ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30"
@@ -221,7 +276,9 @@ export default function BallotPage() {
             >
               {allSelected
                 ? "Review & Submit →"
-                : `Select all ${positions.length} position${positions.length !== 1 ? "s" : ""} to continue`}
+                : `Select all ${positions.length} position${
+                    positions.length !== 1 ? "s" : ""
+                  } to continue`}
             </button>
           </div>
         </div>

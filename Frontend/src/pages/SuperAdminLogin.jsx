@@ -31,7 +31,7 @@ export default function SuperAdminLoginPage() {
 
   return (
     <PageShell>
-      <div className="max-w-sm mx-auto mt-24">
+      <div className="max-w-sm mx-auto">
         <div className="bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl border border-slate-800">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-purple-700 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-violet-900/40">

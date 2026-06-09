@@ -1,31 +1,85 @@
 import { useState } from "react";
-import { Palette, Image, CheckCircle, Eye, X } from "lucide-react";
+import { Palette, Image, CheckCircle, Eye, X, Key } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import { updateBranding, updateObserverPin } from "../../api";
+import VBLoader from "../ui/VBLoader";
 
 export default function BrandingTab() {
-  const { branding, setBranding, addLog } = useApp();
-  const [form, setForm]   = useState({ ...branding });
+  const { branding, setBranding, accessToken, orgSlug, showAlert, addLog } =
+    useApp();
+  const [form, setForm] = useState({ ...branding });
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(branding);
 
-  const handleSave = () => {
-    setBranding(form);
-    addLog(`Election branding updated — "${form.electionName || "unnamed"}"`, "admin");
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateBranding(
+        {
+          electionName: form.electionName,
+          institutionName: form.institutionName,
+          logoUrl: form.logoUrl || null,
+        },
+        accessToken,
+        orgSlug
+      );
+      setBranding(form);
+      addLog(`Branding updated — "${form.electionName || "unnamed"}"`, "admin");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      showAlert("Save Failed", err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 500_000) {
+      showAlert("Image Too Large", "Please use an image under 500 KB.");
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = (ev) => setForm((f) => ({ ...f, logoUrl: ev.target.result }));
+    reader.onload = (ev) =>
+      setForm((f) => ({ ...f, logoUrl: ev.target.result }));
     reader.readAsDataURL(file);
+  };
+
+  const handlePinSave = async () => {
+    if (pin.length < 4)
+      return showAlert(
+        "PIN Too Short",
+        "Observer PIN must be at least 4 characters."
+      );
+    if (pin !== pinConfirm)
+      return showAlert("PIN Mismatch", "The two PIN entries don't match.");
+    setPinSaving(true);
+    try {
+      await updateObserverPin(pin, accessToken, orgSlug);
+      addLog("Observer PIN updated by admin", "admin");
+      setPin("");
+      setPinConfirm("");
+      showAlert(
+        "PIN Updated",
+        "Observer PIN has been changed. Share it with your scrutineers."
+      );
+    } catch (err) {
+      showAlert("Failed", err.message);
+    } finally {
+      setPinSaving(false);
+    }
   };
 
   return (
     <div className="space-y-6 max-w-2xl">
+      {/* ── Election Identity ──────────────────────────────────────────────── */}
       <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-5">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
           Election Identity
@@ -37,11 +91,19 @@ export default function BrandingTab() {
           </label>
           <input
             value={form.electionName}
-            onChange={(e) => setForm((f) => ({ ...f, electionName: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, electionName: e.target.value }))
+            }
             className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 transition-colors"
-            placeholder={`e.g. ${branding.institutionName ? branding.institutionName.split(" ").slice(-1)[0] : "SRC"} General Elections ${new Date().getFullYear()}`}
+            placeholder={`e.g. ${
+              branding.institutionName
+                ? branding.institutionName.split(" ").slice(-1)[0]
+                : "SRC"
+            } General Elections ${new Date().getFullYear()}`}
           />
-          <p className="text-xs text-slate-600 mt-1">Appears on the login page, ballot, and results.</p>
+          <p className="text-xs text-slate-600 mt-1">
+            Appears on the login page, ballot, and results.
+          </p>
         </div>
 
         <div>
@@ -50,11 +112,15 @@ export default function BrandingTab() {
           </label>
           <input
             value={form.institutionName}
-            onChange={(e) => setForm((f) => ({ ...f, institutionName: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, institutionName: e.target.value }))
+            }
             className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 transition-colors"
             placeholder="e.g. University of Nigeria, Nsukka"
           />
-          <p className="text-xs text-slate-600 mt-1">Shown as a small eyebrow label above the election name.</p>
+          <p className="text-xs text-slate-600 mt-1">
+            Shown as a small eyebrow label above the election name.
+          </p>
         </div>
 
         <div>
@@ -65,7 +131,9 @@ export default function BrandingTab() {
             <label className="flex-1 flex items-center gap-3 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 hover:border-blue-500 transition-colors cursor-pointer">
               <Image className="w-4 h-4 text-slate-500 shrink-0" />
               <span className="text-sm text-slate-400 truncate">
-                {form.logoUrl ? "Logo uploaded ✓" : "Click to upload logo image…"}
+                {form.logoUrl
+                  ? "Logo uploaded ✓"
+                  : "Click to upload logo image (max 500 KB)…"}
               </span>
               <input
                 type="file"
@@ -78,7 +146,11 @@ export default function BrandingTab() {
             {form.logoUrl && (
               <>
                 <div className="w-14 h-14 rounded-xl border-2 border-slate-600 overflow-hidden shrink-0 bg-slate-900">
-                  <img src={form.logoUrl} alt="logo preview" className="w-full h-full object-cover" />
+                  <img
+                    src={form.logoUrl}
+                    alt="logo preview"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <button
                   onClick={() => setForm((f) => ({ ...f, logoUrl: "" }))}
@@ -91,14 +163,15 @@ export default function BrandingTab() {
             )}
           </div>
           <p className="text-xs text-slate-600 mt-1">
-            Upload a square image (PNG, JPG, or SVG). Replaces the "VB" initials on the login page.
+            Upload a square image (PNG, JPG, or SVG). Replaces the "VB" initials
+            on the login page.
           </p>
         </div>
 
         <button
           onClick={handleSave}
-          disabled={!dirty && !saved}
-          title={dirty ? "Apply branding changes" : "No unsaved changes"}
+          disabled={(!dirty && !saved) || saving}
+          title={dirty ? "Save branding to database" : "No unsaved changes"}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer ${
             saved
               ? "bg-green-600 text-white"
@@ -107,19 +180,88 @@ export default function BrandingTab() {
               : "bg-slate-700 text-slate-500 cursor-not-allowed"
           }`}
         >
-          {saved ? (
-            <><CheckCircle className="w-4 h-4" /> Saved!</>
+          {saving ? (
+            <VBLoader size="sm" />
+          ) : saved ? (
+            <>
+              <CheckCircle className="w-4 h-4" /> Saved!
+            </>
           ) : (
-            <><Palette className="w-4 h-4" /> Apply Branding</>
+            <>
+              <Palette className="w-4 h-4" /> Save Branding
+            </>
           )}
         </button>
       </div>
 
-      {/* Live preview — dark card matching the actual voter login page */}
+      {/* ── Observer PIN ───────────────────────────────────────────────────── */}
+      <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
+        <div className="flex items-center gap-2">
+          <Key className="w-4 h-4 text-teal-400" />
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Observer PIN
+          </p>
+        </div>
+        <p className="text-sm text-slate-400">
+          The PIN your accredited observers use to access the Observer
+          Dashboard. The default at registration is{" "}
+          <span className="font-mono font-bold text-slate-300">0000</span> —
+          change it before the election.
+        </p>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
+              New PIN
+            </label>
+            <input
+              type="password"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+              maxLength={8}
+              placeholder="e.g. 2025"
+              className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white text-center font-mono text-xl tracking-widest outline-none focus:border-teal-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
+              Confirm PIN
+            </label>
+            <input
+              type="password"
+              value={pinConfirm}
+              onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))}
+              maxLength={8}
+              placeholder="Repeat PIN"
+              className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white text-center font-mono text-xl tracking-widest outline-none transition-colors ${
+                pinConfirm && pin !== pinConfirm
+                  ? "border-red-500"
+                  : "border-slate-600 focus:border-teal-500"
+              }`}
+            />
+          </div>
+        </div>
+        <button
+          onClick={handlePinSave}
+          disabled={pinSaving || !pin || !pinConfirm}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-teal-700 hover:bg-teal-600 text-white transition-colors cursor-pointer disabled:opacity-40"
+        >
+          {pinSaving ? (
+            <VBLoader size="sm" />
+          ) : (
+            <>
+              <Key className="w-4 h-4" /> Update Observer PIN
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* ── Live Preview ───────────────────────────────────────────────────── */}
       <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
         <div className="px-5 py-3 border-b border-slate-700 flex items-center gap-2">
           <Eye className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Login Page Preview</span>
+          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
+            Login Page Preview
+          </span>
           {dirty && (
             <span className="text-[10px] text-amber-400 font-bold px-2 py-0.5 bg-amber-900/30 rounded-full border border-amber-700/40">
               Unsaved
@@ -137,7 +279,9 @@ export default function BrandingTab() {
             ) : (
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
                 <span className="text-2xl font-black text-white">
-                  {form.institutionName ? form.institutionName.slice(0, 2).toUpperCase() : "VB"}
+                  {form.institutionName
+                    ? form.institutionName.slice(0, 2).toUpperCase()
+                    : "VB"}
                 </span>
               </div>
             )}

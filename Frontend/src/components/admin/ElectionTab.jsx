@@ -27,7 +27,6 @@ const PHASES = (cfg) => [
     label: "Voting & Live Count",
     done: cfg.status === "ENDED",
     active: cfg.status === "ACTIVE",
-    // Note: tallying runs in real-time during voting, not after
   },
   {
     label: "Results Published",
@@ -46,12 +45,13 @@ export default function ElectionTab() {
     candidates,
     setCandidates,
     users,
+    setUsers,
+    setActivityLog,
     electionHistory,
     setElectionHistory,
     showAlert,
     showConfirm,
     addLog,
-    fetchAdminOverview,
   } = useApp();
 
   const [durH, setDurH] = useState(0);
@@ -62,7 +62,7 @@ export default function ElectionTab() {
   const patch = async (changes, logMsg, logType = "system") => {
     setSaving(true);
     try {
-      await updateElectionConfig(changes, accessToken, orgSlug,);
+      await updateElectionConfig(changes, accessToken, orgSlug);
       setElectionConfig((prev) => ({ ...prev, ...changes }));
       addLog(logMsg, logType);
     } catch (err) {
@@ -94,36 +94,13 @@ export default function ElectionTab() {
 
   const reset = () =>
     showConfirm(
-      "Archive & Reset",
-      "Archive results and reset for a new election?",
+      "End Election",
+      "Mark this election as ended? Results will be preserved. Head to the History tab to create a new election.",
       async () => {
-        // Save to local history before clearing
-        setElectionHistory((prev) => [
-          {
-            id: Date.now(),
-            date: new Date().toLocaleString(),
-            totalVotes: users.filter((u) => u.hasVoted && u.role !== "ADMIN")
-              .length,
-            candidates: candidates.map((c) => ({ ...c })),
-          },
-          ...prev,
-        ]);
+        await patch({ status: "ENDED" }, "Election ended by admin", "system");
 
-        // Persist the reset to backend
-        await patch(
-          {
-            status: "NOT_STARTED",
-            isPublished: false,
-            registryLocked: false,
-            endsAt: null,
-            showCountdown: false,
-          },
-          "Election archived and system reset"
-        );
-
-        // Re-fetch fresh state from backend so UI reflects true DB state
         try {
-          const overview = await fetchAdminOverview(accessToken);
+          const overview = await fetchAdminOverview(accessToken, orgSlug);
           setCandidates(
             overview.candidates.map((c) => ({
               id: c.id,
@@ -146,12 +123,25 @@ export default function ElectionTab() {
               role: "STUDENT",
             }))
           );
-        } catch (_) {
-          // fallback: zero out locally if fetch fails
-          setCandidates((prev) => prev.map((c) => ({ ...c, votes: 0 })));
-        }
+          setActivityLog(
+            overview.auditLog.map((e) => ({
+              id: e.id,
+              type: e.event_type,
+              message: e.message,
+              timestamp: new Date(e.created_at).toLocaleTimeString(),
+              date: new Date(e.created_at).toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+              }),
+              iso: e.created_at,
+            }))
+          );
+        } catch (_) {}
 
-        showAlert("Reset Complete", "Ready for a new election.");
+        showAlert(
+          "Election Ended",
+          "Head to the History tab to archive results and start a new election."
+        );
       }
     );
 

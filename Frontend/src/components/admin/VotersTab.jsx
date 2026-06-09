@@ -26,13 +26,22 @@ export default function VotersTab() {
   const [uploading, setUploading] = useState(false);
   const [replaceMode, setReplaceMode] = useState(false);
   const [copied, setCopied]       = useState(false);
+  const [copiedObs, setCopiedObs] = useState(false);
 
-  const voterUrl = `${window.location.origin}/vote/${orgSlug}`;
+  const voterUrl    = `${window.location.origin}/vote/${orgSlug}`;
+  const observerUrl = `${window.location.origin}/observer/login?slug=${orgSlug}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(voterUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleCopyObs = () => {
+    navigator.clipboard.writeText(observerUrl).then(() => {
+      setCopiedObs(true);
+      setTimeout(() => setCopiedObs(false), 2000);
     });
   };
 
@@ -129,6 +138,26 @@ export default function VotersTab() {
         >
           {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           {copied ? "Copied!" : "Copy"}
+        </button>
+      </div>
+
+      {/* Org observer URL */}
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Observer URL</p>
+          <p className="text-sm font-mono text-teal-400 truncate">{observerUrl}</p>
+        </div>
+        <button
+          onClick={handleCopyObs}
+          title={copiedObs ? "Copied!" : "Copy observer URL to clipboard"}
+          className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
+            copiedObs
+              ? "bg-green-500/20 text-green-400 border-green-500/30"
+              : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+          }`}
+        >
+          {copiedObs ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copiedObs ? "Copied!" : "Copy"}
         </button>
       </div>
 

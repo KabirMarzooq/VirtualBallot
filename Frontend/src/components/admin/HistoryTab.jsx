@@ -60,12 +60,6 @@ export default function HistoryTab() {
         "You cannot start a new election while one is still running. End the current election first."
       );
     }
-    if (electionConfig.status === "NOT_STARTED") {
-      return showAlert(
-        "Already Ready",
-        "Your current election hasn't started yet. Use the Election tab to configure and start it."
-      );
-    }
     setShowNewForm(true);
     setNewName("");
   };
@@ -100,7 +94,6 @@ export default function HistoryTab() {
           });
           setCandidates([]);
           setUsers([]);
-          setActivityLog([]);
           addLog(`New election created: "${newName.trim()}"`, "system");
 
           // Refresh history to include the just-archived one
@@ -149,7 +142,7 @@ export default function HistoryTab() {
             All concluded elections for your organization
           </p>
         </div>
-        {electionConfig.status === "ENDED" && (
+        {electionConfig.status !== "ACTIVE" && (
           <button
             onClick={handleCreateNew}
             disabled={creating}

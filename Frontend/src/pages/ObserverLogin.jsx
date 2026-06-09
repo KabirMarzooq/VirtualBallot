@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Telescope, ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import VBLoader from "../components/ui/VBLoader";
-import { observerLogin } from "../api";
+import { observerLogin, ORG_SLUG } from "../api";
 
 export default function ObserverLoginPage() {
   const { setAccessToken, setElectionId, addLog } = useApp();
@@ -12,17 +12,19 @@ export default function ObserverLoginPage() {
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const slug = searchParams.get("slug") || ORG_SLUG;
 
   const submit = async () => {
     if (!pin) return;
     setLoading(true);
     setError("");
     try {
-      const data = await observerLogin(pin);
+      const data = await observerLogin(pin, slug);
       setAccessToken(data.accessToken);
       setElectionId(data.electionId);
       addLog("Observer authenticated and entered dashboard", "admin");
-      navigate("/observer");
+      navigate(`/observer?slug=${slug}`);
     } catch (err) {
       setError(err.message);
       setShake(true);

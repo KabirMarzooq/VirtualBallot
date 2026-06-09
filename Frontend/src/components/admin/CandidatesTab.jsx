@@ -54,7 +54,8 @@ export default function CandidatesTab() {
           imageUrl: img.trim() || undefined,
           manifesto: manifesto.trim() || undefined,
         },
-        accessToken, orgSlug
+        accessToken,
+        orgSlug
       );
       setCandidates((prev) => [
         ...prev,
@@ -97,7 +98,12 @@ export default function CandidatesTab() {
   const saveManifesto = async (c) => {
     setSaving(true);
     try {
-      await updateCandidate(c.id, { manifesto: editText.trim() }, accessToken, orgSlug);
+      await updateCandidate(
+        c.id,
+        { manifesto: editText.trim() },
+        accessToken,
+        orgSlug
+      );
       setCandidates((prev) =>
         prev.map((x) =>
           x.id === c.id ? { ...x, manifesto: editText.trim() } : x
@@ -164,42 +170,84 @@ export default function CandidatesTab() {
             <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
               Photo (optional)
             </label>
-            <div className="flex gap-3 items-start">
-              <label className={`flex-1 flex items-center gap-3 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 transition-colors ${locked ? "opacity-50 cursor-not-allowed" : "hover:border-blue-500 cursor-pointer"}`}>
-                <Image className="w-4 h-4 text-slate-500 shrink-0" />
-                <span className="text-sm text-slate-400 truncate">
-                  {img ? "Photo selected ✓" : "Click to upload photo…"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  disabled={locked}
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => { setImg(ev.target.result); setPreview(true); };
-                    reader.readAsDataURL(file);
-                  }}
-                />
-              </label>
-              {img && !locked && (
-                <button
-                  onClick={() => { setImg(""); setPreview(false); }}
-                  title="Remove photo"
-                  className="px-3 py-3 bg-slate-700 text-slate-400 rounded-xl border border-slate-600 text-sm font-bold hover:bg-red-900/30 hover:text-red-400 hover:border-red-700/40 transition-colors cursor-pointer shrink-0"
+            <div className="space-y-2">
+              <div className="flex gap-3 items-start">
+                <label
+                  className={`flex-1 flex items-center gap-3 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 transition-colors ${
+                    locked
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:border-blue-500 cursor-pointer"
+                  }`}
                 >
-                  ✕
-                </button>
-              )}
+                  <Image className="w-4 h-4 text-slate-500 shrink-0" />
+                  <span className="text-sm text-slate-400 truncate">
+                    {img && img.startsWith("data:")
+                      ? "Photo uploaded ✓"
+                      : "Upload photo…"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={locked}
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      if (file.size > 200_000) {
+                        showAlert(
+                          "Image Too Large",
+                          "Please use an image under 200 KB for candidates."
+                        );
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setImg(ev.target.result);
+                        setPreview(true);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+                {img && !locked && (
+                  <button
+                    onClick={() => {
+                      setImg("");
+                      setPreview(false);
+                    }}
+                    title="Remove photo"
+                    className="px-3 py-3 bg-slate-700 text-slate-400 rounded-xl border border-slate-600 text-sm font-bold hover:bg-red-900/30 hover:text-red-400 hover:border-red-700/40 transition-colors cursor-pointer shrink-0"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-600">or paste URL:</span>
+                <input
+                  value={img && !img.startsWith("data:") ? img : ""}
+                  onChange={(e) => {
+                    setImg(e.target.value);
+                    setPreview(!!e.target.value);
+                  }}
+                  disabled={locked}
+                  placeholder="https://example.com/photo.jpg"
+                  className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500 disabled:opacity-50 placeholder:text-slate-700"
+                />
+              </div>
             </div>
             {preview && img && (
               <div className="mt-3 flex items-center gap-4 bg-slate-900/60 rounded-xl p-3 border border-slate-700">
-                <img src={img} alt="preview" className="w-16 h-16 rounded-xl bg-slate-800 object-cover shrink-0" />
+                <img
+                  src={img}
+                  alt="preview"
+                  className="w-16 h-16 rounded-xl bg-slate-800 object-cover shrink-0"
+                />
                 <div>
                   <p className="font-bold text-white">{name || "Name"}</p>
-                  <p className="text-xs text-slate-400 uppercase">{pos || "Position"}</p>
+                  <p className="text-xs text-slate-400 uppercase">
+                    {pos || "Position"}
+                  </p>
                 </div>
               </div>
             )}

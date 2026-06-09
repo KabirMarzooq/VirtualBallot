@@ -35,7 +35,10 @@ const mapLog = (e) => ({
   type: e.event_type,
   message: e.message,
   timestamp: new Date(e.created_at).toLocaleTimeString(),
-  date: new Date(e.created_at).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" }),
+  date: new Date(e.created_at).toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+  }),
   iso: e.created_at,
 });
 
@@ -45,7 +48,9 @@ export function AppProvider({ children }) {
     try {
       const s = sessionStorage.getItem("vb_admin_user");
       return s ? JSON.parse(s) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
   const [accessToken, setAccessToken] = useState(
     () => sessionStorage.getItem("vb_admin_token") || null
@@ -53,12 +58,11 @@ export function AppProvider({ children }) {
   const [electionId, setElectionId] = useState(null);
   const [orgId, setOrgId] = useState(null);
 
-  const getSlugFromPath = () => {
-    const m = window.location.pathname.match(/^\/vote\/([^/]+)/);
-    return m ? m[1] : import.meta.env.VITE_ORG_SLUG || "nuesa";
-  };
   const [orgSlug, setOrgSlug] = useState(
-    () => sessionStorage.getItem("vb_admin_slug") || getSlugFromPath()
+    () =>
+      sessionStorage.getItem("vb_admin_slug") ||
+      import.meta.env.VITE_ORG_SLUG ||
+      "nuesa"
   );
 
   // ── Election data ─────────────────────────────────────────────────────────────
@@ -69,7 +73,11 @@ export function AppProvider({ children }) {
     showCountdown: false,
     endsAt: null,
   });
-  const [branding, setBranding] = useState({ electionName: "", institutionName: "", logoUrl: "" });
+  const [branding, setBranding] = useState({
+    electionName: "",
+    institutionName: "",
+    logoUrl: "",
+  });
   const [candidates, setCandidates] = useState([]);
   const [users, setUsers] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
@@ -85,13 +93,19 @@ export function AppProvider({ children }) {
   const [emailSent, setEmailSent] = useState(false);
 
   // ── Global modal ──────────────────────────────────────────────────────────────
-  const [modal, setModal] = useState({ isOpen: false, type: "alert", title: "", message: "", onConfirm: null });
+  const [modal, setModal] = useState({
+    isOpen: false,
+    type: "alert",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
   const logId = useRef(0);
 
   // ── On mount: try to restore admin session or load voter election data ────────
   useEffect(() => {
-    const token   = sessionStorage.getItem("vb_admin_token");
-    const slug    = sessionStorage.getItem("vb_admin_slug");
+    const token = sessionStorage.getItem("vb_admin_token");
+    const slug = sessionStorage.getItem("vb_admin_slug");
     const isVoter = window.location.pathname.startsWith("/vote/");
 
     if (token && slug && !isVoter) {
@@ -99,8 +113,11 @@ export function AppProvider({ children }) {
       fetchAdminOverview(token, slug)
         .then((overview) => {
           const storedUser = (() => {
-            try { return JSON.parse(sessionStorage.getItem("vb_admin_user")); }
-            catch { return null; }
+            try {
+              return JSON.parse(sessionStorage.getItem("vb_admin_user"));
+            } catch {
+              return null;
+            }
           })();
           if (storedUser) setCurrentUser(storedUser);
           setAccessToken(token);
@@ -117,8 +134,11 @@ export function AppProvider({ children }) {
 
           // institutionName is in branding stored separately; fall back to slug
           const storedBranding = (() => {
-            try { return JSON.parse(sessionStorage.getItem("vb_admin_branding")); }
-            catch { return null; }
+            try {
+              return JSON.parse(sessionStorage.getItem("vb_admin_branding"));
+            } catch {
+              return null;
+            }
           })();
           setBranding({
             electionName: overview.election.name,
@@ -215,17 +235,20 @@ export function AppProvider({ children }) {
         type,
         message,
         timestamp: now.toLocaleTimeString(),
-        date: now.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" }),
+        date: now.toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+        }),
         iso: now.toISOString(),
       },
     ]);
   };
 
-  const showAlert   = (title, message) =>
-    setModal({ isOpen: true, type: "alert",   title, message, onConfirm: null });
+  const showAlert = (title, message) =>
+    setModal({ isOpen: true, type: "alert", title, message, onConfirm: null });
   const showConfirm = (title, message, onConfirm) =>
     setModal({ isOpen: true, type: "confirm", title, message, onConfirm });
-  const closeModal  = () => setModal((m) => ({ ...m, isOpen: false }));
+  const closeModal = () => setModal((m) => ({ ...m, isOpen: false }));
 
   const toggleBallotSelection = (pos, id) =>
     setBallot((prev) => ({ ...prev, [pos]: id }));
@@ -246,34 +269,56 @@ export function AppProvider({ children }) {
 
   const value = {
     // auth
-    currentUser, setCurrentUser,
-    accessToken,  setAccessToken,
-    electionId,   setElectionId,
-    orgId,        setOrgId,
-    orgSlug,      setOrgSlug,
+    currentUser,
+    setCurrentUser,
+    accessToken,
+    setAccessToken,
+    electionId,
+    setElectionId,
+    orgId,
+    setOrgId,
+    orgSlug,
+    setOrgSlug,
     loadElectionForSlug,
     // election data
-    electionConfig, setElectionConfig,
-    branding,       setBranding,
-    candidates,     setCandidates,
-    users,          setUsers,
-    activityLog,    setActivityLog,
-    electionHistory, setElectionHistory,
+    electionConfig,
+    setElectionConfig,
+    branding,
+    setBranding,
+    candidates,
+    setCandidates,
+    users,
+    setUsers,
+    activityLog,
+    setActivityLog,
+    electionHistory,
+    setElectionHistory,
     timeLeft,
     appLoading,
     // ballot
-    ballot,              setBallot,
-    receiptHash,         setReceiptHash,
-    showConfirmModal,    setShowConfirmModal,
-    showConfetti,        setShowConfetti,
-    emailSent,           setEmailSent,
+    ballot,
+    setBallot,
+    receiptHash,
+    setReceiptHash,
+    showConfirmModal,
+    setShowConfirmModal,
+    showConfetti,
+    setShowConfetti,
+    emailSent,
+    setEmailSent,
     // modal
-    modal, closeModal,
+    modal,
+    closeModal,
     // actions
-    addLog, showAlert, showConfirm,
-    toggleBallotSelection, resetBallotSession,
+    addLog,
+    showAlert,
+    showConfirm,
+    toggleBallotSelection,
+    resetBallotSession,
     // shared mappers (used by Admin restore + AdminLogin)
-    mapCandidate, mapVoter, mapLog,
+    mapCandidate,
+    mapVoter,
+    mapLog,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

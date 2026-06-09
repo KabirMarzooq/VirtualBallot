@@ -10,8 +10,9 @@
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
-// Change this to your org's slug. When multi-tenancy is live this will
-// come from the subdomain / URL param automatically.
+// Fallback slug used when no slug is available from URL or context.
+// For voter pages the real slug always comes from the URL (/vote/:slug).
+// For admin pages it comes from AppContext (set after login).
 export const ORG_SLUG = import.meta.env.VITE_ORG_SLUG || "nuesa"
 
 // ─── Internal fetch wrapper ───────────────────────────────────────────────────
@@ -46,10 +47,8 @@ export const fetchCandidates = (slug = ORG_SLUG) =>
     request(`/elections/${slug}/candidates`)
 
 /** Load published results */
-export const fetchResults = (slug = ORG_SLUG) =>
+export const fetchPublicResults = (slug = ORG_SLUG) =>
     request(`/elections/${slug}/results`)
-
-// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 // ─── Registration ─────────────────────────────────────────────────────────────
 
@@ -66,10 +65,6 @@ export const registerVoter = (voterId, email, slug = ORG_SLUG) =>
         method: "POST",
         body: JSON.stringify({ voterId, email }),
     })
-
-/** Fetch public results (no auth needed) */
-export const fetchPublicResults = (slug = ORG_SLUG) =>
-    request(`/elections/${slug}/results`)
 
 /**
  * Voter enters their matric number.
@@ -178,6 +173,20 @@ export const uploadRoster = (voters, token, slug = ORG_SLUG, replaceExisting = f
 /** Get full admin dashboard data */
 export const fetchAdminOverview = (token, slug = ORG_SLUG) =>
     request(`/elections/${slug}/admin/overview`, {}, token)
+
+/** Update organization branding (election name, institution name, logo URL) */
+export const updateBranding = (patch, token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/branding`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+    }, token)
+
+/** Update observer PIN */
+export const updateObserverPin = (pin, token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/observer-pin`, {
+        method: "PATCH",
+        body: JSON.stringify({ pin }),
+    }, token)
 
 /** Update election config (status, isPublished, registryLocked, etc.) */
 export const updateElectionConfig = (patch, token, slug = ORG_SLUG) =>

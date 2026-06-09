@@ -2,17 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth scrollbar hide utility */
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
-
-.scrollbar-hide:webkit-scrollbar {
-    display: none;
+::-webkit-scrollbar-track {
+  background:  #0f172a;
 }
-
-/* Smooth transitions across the app */
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+  transition: background 150ms ease;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.75) !important;
+}
 * {
-    -webkit-tap-highlight-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0f172a;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
