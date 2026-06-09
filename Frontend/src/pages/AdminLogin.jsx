@@ -12,6 +12,7 @@ export default function AdminLoginPage() {
     setAccessToken,
     setElectionId,
     setOrgId,
+    setOrgSlug,
     setUsers,
     setCandidates,
     setActivityLog,
@@ -41,6 +42,7 @@ export default function AdminLoginPage() {
       setAccessToken(token);
       setElectionId(loginData.electionId);
       setOrgId(loginData.org.id);
+      setOrgSlug(loginData.org.slug);
 
       // 2. Fetch full admin overview in one call
       const overview = await fetchAdminOverview(token, loginData.org.slug);

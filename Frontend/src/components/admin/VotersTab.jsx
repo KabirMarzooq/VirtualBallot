@@ -18,7 +18,7 @@ import { uploadRoster, removeVoter } from "../../api";
 import VBLoader from "../ui/VBLoader";
 
 export default function VotersTab() {
-  const { users, setUsers, accessToken, showAlert, addLog } = useApp();
+  const { users, setUsers, accessToken, orgSlug, showAlert, addLog } = useApp();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [uploading, setUploading] = useState(false);
@@ -57,7 +57,7 @@ export default function VotersTab() {
         const result = await uploadRoster(
           parsed,
           accessToken,
-          undefined,
+          orgSlug,
           replaceMode
         );
         // Refresh local state with the new voters
@@ -90,7 +90,7 @@ export default function VotersTab() {
 
   const handleRemove = async (voter) => {
     try {
-      await removeVoter(voter.id, accessToken);
+      await removeVoter(voter.id, accessToken, orgSlug,);
       setUsers((prev) => prev.filter((u) => u.matric !== voter.matric));
       addLog(`Voter ${voter.matric} removed from roster`, "registry");
     } catch (err) {

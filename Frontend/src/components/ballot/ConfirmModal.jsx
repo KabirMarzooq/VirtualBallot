@@ -80,7 +80,7 @@ export default function ConfirmModal() {
       >
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-          <span className="text-[7rem] font-black text-slate-100 rotate-[-35deg] select-none tracking-tighter leading-none z-0">
+          <span className="text-[7rem] font-black text-slate-100 rotate-[-35deg] select-none tracking-tighter leading-none">
             BALLOT
           </span>
         </div>

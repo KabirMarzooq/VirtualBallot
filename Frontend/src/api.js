@@ -46,8 +46,8 @@ export const fetchCandidates = (slug = ORG_SLUG) =>
     request(`/elections/${slug}/candidates`)
 
 /** Load published results */
-export const fetchResults = () =>
-    request(`/elections/${ORG_SLUG}/results`)
+export const fetchResults = (slug = ORG_SLUG) =>
+    request(`/elections/${slug}/results`)
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -106,8 +106,8 @@ export const adminLogin = (email, password) =>
  * Observer logs in with PIN.
  * Returns: { accessToken, electionId }
  */
-export const observerLogin = (pin) =>
-    request(`/auth/${ORG_SLUG}/observer/login`, {
+export const observerLogin = (pin, slug = ORG_SLUG) =>
+    request(`/auth/${slug}/observer/login`, {
         method: "POST",
         body: JSON.stringify({ pin }),
     })
@@ -180,37 +180,37 @@ export const fetchAdminOverview = (token, slug = ORG_SLUG) =>
     request(`/elections/${slug}/admin/overview`, {}, token)
 
 /** Update election config (status, isPublished, registryLocked, etc.) */
-export const updateElectionConfig = (patch, token) =>
-    request(`/elections/${ORG_SLUG}/config`, {
+export const updateElectionConfig = (patch, token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/config`, {
         method: "PATCH",
         body: JSON.stringify(patch),
     }, token)
 
 /** Get full voter list */
-export const fetchVoters = (token) =>
-    request(`/voters/${ORG_SLUG}`, {}, token)
+export const fetchVoters = (token, slug = ORG_SLUG) =>
+    request(`/voters/${slug}`, {}, token)
 
 /** Remove a voter from the roster */
-export const removeVoter = (voterId, token) =>
-    request(`/voters/${ORG_SLUG}/${voterId}`, { method: "DELETE" }, token)
+export const removeVoter = (voterId, token, slug = ORG_SLUG) =>
+    request(`/voters/${slug}/${voterId}`, { method: "DELETE" }, token)
 
 /** Add a candidate */
-export const addCandidate = (candidate, token) =>
-    request(`/candidates/${ORG_SLUG}`, {
+export const addCandidate = (candidate, token, slug = ORG_SLUG) =>
+    request(`/candidates/${slug}`, {
         method: "POST",
         body: JSON.stringify(candidate),
     }, token)
 
 /** Update candidate manifesto / details */
-export const updateCandidate = (candidateId, patch, token) =>
-    request(`/candidates/${ORG_SLUG}/${candidateId}`, {
+export const updateCandidate = (candidateId, patch, token, slug = ORG_SLUG) =>
+    request(`/candidates/${slug}/${candidateId}`, {
         method: "PATCH",
         body: JSON.stringify(patch),
     }, token)
 
 /** Remove a candidate */
-export const removeCandidate = (candidateId, token) =>
-    request(`/candidates/${ORG_SLUG}/${candidateId}`, { method: "DELETE" }, token)
+export const removeCandidate = (candidateId, token, slug = ORG_SLUG) =>
+    request(`/candidates/${slug}/${candidateId}`, { method: "DELETE" }, token)
 
 // ─── Super Admin ──────────────────────────────────────────────────────────────
 

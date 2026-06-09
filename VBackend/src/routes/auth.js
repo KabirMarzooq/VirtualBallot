@@ -317,20 +317,14 @@ router.post("/org/register", async (req, res) => {
 
 // ─── POST /auth/admin/login ───────────────────────────────────────────────────
 // Slug-free admin login — finds org by email address
-// This is what the admin login page uses after the DB wipe
+// This is what the admin login page uses
 router.post("/admin/login", async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) return fail(res, "Email and password required")
 
-  // Block deactivated organizations
-  if (!org.is_active) {
-    return fail(res, "This organization has been deactivated. Please contact support.", 403)
-  }
-
   try {
-    // Find org by admin email — no slug needed
     const orgResult = await query(
-      `SELECT id, name, slug, admin_email, admin_password 
+      `SELECT id, name, slug, admin_email, admin_password, is_active
        FROM organizations WHERE admin_email = $1`,
       [email.trim().toLowerCase()]
     )
@@ -338,6 +332,11 @@ router.post("/admin/login", async (req, res) => {
       return fail(res, "No account found with this email address", 404)
     }
     const org = orgResult.rows[0]
+
+    // Block deactivated organizations
+    if (!org.is_active) {
+      return fail(res, "This organization has been deactivated. Please contact support.", 403)
+    }
 
     const passwordOk = await bcrypt.compare(password, org.admin_password)
     if (!passwordOk) return fail(res, "Invalid credentials", 401)

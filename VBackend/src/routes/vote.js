@@ -127,10 +127,6 @@ router.post("/", requireVoter, async (req, res) => {
       receiptId,
     })
 
-    return ok(res, {
-      message: "Vote cast successfully",
-      receiptId,
-    })
   } catch (err) {
     await client.query("ROLLBACK")
 

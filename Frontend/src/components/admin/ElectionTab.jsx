@@ -42,6 +42,7 @@ export default function ElectionTab() {
     setElectionConfig,
     timeLeft,
     accessToken,
+    orgSlug,
     candidates,
     setCandidates,
     users,
@@ -61,7 +62,7 @@ export default function ElectionTab() {
   const patch = async (changes, logMsg, logType = "system") => {
     setSaving(true);
     try {
-      await updateElectionConfig(changes, accessToken);
+      await updateElectionConfig(changes, accessToken, orgSlug,);
       setElectionConfig((prev) => ({ ...prev, ...changes }));
       addLog(logMsg, logType);
     } catch (err) {

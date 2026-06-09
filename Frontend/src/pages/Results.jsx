@@ -110,7 +110,7 @@ export default function ResultsPage() {
   const slug = useSlug()
 
   useEffect(() => {
-    fetchPublicResults()
+    fetchPublicResults(slug)
       .then((data) => setResultsData(data))
       .catch(() =>
         setResultsData({

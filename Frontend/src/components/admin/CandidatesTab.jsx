@@ -22,6 +22,7 @@ export default function CandidatesTab() {
     accessToken,
     showAlert,
     addLog,
+    orgSlug,
   } = useApp();
 
   const [name, setName] = useState("");
@@ -53,7 +54,7 @@ export default function CandidatesTab() {
           imageUrl: img.trim() || undefined,
           manifesto: manifesto.trim() || undefined,
         },
-        accessToken
+        accessToken, orgSlug
       );
       setCandidates((prev) => [
         ...prev,
@@ -83,7 +84,7 @@ export default function CandidatesTab() {
   const remove = async (c) => {
     setSaving(true);
     try {
-      await removeCandidate(c.id, accessToken);
+      await removeCandidate(c.id, accessToken, orgSlug);
       setCandidates((prev) => prev.filter((x) => x.id !== c.id));
       addLog(`Candidate "${c.name}" removed`, "candidate");
     } catch (err) {
@@ -96,7 +97,7 @@ export default function CandidatesTab() {
   const saveManifesto = async (c) => {
     setSaving(true);
     try {
-      await updateCandidate(c.id, { manifesto: editText.trim() }, accessToken);
+      await updateCandidate(c.id, { manifesto: editText.trim() }, accessToken, orgSlug);
       setCandidates((prev) =>
         prev.map((x) =>
           x.id === c.id ? { ...x, manifesto: editText.trim() } : x
