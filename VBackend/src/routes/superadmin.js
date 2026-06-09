@@ -131,32 +131,30 @@ router.get("/logs", requireSuperAdmin, async (req, res) => {
             values.push(type)
         }
 
-        values.push(limit, offset)
-
         const result = await query(`
-      SELECT
-        al.id,
-        al.event_type,
-        al.message,
-        al.actor,
-        al.created_at,
-        o.name  AS org_name,
-        o.slug  AS org_slug,
-        e.name  AS election_name
-      FROM audit_logs al
-      LEFT JOIN organizations o ON o.id = al.org_id
-      LEFT JOIN elections     e ON e.id = al.election_id
-      WHERE ${conditions.join(" AND ")}
-      ORDER BY al.created_at DESC
-      LIMIT $${idx++} OFFSET $${idx}
-    `, values)
+            SELECT
+              al.id,
+              al.event_type,
+              al.message,
+              al.actor,
+              al.created_at,
+              o.name  AS org_name,
+              o.slug  AS org_slug,
+              e.name  AS election_name
+            FROM audit_logs al
+            LEFT JOIN organizations o ON o.id = al.org_id
+            LEFT JOIN elections     e ON e.id = al.election_id
+            WHERE ${conditions.join(" AND ")}
+            ORDER BY al.created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
+          `, values)
 
         const countResult = await query(`
-      SELECT COUNT(*) AS total
-      FROM audit_logs al
-      LEFT JOIN organizations o ON o.id = al.org_id
-      WHERE ${conditions.slice(0, -0).join(" AND ")}
-    `, values.slice(0, -2))
+            SELECT COUNT(*) AS total
+            FROM audit_logs al
+            LEFT JOIN organizations o ON o.id = al.org_id
+            WHERE ${conditions.join(" AND ")}
+          `, values)
 
         return ok(res, {
             logs: result.rows,

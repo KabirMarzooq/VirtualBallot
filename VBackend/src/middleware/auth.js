@@ -96,12 +96,16 @@ export const resolveOrg = async (req, res, next) => {
     if (!slug) return fail(res, "Organization slug required", 400)
 
     const result = await query(
-      `SELECT id, name, slug, logo_url FROM organizations WHERE slug = $1`,
+      `SELECT id, name, slug, logo_url, is_active FROM organizations WHERE slug = $1`,
       [slug]
     )
 
     if (result.rows.length === 0) {
       return fail(res, "Organization not found", 404)
+    }
+
+    if (!result.rows[0].is_active) {
+      return fail(res, "This organization has been deactivated. Please contact support.", 403)
     }
 
     req.org = result.rows[0]

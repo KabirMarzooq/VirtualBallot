@@ -26,19 +26,19 @@ router.get("/:slug", resolveOrg, async (req, res) => {
 
     return ok(res, {
       election: {
-        id:             e.id,
-        name:           e.name,
-        status:         e.status,
-        isPublished:    e.is_published,
+        id: e.id,
+        name: e.name,
+        status: e.status,
+        isPublished: e.is_published,
         registryLocked: e.registry_locked,
-        showCountdown:  e.show_countdown,
-        endsAt:         e.ends_at,
+        showCountdown: e.show_countdown,
+        endsAt: e.ends_at,
       },
       branding: {
-        electionName:    e.name,
+        electionName: e.name,
         institutionName: e.org_name,
-        logoUrl:         e.logo_url || "",
-        slug:            e.slug,
+        logoUrl: e.logo_url || "",
+        slug: e.slug,
       },
     })
   } catch (err) {
@@ -105,7 +105,7 @@ router.get("/:slug/results", resolveOrg, async (req, res) => {
     )
 
     return ok(res, {
-      published:  true,
+      published: true,
       candidates: candidatesResult.rows,
       stats: {
         total: Number(statsResult.rows[0].total),
@@ -117,20 +117,98 @@ router.get("/:slug/results", resolveOrg, async (req, res) => {
   }
 })
 
+// ─── PATCH /elections/:slug/branding — Admin: update election name + org branding ──
+router.patch("/:slug/branding", resolveOrg, requireAdmin, async (req, res) => {
+  const { electionName, institutionName, logoUrl } = req.body
+
+  try {
+    // Update election name if provided
+    if (electionName !== undefined) {
+      const electionResult = await query(
+        `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [req.orgId]
+      )
+      if (electionResult.rows.length > 0) {
+        await query(
+          `UPDATE elections SET name = $1, updated_at = NOW() WHERE id = $2`,
+          [electionName.trim(), electionResult.rows[0].id]
+        )
+      }
+    }
+
+    // Update org-level branding (institution name + logo)
+    const updates = []
+    const values = []
+    let idx = 1
+
+    if (institutionName !== undefined) { updates.push(`name = $${idx++}`); values.push(institutionName.trim()) }
+    if (logoUrl !== undefined) { updates.push(`logo_url = $${idx++}`); values.push(logoUrl || null) }
+
+    if (updates.length > 0) {
+      values.push(req.orgId)
+      await query(
+        `UPDATE organizations SET ${updates.join(", ")} WHERE id = $${idx}`,
+        values
+      )
+    }
+
+    await query(
+      `INSERT INTO audit_logs (org_id, event_type, message, actor)
+       VALUES ($1, 'admin', 'Branding updated', $2)`,
+      [req.orgId, req.adminEmail]
+    )
+
+    return ok(res, { message: "Branding updated" })
+  } catch (err) {
+    console.error("Branding update error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── PATCH /elections/:slug/observer-pin — Admin: change the observer PIN ────
+router.patch("/:slug/observer-pin", resolveOrg, requireAdmin, async (req, res) => {
+  const { pin } = req.body
+
+  if (!pin || pin.toString().length < 4) {
+    return fail(res, "PIN must be at least 4 characters")
+  }
+
+  try {
+    const bcrypt = await import("bcryptjs")
+    const pinHash = await bcrypt.default.hash(pin.toString(), 10)
+
+    await query(
+      `UPDATE organizations SET observer_pin = $1 WHERE id = $2`,
+      [pinHash, req.orgId]
+    )
+
+    await query(
+      `INSERT INTO audit_logs (org_id, event_type, message, actor)
+       VALUES ($1, 'admin', 'Observer PIN updated', $2)`,
+      [req.orgId, req.adminEmail]
+    )
+
+    return ok(res, { message: "Observer PIN updated" })
+  } catch (err) {
+    console.error("Observer PIN update error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
 // ─── PATCH /elections/:slug/config — Admin: update election settings ──────────
 router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
   const { status, isPublished, registryLocked, showCountdown, endsAt } = req.body
 
   try {
     const updates = []
-    const values  = []
-    let   idx     = 1
+    const values = []
+    let idx = 1
 
-    if (status         !== undefined) { updates.push(`status = $${idx++}`);          values.push(status) }
-    if (isPublished    !== undefined) { updates.push(`is_published = $${idx++}`);    values.push(isPublished) }
+    if (status !== undefined) { updates.push(`status = $${idx++}`); values.push(status) }
+    if (isPublished !== undefined) { updates.push(`is_published = $${idx++}`); values.push(isPublished) }
     if (registryLocked !== undefined) { updates.push(`registry_locked = $${idx++}`); values.push(registryLocked) }
-    if (showCountdown  !== undefined) { updates.push(`show_countdown = $${idx++}`);  values.push(showCountdown) }
-    if (endsAt         !== undefined) { updates.push(`ends_at = $${idx++}`);         values.push(endsAt) }
+    if (showCountdown !== undefined) { updates.push(`show_countdown = $${idx++}`); values.push(showCountdown) }
+    if (endsAt !== undefined) { updates.push(`ends_at = $${idx++}`); values.push(endsAt) }
 
     if (status === "ACTIVE") {
       updates.push(`started_at = $${idx++}`)
@@ -180,18 +258,18 @@ router.get("/:slug/admin/overview", resolveOrg, requireAdmin, async (req, res) =
 
     return ok(res, {
       election: {
-        id:             election.id,
-        name:           election.name,
-        status:         election.status,
-        isPublished:    election.is_published,
+        id: election.id,
+        name: election.name,
+        status: election.status,
+        isPublished: election.is_published,
         registryLocked: election.registry_locked,
-        showCountdown:  election.show_countdown,
-        endsAt:         election.ends_at,
-        startedAt:      election.started_at,
+        showCountdown: election.show_countdown,
+        endsAt: election.ends_at,
+        startedAt: election.started_at,
       },
       candidates: candidatesResult.rows,
-      voters:     votersResult.rows,
-      auditLog:   auditResult.rows,
+      voters: votersResult.rows,
+      auditLog: auditResult.rows,
     })
   } catch (err) {
     return fail(res, "Server error", 500)
@@ -237,32 +315,32 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
       winnersResult.rows.forEach(c => {
         if (!positions[c.position]) {
           positions[c.position] = {
-            position:   c.position,
-            winner:     c.name,
-            image_url:  c.image_url,
-            votes:      Number(c.vote_count),
-            total:      Number(c.position_total),
-            pct:        c.position_total > 0
-                          ? Math.round((c.vote_count / c.position_total) * 100)
-                          : 0,
+            position: c.position,
+            winner: c.name,
+            image_url: c.image_url,
+            votes: Number(c.vote_count),
+            total: Number(c.position_total),
+            pct: c.position_total > 0
+              ? Math.round((c.vote_count / c.position_total) * 100)
+              : 0,
           }
         }
       })
 
       return {
-        id:             e.id,
-        name:           e.name,
-        status:         e.status,
-        startedAt:      e.started_at,
-        endsAt:         e.ends_at,
-        createdAt:      e.created_at,
-        votesCast:      Number(e.votes_cast),
-        totalVoters:    Number(e.total_voters),
+        id: e.id,
+        name: e.name,
+        status: e.status,
+        startedAt: e.started_at,
+        endsAt: e.ends_at,
+        createdAt: e.created_at,
+        votesCast: Number(e.votes_cast),
+        totalVoters: Number(e.total_voters),
         candidateCount: Number(e.candidate_count),
-        turnout:        e.total_voters > 0
-                          ? Math.round((e.votes_cast / e.total_voters) * 100)
-                          : 0,
-        winners:        Object.values(positions),
+        turnout: e.total_voters > 0
+          ? Math.round((e.votes_cast / e.total_voters) * 100)
+          : 0,
+        winners: Object.values(positions),
       }
     }))
 
@@ -275,13 +353,12 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
 
 // ─── POST /elections/:slug/new ────────────────────────────────────────────────
 // Admin: archive current election and create a fresh one
-// This is the proper "start fresh" — old data is preserved, new election begins
 router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
   const { name } = req.body
   if (!name?.trim()) return fail(res, "Election name is required")
 
   try {
-    // Verify current election is ENDED before allowing a new one
+    // Verify current election is not ACTIVE before allowing a new one
     const currentResult = await query(
       `SELECT id, status FROM elections
        WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -291,7 +368,15 @@ router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
     if (currentResult.rows.length > 0) {
       const current = currentResult.rows[0]
       if (current.status === "ACTIVE") {
-        return fail(res, "Cannot create a new election while one is still active", 400)
+        return fail(res, "Cannot create a new election while one is still active. End it first.", 400)
+      }
+      // Mark the current election as ENDED so it shows in history
+      // (it may already be ENDED, or it may be NOT_STARTED — either way archive it)
+      if (current.status !== "ENDED") {
+        await query(
+          `UPDATE elections SET status = 'ENDED', ends_at = NOW(), updated_at = NOW() WHERE id = $1`,
+          [current.id]
+        )
       }
     }
 
@@ -312,8 +397,8 @@ router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
     )
 
     return ok(res, {
-      message:   "New election created successfully",
-      election:  newElection,
+      message: "New election created successfully",
+      election: newElection,
     }, 201)
   } catch (err) {
     console.error("New election error:", err)
