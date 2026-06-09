@@ -13,13 +13,13 @@ export const requireVoter = async (req, res, next) => {
       return fail(res, "No token provided", 401)
     }
 
-    const token   = header.split(" ")[1]
+    const token = header.split(" ")[1]
     const payload = verifyAccessToken(token)
 
     // Attach context to request
-    req.voterId    = payload.voterId
+    req.voterId = payload.voterId
     req.electionId = payload.electionId
-    req.orgId      = payload.orgId
+    req.orgId = payload.orgId
 
     next()
   } catch (err) {
@@ -39,14 +39,14 @@ export const requireAdmin = async (req, res, next) => {
       return fail(res, "No token provided", 401)
     }
 
-    const token   = header.split(" ")[1]
+    const token = header.split(" ")[1]
     const payload = verifyAccessToken(token)
 
     if (payload.role !== "admin") {
       return fail(res, "Admin access required", 403)
     }
 
-    req.orgId      = payload.orgId
+    req.orgId = payload.orgId
     req.electionId = payload.electionId
     req.adminEmail = payload.email
 
@@ -67,14 +67,14 @@ export const requireObserver = async (req, res, next) => {
       return fail(res, "No token provided", 401)
     }
 
-    const token   = header.split(" ")[1]
+    const token = header.split(" ")[1]
     const payload = verifyAccessToken(token)
 
     if (payload.role !== "observer" && payload.role !== "admin") {
       return fail(res, "Observer access required", 403)
     }
 
-    req.orgId      = payload.orgId
+    req.orgId = payload.orgId
     req.electionId = payload.electionId
 
     next()
@@ -109,5 +109,28 @@ export const resolveOrg = async (req, res, next) => {
     next()
   } catch (err) {
     return fail(res, "Server error", 500)
+  }
+}
+
+/**
+ * requireSuperAdmin
+ * Checks the JWT role is 'superadmin'.
+ * Superadmin token is issued only via POST /auth/superadmin/login
+ * using credentials stored entirely in .env — never in the database.
+ */
+export const requireSuperAdmin = (req, res, next) => {
+  try {
+    const header = req.headers.authorization
+    if (!header?.startsWith("Bearer ")) return fail(res, "No token provided", 401)
+
+    const token = header.split(" ")[1]
+    const payload = verifyAccessToken(token)
+
+    if (payload.role !== "superadmin") return fail(res, "Super admin access required", 403)
+
+    req.superAdmin = true
+    next()
+  } catch (err) {
+    return fail(res, "Invalid or expired token", 401)
   }
 }

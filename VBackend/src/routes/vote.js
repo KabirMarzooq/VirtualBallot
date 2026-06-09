@@ -1,4 +1,5 @@
 import express from "express"
+import { io } from "../server.js"
 import { getClient, query } from "../db/pool.js"
 import { requireVoter } from "../middleware/auth.js"
 import { generateReceiptId, ok, fail } from "../utils/index.js"
@@ -105,8 +106,29 @@ router.post("/", requireVoter, async (req, res) => {
 
     await client.query("COMMIT")
 
+    // ── Broadcast live update to all clients watching this election ──────────────
+    // Fetch fresh vote counts to broadcast accurate numbers
+    const updatedCandidates = await query(
+      `SELECT id, name, position, vote_count, color, image_url
+   FROM candidates WHERE election_id = $1
+   ORDER BY position, vote_count DESC`,
+      [electionId]
+    )
+
+    io.to(`election:${electionId}`).emit("vote:update", {
+      electionId,
+      receiptId,
+      candidates: updatedCandidates.rows,
+      timestamp: new Date().toISOString(),
+    })
+
     return ok(res, {
-      message:   "Vote cast successfully",
+      message: "Vote cast successfully",
+      receiptId,
+    })
+
+    return ok(res, {
+      message: "Vote cast successfully",
       receiptId,
     })
   } catch (err) {

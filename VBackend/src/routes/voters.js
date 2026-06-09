@@ -10,7 +10,7 @@ const router = express.Router()
 // Admin: bulk-upload voters from a parsed CSV array
 // Body: { voters: [ { matric, name, email? }, ... ] }
 router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
-  const { voters } = req.body
+  const { voters, replaceExisting = false } = req.body
 
   if (!voters || !Array.isArray(voters) || voters.length === 0) {
     return fail(res, "Voters array required")
@@ -24,6 +24,20 @@ router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
     )
     if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
     const electionId = electionResult.rows[0].id
+
+    // If replace mode: delete all existing voters who haven't voted yet
+    if (replaceExisting) {
+      await query(
+        `DELETE FROM voters
+         WHERE election_id = $1 AND has_voted = FALSE`,
+        [electionId]
+      )
+      await query(
+        `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+         VALUES ($1, $2, 'registry', 'Voter roster replaced — previous unvoted entries cleared', $3)`,
+        [req.orgId, electionId, req.adminEmail]
+      )
+    }
 
     let inserted = 0
     let skipped = 0

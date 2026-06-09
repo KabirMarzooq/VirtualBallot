@@ -16,7 +16,7 @@ const router = express.Router()
 // Step 1: voter enters matric number → system sends OTP to their email
 router.post("/:slug/voter/login", async (req, res) => {
   const { matric } = req.body
-  const { slug }   = req.params
+  const { slug } = req.params
 
   if (!matric) return fail(res, "Matric number required")
 
@@ -64,7 +64,7 @@ router.post("/:slug/voter/login", async (req, res) => {
     }
 
     // Generate and store OTP
-    const otp     = generateOTP()
+    const otp = generateOTP()
     const otpHash = await hashOTP(otp)
     const expires = new Date(Date.now() + (Number(process.env.OTP_EXPIRES_MINUTES) || 5) * 60 * 1000)
 
@@ -79,8 +79,8 @@ router.post("/:slug/voter/login", async (req, res) => {
 
     // Send OTP email (logs to console in dev if SMTP not configured)
     await sendOTPEmail({
-      to:           voter.email,
-      name:         voter.name,
+      to: voter.email,
+      name: voter.name,
       otp,
       electionName: election.name,
     })
@@ -89,14 +89,14 @@ router.post("/:slug/voter/login", async (req, res) => {
     return ok(res, {
       message: "OTP sent to your registered email address",
       voter: {
-        id:     voter.id,
-        name:   voter.name,
+        id: voter.id,
+        name: voter.name,
         // Mask email: am***@nuesa.edu.ng
-        email:  voter.email.replace(/(.{2})(.*)(@.*)/, "$1***$3"),
+        email: voter.email.replace(/(.{2})(.*)(@.*)/, "$1***$3"),
         matric: voter.matric,
       },
       electionId: election.id,
-      orgId:      org.id,
+      orgId: org.id,
     })
   } catch (err) {
     console.error("Voter login error:", err)
@@ -149,7 +149,7 @@ router.post("/:slug/voter/verify-otp", async (req, res) => {
     })
 
     return ok(res, {
-      message:     "Verified. Proceed to ballot.",
+      message: "Verified. Proceed to ballot.",
       accessToken,
     })
   } catch (err) {
@@ -162,7 +162,7 @@ router.post("/:slug/voter/verify-otp", async (req, res) => {
 // Admin logs in with email + password
 router.post("/:slug/admin/login", async (req, res) => {
   const { email, password } = req.body
-  const { slug }            = req.params
+  const { slug } = req.params
 
   if (!email || !password) return fail(res, "Email and password required")
 
@@ -189,10 +189,10 @@ router.post("/:slug/admin/login", async (req, res) => {
     const electionId = electionResult.rows[0]?.id || null
 
     const accessToken = signAccessToken({
-      orgId:   org.id,
+      orgId: org.id,
       electionId,
-      email:   org.admin_email,
-      role:    "admin",
+      email: org.admin_email,
+      role: "admin",
     })
 
     return ok(res, {
@@ -209,7 +209,7 @@ router.post("/:slug/admin/login", async (req, res) => {
 // ─── POST /auth/:slug/observer/login ──────────────────────────────────────────
 // Observer logs in with PIN
 router.post("/:slug/observer/login", async (req, res) => {
-  const { pin }  = req.body
+  const { pin } = req.body
   const { slug } = req.params
 
   if (!pin) return fail(res, "PIN required")
@@ -237,6 +237,131 @@ router.post("/:slug/observer/login", async (req, res) => {
     return ok(res, { accessToken, electionId })
   } catch (err) {
     console.error("Observer login error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/org/register ──────────────────────────────────────────────────
+// Public — a new organization creates their admin account
+// Body: { orgName, slug, adminEmail, password, confirmPassword }
+router.post("/org/register", async (req, res) => {
+  const { orgName, slug, adminEmail, password, confirmPassword } = req.body
+
+  // Basic validation
+  if (!orgName?.trim()) return fail(res, "Organization name is required")
+  if (!slug?.trim()) return fail(res, "URL slug is required")
+  if (!adminEmail?.trim()) return fail(res, "Admin email is required")
+  if (!password) return fail(res, "Password is required")
+  if (password !== confirmPassword) return fail(res, "Passwords do not match")
+  if (password.length < 8) return fail(res, "Password must be at least 8 characters")
+
+  // Slug validation — only lowercase letters, numbers, hyphens
+  if (!/^[a-z0-9-]+$/.test(slug.trim())) {
+    return fail(res, "Slug can only contain lowercase letters, numbers, and hyphens")
+  }
+
+  try {
+    // Check slug is not already taken
+    const slugCheck = await query(
+      `SELECT id FROM organizations WHERE slug = $1`,
+      [slug.trim().toLowerCase()]
+    )
+    if (slugCheck.rows.length > 0) {
+      return fail(res, "This URL is already taken — please choose a different one", 409)
+    }
+
+    // Check email is not already registered
+    const emailCheck = await query(
+      `SELECT id FROM organizations WHERE admin_email = $1`,
+      [adminEmail.trim().toLowerCase()]
+    )
+    if (emailCheck.rows.length > 0) {
+      return fail(res, "An account with this email already exists", 409)
+    }
+
+    // Hash password and default observer PIN
+    const adminHash = await bcrypt.hash(password, 10)
+    const observerHash = await bcrypt.hash("0000", 10) // default — admin should change this
+
+    // Create the organization
+    const result = await query(
+      `INSERT INTO organizations (name, slug, admin_email, admin_password, observer_pin)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, name, slug`,
+      [
+        orgName.trim(),
+        slug.trim().toLowerCase(),
+        adminEmail.trim().toLowerCase(),
+        adminHash,
+        observerHash,
+      ]
+    )
+    const org = result.rows[0]
+
+    // Create a blank election for them automatically so the dashboard isn't broken
+    await query(
+      `INSERT INTO elections (org_id, name, status)
+       VALUES ($1, $2, 'NOT_STARTED')`,
+      [org.id, `${orgName.trim()} Election`]
+    )
+
+    return ok(res, {
+      message: "Organization registered successfully. You can now log in.",
+      org: { id: org.id, name: org.name, slug: org.slug },
+    }, 201)
+  } catch (err) {
+    console.error("Org register error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/admin/login ───────────────────────────────────────────────────
+// Slug-free admin login — finds org by email address
+// This is what the admin login page uses after the DB wipe
+router.post("/admin/login", async (req, res) => {
+  const { email, password } = req.body
+  if (!email || !password) return fail(res, "Email and password required")
+
+  // Block deactivated organizations
+  if (!org.is_active) {
+    return fail(res, "This organization has been deactivated. Please contact support.", 403)
+  }
+
+  try {
+    // Find org by admin email — no slug needed
+    const orgResult = await query(
+      `SELECT id, name, slug, admin_email, admin_password 
+       FROM organizations WHERE admin_email = $1`,
+      [email.trim().toLowerCase()]
+    )
+    if (orgResult.rows.length === 0) {
+      return fail(res, "No account found with this email address", 404)
+    }
+    const org = orgResult.rows[0]
+
+    const passwordOk = await bcrypt.compare(password, org.admin_password)
+    if (!passwordOk) return fail(res, "Invalid credentials", 401)
+
+    const electionResult = await query(
+      `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [org.id]
+    )
+    const electionId = electionResult.rows[0]?.id || null
+
+    const accessToken = signAccessToken({
+      orgId: org.id,
+      electionId,
+      email: org.admin_email,
+      role: "admin",
+    })
+
+    return ok(res, {
+      accessToken,
+      org: { id: org.id, name: org.name, slug: org.slug },
+      electionId,
+    })
+  } catch (err) {
+    console.error("Admin login error:", err)
     return fail(res, "Server error", 500)
   }
 })

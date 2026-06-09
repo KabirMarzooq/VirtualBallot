@@ -198,4 +198,127 @@ router.get("/:slug/admin/overview", resolveOrg, requireAdmin, async (req, res) =
   }
 })
 
+// ─── GET /elections/:slug/history ─────────────────────────────────────────────
+// Admin: all past elections for this org, with winner summaries
+router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
+  try {
+    // Get all elections except the current (most recent) one
+    const result = await query(
+      `SELECT e.id, e.name, e.status, e.started_at, e.ends_at, e.created_at,
+              COUNT(DISTINCT v.id) FILTER (WHERE v.has_voted = TRUE) AS votes_cast,
+              COUNT(DISTINCT v.id) AS total_voters,
+              COUNT(DISTINCT c.id) AS candidate_count
+       FROM elections e
+       LEFT JOIN voters    v ON v.election_id = e.id
+       LEFT JOIN candidates c ON c.election_id = e.id
+       WHERE e.org_id = $1
+         AND e.status = 'ENDED'
+       GROUP BY e.id
+       ORDER BY e.created_at DESC`,
+      [req.orgId]
+    )
+
+    // For each ended election, get the winners per position
+    const elections = await Promise.all(result.rows.map(async (e) => {
+      const winnersResult = await query(
+        `SELECT position,
+                name,
+                image_url,
+                vote_count,
+                (SELECT SUM(vote_count) FROM candidates WHERE election_id = $1 AND position = c.position) AS position_total
+         FROM candidates c
+         WHERE election_id = $1
+         ORDER BY position, vote_count DESC`,
+        [e.id]
+      )
+
+      // Pick the top candidate per position
+      const positions = {}
+      winnersResult.rows.forEach(c => {
+        if (!positions[c.position]) {
+          positions[c.position] = {
+            position:   c.position,
+            winner:     c.name,
+            image_url:  c.image_url,
+            votes:      Number(c.vote_count),
+            total:      Number(c.position_total),
+            pct:        c.position_total > 0
+                          ? Math.round((c.vote_count / c.position_total) * 100)
+                          : 0,
+          }
+        }
+      })
+
+      return {
+        id:             e.id,
+        name:           e.name,
+        status:         e.status,
+        startedAt:      e.started_at,
+        endsAt:         e.ends_at,
+        createdAt:      e.created_at,
+        votesCast:      Number(e.votes_cast),
+        totalVoters:    Number(e.total_voters),
+        candidateCount: Number(e.candidate_count),
+        turnout:        e.total_voters > 0
+                          ? Math.round((e.votes_cast / e.total_voters) * 100)
+                          : 0,
+        winners:        Object.values(positions),
+      }
+    }))
+
+    return ok(res, { elections })
+  } catch (err) {
+    console.error("History error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /elections/:slug/new ────────────────────────────────────────────────
+// Admin: archive current election and create a fresh one
+// This is the proper "start fresh" — old data is preserved, new election begins
+router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
+  const { name } = req.body
+  if (!name?.trim()) return fail(res, "Election name is required")
+
+  try {
+    // Verify current election is ENDED before allowing a new one
+    const currentResult = await query(
+      `SELECT id, status FROM elections
+       WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+
+    if (currentResult.rows.length > 0) {
+      const current = currentResult.rows[0]
+      if (current.status === "ACTIVE") {
+        return fail(res, "Cannot create a new election while one is still active", 400)
+      }
+    }
+
+    // Create the new blank election
+    const newResult = await query(
+      `INSERT INTO elections (org_id, name, status)
+       VALUES ($1, $2, 'NOT_STARTED')
+       RETURNING id, name, status`,
+      [req.orgId, name.trim()]
+    )
+    const newElection = newResult.rows[0]
+
+    // Audit log
+    await query(
+      `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+       VALUES ($1, $2, 'system', $3, $4)`,
+      [req.orgId, newElection.id, `New election created: "${name.trim()}"`, req.adminEmail]
+    )
+
+    return ok(res, {
+      message:   "New election created successfully",
+      election:  newElection,
+    }, 201)
+  } catch (err) {
+    console.error("New election error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
 export default router

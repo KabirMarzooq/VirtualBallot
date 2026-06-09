@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS organizations (
   admin_password  TEXT NOT NULL,          -- bcrypt hashed
   observer_pin    TEXT NOT NULL DEFAULT '$2a$10$placeholder',  -- bcrypt hashed
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- ── Elections ─────────────────────────────────────────────────────────────────

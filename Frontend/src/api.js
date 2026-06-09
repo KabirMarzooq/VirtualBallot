@@ -38,12 +38,12 @@ async function request(path, options = {}, token = null) {
 // ─── Election / Branding ─────────────────────────────────────────────────────
 
 /** Load election config + branding for the login page */
-export const fetchElection = () =>
-    request(`/elections/${ORG_SLUG}`)
+export const fetchElection = (slug = ORG_SLUG) =>
+    request(`/elections/${slug}`)
 
 /** Load candidates for the ballot */
-export const fetchCandidates = () =>
-    request(`/elections/${ORG_SLUG}/candidates`)
+export const fetchCandidates = (slug = ORG_SLUG) =>
+    request(`/elections/${slug}/candidates`)
 
 /** Load published results */
 export const fetchResults = () =>
@@ -54,30 +54,30 @@ export const fetchResults = () =>
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 /** Step 1: check matric is on roster and not yet registered */
-export const checkEligibility = (matric) =>
-    request(`/voters/${ORG_SLUG}/check-eligibility`, {
+export const checkEligibility = (matric, slug = ORG_SLUG) =>
+    request(`/voters/${slug}/check-eligibility`, {
         method: "POST",
         body: JSON.stringify({ matric }),
     })
 
 /** Step 2: save voter's email to complete registration */
-export const registerVoter = (voterId, email) =>
-    request(`/voters/${ORG_SLUG}/register`, {
+export const registerVoter = (voterId, email, slug = ORG_SLUG) =>
+    request(`/voters/${slug}/register`, {
         method: "POST",
         body: JSON.stringify({ voterId, email }),
     })
 
 /** Fetch public results (no auth needed) */
-export const fetchPublicResults = () =>
-    request(`/elections/${ORG_SLUG}/results`)
+export const fetchPublicResults = (slug = ORG_SLUG) =>
+    request(`/elections/${slug}/results`)
 
 /**
  * Voter enters their matric number.
  * Backend checks the roster and sends an OTP to their email.
  * Returns: { voter: { id, name, email (masked), matric }, electionId, orgId }
  */
-export const voterLogin = (matric) =>
-    request(`/auth/${ORG_SLUG}/voter/login`, {
+export const voterLogin = (matric, slug = ORG_SLUG) =>
+    request(`/auth/${slug}/voter/login`, {
         method: "POST",
         body: JSON.stringify({ matric }),
     })
@@ -86,8 +86,8 @@ export const voterLogin = (matric) =>
  * Voter submits the OTP they received.
  * Returns: { accessToken }
  */
-export const verifyOtp = (voterId, electionId, orgId, otp) =>
-    request(`/auth/${ORG_SLUG}/voter/verify-otp`, {
+export const verifyOtp = (voterId, electionId, orgId, otp, slug = ORG_SLUG) =>
+    request(`/auth/${slug}/voter/verify-otp`, {
         method: "POST",
         body: JSON.stringify({ voterId, electionId, orgId, otp }),
     })
@@ -97,7 +97,7 @@ export const verifyOtp = (voterId, electionId, orgId, otp) =>
  * Returns: { accessToken, org, electionId }
  */
 export const adminLogin = (email, password) =>
-    request(`/auth/${ORG_SLUG}/admin/login`, {
+    request(`/auth/admin/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
     })
@@ -111,6 +111,27 @@ export const observerLogin = (pin) =>
         method: "POST",
         body: JSON.stringify({ pin }),
     })
+
+// ─── Organization Registration ────────────────────────────────────────────────
+
+/** Register a new organization (creates admin account + blank election) */
+export const registerOrg = ({ orgName, slug, adminEmail, password, confirmPassword }) =>
+    request(`/auth/org/register`, {
+        method: "POST",
+        body: JSON.stringify({ orgName, slug, adminEmail, password, confirmPassword }),
+    })
+
+/** Check if a slug is available before the user finishes the form */
+export const checkSlugAvailable = async (slug) => {
+    try {
+        // We try fetching the org — if it 404s, the slug is free
+        await request(`/elections/${slug}`)
+        return false // org exists → slug taken
+    } catch (err) {
+        if (err.message?.includes("not found")) return true  // slug free
+        return false // any other error → treat as taken to be safe
+    }
+}
 
 // ─── Voting ───────────────────────────────────────────────────────────────────
 
@@ -132,24 +153,37 @@ export const submitBallot = (selections, token) =>
 export const verifyReceipt = (receiptId) =>
     request(`/vote/verify/${receiptId}`)
 
+// ─── Election History ─────────────────────────────────────────────────────────
+
+/** Fetch all ended elections for this org */
+export const fetchElectionHistory = (token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/history`, {}, token)
+
+/** Create a new blank election (archives the current one implicitly) */
+export const createNewElection = (name, token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/new`, {
+        method: "POST",
+        body: JSON.stringify({ name }),
+    }, token)
+
+/** Upload roster with replace option */
+export const uploadRoster = (voters, token, slug = ORG_SLUG, replaceExisting = false) =>
+    request(`/voters/${slug}/roster`, {
+        method: "POST",
+        body: JSON.stringify({ voters, replaceExisting }),
+    }, token)
+
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
 /** Get full admin dashboard data */
-export const fetchAdminOverview = (token) =>
-    request(`/elections/${ORG_SLUG}/admin/overview`, {}, token)
+export const fetchAdminOverview = (token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/admin/overview`, {}, token)
 
 /** Update election config (status, isPublished, registryLocked, etc.) */
 export const updateElectionConfig = (patch, token) =>
     request(`/elections/${ORG_SLUG}/config`, {
         method: "PATCH",
         body: JSON.stringify(patch),
-    }, token)
-
-/** Upload voter roster: voters = [{ matric, name, email? }] */
-export const uploadRoster = (voters, token) =>
-    request(`/voters/${ORG_SLUG}/roster`, {
-        method: "POST",
-        body: JSON.stringify({ voters }),
     }, token)
 
 /** Get full voter list */
@@ -177,3 +211,35 @@ export const updateCandidate = (candidateId, patch, token) =>
 /** Remove a candidate */
 export const removeCandidate = (candidateId, token) =>
     request(`/candidates/${ORG_SLUG}/${candidateId}`, { method: "DELETE" }, token)
+
+// ─── Super Admin ──────────────────────────────────────────────────────────────
+
+/** Login with .env credentials — returns a superadmin JWT */
+export const superadminLogin = (email, secret) =>
+    request(`/superadmin/login`, {
+        method: "POST",
+        body: JSON.stringify({ email, secret }),
+    })
+
+/** Platform-wide overview */
+export const fetchSuperAdminOverview = (token) =>
+    request(`/superadmin/overview`, {}, token)
+
+/** Cross-org audit logs with optional filters */
+export const fetchSuperAdminLogs = (token, { limit = 100, offset = 0, org = null, type = null } = {}) => {
+    const params = new URLSearchParams({ limit, offset })
+    if (org) params.set("org", org)
+    if (type) params.set("type", type)
+    return request(`/superadmin/logs?${params}`, {}, token)
+}
+
+/** Deactivate an organization */
+export const deactivateOrg = (orgId, reason, token) =>
+    request(`/superadmin/orgs/${orgId}/deactivate`, {
+        method: "PATCH",
+        body: JSON.stringify({ reason }),
+    }, token)
+
+/** Reactivate an organization */
+export const reactivateOrg = (orgId, token) =>
+    request(`/superadmin/orgs/${orgId}/reactivate`, { method: "PATCH" }, token)

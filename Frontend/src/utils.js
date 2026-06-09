@@ -28,13 +28,19 @@ export const genSerialId = (prefix = "BLT") =>
 export const parseVoterCSV = (text) => {
     const lines = text.split("\n").map((l) => l.replace(/\r/g, "").trim()).filter(Boolean)
     return lines
+        // skip header row (starts with "matric" case-insensitive)
         .filter((row) => !/^matric/i.test(row))
         .map((row) => {
-            const idx = row.indexOf(",")
-            if (idx === -1) return null
-            const matric = row.slice(0, idx).trim().toUpperCase()
-            const name = row.slice(idx + 1).trim().replace(/^"|"$/g, "")
-            return matric && name ? { matric, name } : null
+            // Handle quoted CSV fields properly (Excel wraps fields containing
+            // commas in double quotes — e.g. "Obi, Chukwuemeka",U/25/002)
+            const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
+            if (!cols || cols.length < 2) return null
+
+            const matric = cols[0].replace(/^"|"$/g, "").trim().toUpperCase()
+            const name = cols[1].replace(/^"|"$/g, "").trim()
+            const email = cols[2]?.replace(/^"|"$/g, "").trim() || null
+
+            return matric && name ? { matric, name, email } : null
         })
         .filter(Boolean)
 }
