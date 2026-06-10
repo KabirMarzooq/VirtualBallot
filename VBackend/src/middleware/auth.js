@@ -110,6 +110,19 @@ export const resolveOrg = async (req, res, next) => {
 
     req.org = result.rows[0]
     req.orgId = result.rows[0].id
+    req.orgName = result.rows[0].name
+
+    // Auto-end any election whose timer has expired
+    await query(
+      `UPDATE elections
+   SET status = 'ENDED', updated_at = NOW()
+   WHERE org_id = $1
+     AND status = 'ACTIVE'
+     AND ends_at IS NOT NULL
+     AND ends_at < NOW()`,
+      [req.orgId]
+    )
+
     next()
   } catch (err) {
     return fail(res, "Server error", 500)

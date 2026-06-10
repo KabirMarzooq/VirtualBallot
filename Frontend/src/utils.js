@@ -88,3 +88,9 @@ export const getTurnout = (users) => {
         pct: voters.length > 0 ? Math.round((voted.length / voters.length) * 100) : 0,
     }
 }
+
+/** Returns true if the top two candidates in a sorted array are tied */
+export const isTied = (sortedCandidates) => {
+    if (sortedCandidates.length < 2) return false;
+    return sortedCandidates[0].votes === sortedCandidates[1].votes && sortedCandidates[0].votes > 0;
+}

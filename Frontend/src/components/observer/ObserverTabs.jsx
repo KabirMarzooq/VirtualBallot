@@ -58,6 +58,10 @@ export function TallyTab() {
             .filter((c) => c.position === pos)
             .sort((a, b) => b.votes - a.votes);
           const tot = pcs.reduce((s, c) => s + c.votes, 0);
+          const topVotes = pcs[0]?.votes ?? 0;
+          const tiedGroup =
+            topVotes > 0 ? pcs.filter((c) => c.votes === topVotes) : [];
+          const tied = tiedGroup.length > 1;
           return (
             <div
               key={pos}
@@ -84,8 +88,11 @@ export function TallyTab() {
                             className="w-8 h-8 rounded-lg object-cover bg-slate-700 shrink-0"
                           />
                           <div className="flex items-center gap-2">
-                            {i === 0 && tot > 0 && (
+                            {i === 0 && tot > 0 && !tied && (
                               <span className="text-yellow-400 text-xs">★</span>
+                            )}
+                            {tied && c.votes === topVotes && (
+                              <span className="text-amber-400 text-xs">⚖</span>
                             )}
                             <span className="text-sm font-bold text-white">
                               {c.name}

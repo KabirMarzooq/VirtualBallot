@@ -1,10 +1,11 @@
 import express from "express"
 import bcrypt from "bcryptjs"
 import { query } from "../db/pool.js"
+import crypto from "crypto"
 import {
   generateOTP, hashOTP, verifyOTP,
   signAccessToken, signRefreshToken,
-  sendOTPEmail, generateReceiptId,
+  sendOTPEmail, sendPasswordResetEmail, generateReceiptId,
   ok, fail,
 } from "../utils/index.js"
 import dotenv from "dotenv"
@@ -313,6 +314,97 @@ router.post("/:slug/observer/login", async (req, res) => {
     return ok(res, { accessToken, electionId })
   } catch (err) {
     console.error("Observer login error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/admin/forgot-password ────────────────────────────────────────
+// Public — admin requests a password reset link sent to their org email
+// Body: { email }
+router.post("/admin/forgot-password", async (req, res) => {
+  const { email } = req.body
+  if (!email?.trim()) return fail(res, "Email is required")
+
+  try {
+    const orgResult = await query(
+      `SELECT id, name, admin_email, is_active FROM organizations WHERE admin_email = $1`,
+      [email.trim().toLowerCase()]
+    )
+
+    // Always return the same response to avoid leaking whether an email exists
+    if (orgResult.rows.length === 0 || !orgResult.rows[0].is_active) {
+      return ok(res, { message: "If that email is registered, a reset link has been sent." })
+    }
+
+    const org = orgResult.rows[0]
+
+    // Generate a secure random token — store SHA-256 hash in DB, send raw token in URL
+    const rawToken = crypto.randomBytes(32).toString("hex")
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex")
+    const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+    await query(
+      `UPDATE organizations
+       SET password_reset_token = $1, password_reset_expires = $2
+       WHERE id = $3`,
+      [tokenHash, expires, org.id]
+    )
+
+    const resetUrl = `${process.env.FRONTEND_URL}/admin/reset-password?token=${rawToken}`
+
+    await sendPasswordResetEmail({
+      to: org.admin_email,
+      orgName: org.name,
+      resetUrl,
+    })
+
+    return ok(res, { message: "If that email is registered, a reset link has been sent." })
+  } catch (err) {
+    console.error("Forgot password error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/admin/reset-password ─────────────────────────────────────────
+// Public — admin submits the token from the email link + new password
+// Body: { token, password, confirmPassword }
+router.post("/admin/reset-password", async (req, res) => {
+  const { token, password, confirmPassword } = req.body
+
+  if (!token) return fail(res, "Reset token is required")
+  if (!password) return fail(res, "Password is required")
+  if (password !== confirmPassword) return fail(res, "Passwords do not match")
+  if (password.length < 8) return fail(res, "Password must be at least 8 characters")
+
+  try {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex")
+
+    const orgResult = await query(
+      `SELECT id, name FROM organizations
+       WHERE password_reset_token = $1
+         AND password_reset_expires > NOW()`,
+      [tokenHash]
+    )
+
+    if (orgResult.rows.length === 0) {
+      return fail(res, "This reset link is invalid or has expired. Please request a new one.", 400)
+    }
+
+    const org = orgResult.rows[0]
+    const newHash = await bcrypt.hash(password, 10)
+
+    await query(
+      `UPDATE organizations
+       SET admin_password = $1,
+           password_reset_token = NULL,
+           password_reset_expires = NULL
+       WHERE id = $2`,
+      [newHash, org.id]
+    )
+
+    return ok(res, { message: "Password updated successfully. You can now log in." })
+  } catch (err) {
+    console.error("Reset password error:", err)
     return fail(res, "Server error", 500)
   }
 })

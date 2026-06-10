@@ -97,6 +97,20 @@ export const adminLogin = (email, password) =>
         body: JSON.stringify({ email, password }),
     })
 
+/** Request a password reset email for the given admin email */
+export const adminForgotPassword = (email) =>
+    request(`/auth/admin/forgot-password`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+    })
+
+/** Submit a reset token + new password to complete the reset */
+export const adminResetPassword = (token, password, confirmPassword) =>
+    request(`/auth/admin/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ token, password, confirmPassword }),
+    })
+
 /**
  * Observer logs in with PIN.
  * Returns: { accessToken, electionId }

@@ -65,7 +65,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* ── Navbar ── */}
-      <nav className="fixed top-0 w-full z-40 px-6 py-4">
+      <nav className="fixed top-0 w-full z-40 px-6 py-4 bg-transparent backdrop-blur-sm">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2.5 font-bold">
             <div className="bg-blue-600 text-white w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-lg shadow-blue-500/30">
@@ -73,7 +73,7 @@ export default function LandingPage() {
             </div>
             <span className="text-white text-lg">Virtual Ballot</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
             <button
               onClick={() => navigate("/admin/login")}
               className="text-slate-400 hover:text-white text-sm font-bold transition-colors px-4 py-2 cursor-pointer"
@@ -221,6 +221,7 @@ export default function LandingPage() {
             Virtual Ballot
           </div>
           <p>Built for transparent, secure elections.</p>
+          <p>Built By <a href="https://github.com/KabirMarzooq" className="text-blue-600">MaZq</a>.</p>
         </div>
       </footer>
     </div>

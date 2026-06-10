@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
 import { SlugProvider } from "./context/SlugContext";
 
-import Navbar from "./components/layout/Navbar";
 import GlobalModal from "./components/ui/GlobalModal";
 import VBLoader from "./components/ui/VBLoader";
 
@@ -17,6 +16,8 @@ const BallotPage = lazy(() => import("./pages/Ballot"));
 const ReceiptPage = lazy(() => import("./pages/Receipt"));
 const ResultsPage = lazy(() => import("./pages/Results"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLogin"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPassword"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPassword"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const ObserverLoginPage = lazy(() => import("./pages/ObserverLogin"));
 const ObserverPage = lazy(() => import("./pages/Observer"));
@@ -50,7 +51,6 @@ function PageFallback() {
 function AppRoutes() {
   return (
     <>
-      <Navbar />
       <Suspense fallback={<PageFallback />}>
         <Routes>
           {/* ── Marketing / public ─────────────────────────────────────────── */}
@@ -109,6 +109,8 @@ function AppRoutes() {
 
           {/* ── Admin ──────────────────────────────────────────────────────── */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/admin/reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/admin"
             element={

@@ -310,9 +310,24 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
         [e.id]
       )
 
-      // Pick the top candidate per position
+      // Pick the candidate per position
       const positions = {}
+      const allCandidates = []
+
       winnersResult.rows.forEach(c => {
+        const pct = c.position_total > 0
+          ? Math.round((c.vote_count / c.position_total) * 100)
+          : 0
+
+        allCandidates.push({
+          name: c.name,
+          position: c.position,
+          image_url: c.image_url,
+          votes: Number(c.vote_count),
+          total: Number(c.position_total),
+          pct,
+        })
+
         if (!positions[c.position]) {
           positions[c.position] = {
             position: c.position,
@@ -320,10 +335,14 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
             image_url: c.image_url,
             votes: Number(c.vote_count),
             total: Number(c.position_total),
-            pct: c.position_total > 0
-              ? Math.round((c.vote_count / c.position_total) * 100)
-              : 0,
+            pct,
+            tied: false,
           }
+        } else if (Number(c.vote_count) === positions[c.position].votes) {
+          // Tie — append name
+          positions[c.position].tied = true;
+          positions[c.position].winner = positions[c.position].winner + " & " + c.name;
+          positions[c.position].image_url = null; // can't show one photo for two
         }
       })
 
@@ -336,11 +355,13 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
         createdAt: e.created_at,
         votesCast: Number(e.votes_cast),
         totalVoters: Number(e.total_voters),
+        didNotVote: Number(e.total_voters) - Number(e.votes_cast),
         candidateCount: Number(e.candidate_count),
         turnout: e.total_voters > 0
           ? Math.round((e.votes_cast / e.total_voters) * 100)
           : 0,
         winners: Object.values(positions),
+        candidates: allCandidates,
       }
     }))
 

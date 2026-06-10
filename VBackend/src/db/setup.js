@@ -114,6 +114,11 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── Password reset tokens (added via migration) ──────────────────────────────
+ALTER TABLE organizations
+  ADD COLUMN IF NOT EXISTS password_reset_token      TEXT,
+  ADD COLUMN IF NOT EXISTS password_reset_expires    TIMESTAMPTZ;
+
 -- ── Indexes ───────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_voters_election    ON voters(election_id);
 CREATE INDEX IF NOT EXISTS idx_voters_matric      ON voters(matric);

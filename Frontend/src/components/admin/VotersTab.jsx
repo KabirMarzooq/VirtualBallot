@@ -21,14 +21,14 @@ import VBLoader from "../ui/VBLoader";
 
 export default function VotersTab() {
   const { users, setUsers, accessToken, orgSlug, showAlert, addLog } = useApp();
-  const [search, setSearch]       = useState("");
-  const [filter, setFilter]       = useState("all");
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
   const [uploading, setUploading] = useState(false);
   const [replaceMode, setReplaceMode] = useState(false);
-  const [copied, setCopied]       = useState(false);
+  const [copied, setCopied] = useState(false);
   const [copiedObs, setCopiedObs] = useState(false);
 
-  const voterUrl    = `${window.location.origin}/vote/${orgSlug}`;
+  const voterUrl = `${window.location.origin}/vote/${orgSlug}`;
   const observerUrl = `${window.location.origin}/observer/login?slug=${orgSlug}`;
 
   const handleCopy = () => {
@@ -90,16 +90,39 @@ export default function VotersTab() {
           votedAt: null,
           role: "STUDENT",
         }));
-        setUsers((prev) => {
-          const existing = new Set(prev.map((u) => u.matric));
-          const toAdd = newVoters.filter((v) => !existing.has(v.matric));
-          return [...prev, ...toAdd];
-        });
-        addLog(`Roster uploaded — ${result.inserted} voters added`, "registry");
-        showAlert(
-          "Upload Success",
-          `${result.inserted} voters added to roster. ${result.skipped} skipped (duplicates).`
-        );
+
+        if (replaceMode) {
+          // Replace mode: keep voters who have already voted, swap out everyone else
+          setUsers((prev) => {
+            const voted = prev.filter((u) => u.hasVoted);
+            const votedMatrics = new Set(voted.map((u) => u.matric));
+            const fresh = newVoters.filter((v) => !votedMatrics.has(v.matric));
+            return [...voted, ...fresh];
+          });
+          addLog(
+            `Roster replaced — ${result.inserted} voters loaded`,
+            "registry"
+          );
+          showAlert(
+            "Roster Replaced",
+            `${result.inserted} voters loaded. Voters who already voted were preserved.`
+          );
+        } else {
+          // Append mode: skip duplicates
+          setUsers((prev) => {
+            const existing = new Set(prev.map((u) => u.matric));
+            const toAdd = newVoters.filter((v) => !existing.has(v.matric));
+            return [...prev, ...toAdd];
+          });
+          addLog(
+            `Roster updated — ${result.inserted} voters added`,
+            "registry"
+          );
+          showAlert(
+            "Upload Success",
+            `${result.inserted} voters added to roster. ${result.skipped} skipped (duplicates).`
+          );
+        }
       } catch (err) {
         showAlert("Upload Failed", err.message);
       } finally {
@@ -111,7 +134,7 @@ export default function VotersTab() {
 
   const handleRemove = async (voter) => {
     try {
-      await removeVoter(voter.id, accessToken, orgSlug,);
+      await removeVoter(voter.id, accessToken, orgSlug);
       setUsers((prev) => prev.filter((u) => u.matric !== voter.matric));
       addLog(`Voter ${voter.matric} removed from roster`, "registry");
     } catch (err) {
@@ -124,7 +147,9 @@ export default function VotersTab() {
       {/* Org voter URL */}
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Voter URL</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Voter URL
+          </p>
           <p className="text-sm font-mono text-blue-400 truncate">{voterUrl}</p>
         </div>
         <button
@@ -136,7 +161,11 @@ export default function VotersTab() {
               : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
           }`}
         >
-          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? (
+            <Check className="w-3.5 h-3.5" />
+          ) : (
+            <Copy className="w-3.5 h-3.5" />
+          )}
           {copied ? "Copied!" : "Copy"}
         </button>
       </div>
@@ -144,8 +173,12 @@ export default function VotersTab() {
       {/* Org observer URL */}
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Observer URL</p>
-          <p className="text-sm font-mono text-teal-400 truncate">{observerUrl}</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Observer URL
+          </p>
+          <p className="text-sm font-mono text-teal-400 truncate">
+            {observerUrl}
+          </p>
         </div>
         <button
           onClick={handleCopyObs}
@@ -156,7 +189,11 @@ export default function VotersTab() {
               : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
           }`}
         >
-          {copiedObs ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copiedObs ? (
+            <Check className="w-3.5 h-3.5" />
+          ) : (
+            <Copy className="w-3.5 h-3.5" />
+          )}
           {copiedObs ? "Copied!" : "Copy"}
         </button>
       </div>

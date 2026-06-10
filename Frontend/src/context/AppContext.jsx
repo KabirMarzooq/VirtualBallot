@@ -1,5 +1,10 @@
 import { createContext, useContext, useRef, useState, useEffect } from "react";
-import { fetchElection, fetchCandidates, fetchAdminOverview } from "../api";
+import {
+  fetchElection,
+  fetchCandidates,
+  fetchAdminOverview,
+  updateElectionConfig,
+} from "../api";
 import { formatTimeLeft } from "./utils";
 
 const AppContext = createContext(null);
@@ -216,14 +221,21 @@ export function AppProvider({ children }) {
     const timer = setInterval(() => {
       const diff = new Date(electionConfig.endsAt) - new Date();
       if (diff <= 0) {
+        clearInterval(timer);
         setElectionConfig((prev) => ({ ...prev, status: "ENDED" }));
         setTimeLeft("00h : 00m : 00s");
+        // Persist to backend so DB reflects the true ended state
+        if (accessToken && orgSlug) {
+          updateElectionConfig({ status: "ENDED" }, accessToken, orgSlug).catch(
+            () => {}
+          );
+        }
       } else {
         setTimeLeft(formatTimeLeft(diff));
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [electionConfig.status, electionConfig.endsAt]);
+  }, [electionConfig.status, electionConfig.endsAt, accessToken, orgSlug]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
   const addLog = (message, type = "system") => {

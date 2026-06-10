@@ -208,6 +208,16 @@ export default function AdminLoginPage() {
               )}
             </div>
 
+            <div className="text-right -mt-1">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/forgot-password")}
+                className="text-slate-500 hover:text-blue-400 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <button
               onClick={submit}
               disabled={!email || !password || loading}

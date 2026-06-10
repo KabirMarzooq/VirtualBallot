@@ -4,7 +4,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { OBSERVER_TABS } from "../components/observer/ObserverTabs";
 import { getTurnout } from "../utils";
-import { fetchElection, fetchCandidates, ORG_SLUG } from "../api";
+import {
+  fetchElection,
+  fetchCandidates,
+  fetchAdminOverview,
+  ORG_SLUG,
+} from "../api";
 
 export default function ObserverPage() {
   const {
@@ -13,44 +18,77 @@ export default function ObserverPage() {
     candidates,
     setCandidates,
     users,
+    setUsers,
+    activityLog,
+    setActivityLog,
     timeLeft,
     branding,
     setBranding,
-    setElectionId,
+    accessToken,
+    orgSlug,
   } = useApp();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("tally");
   const [searchParams] = useSearchParams();
-  const slug = searchParams.get("slug") || ORG_SLUG;
+  const slug = searchParams.get("slug") || orgSlug || ORG_SLUG;
 
-  // Load election data for the observer using the slug from the URL
+  // Fetch full overview on mount and poll every 15s while ACTIVE
   useEffect(() => {
-    if (!slug) return;
-    Promise.all([fetchElection(slug), fetchCandidates(slug)])
-      .then(([electionData, candidateData]) => {
+    if (!accessToken) return;
+
+    const load = async () => {
+      try {
+        const ov = await fetchAdminOverview(accessToken, slug);
         setElectionConfig({
-          status: electionData.election.status,
-          isPublished: electionData.election.isPublished,
-          registryLocked: electionData.election.registryLocked,
-          showCountdown: electionData.election.showCountdown,
-          endsAt: electionData.election.endsAt,
+          status: ov.election.status,
+          isPublished: ov.election.isPublished,
+          registryLocked: ov.election.registryLocked,
+          showCountdown: ov.election.showCountdown,
+          endsAt: ov.election.endsAt,
         });
-        setBranding(electionData.branding);
-        setElectionId(electionData.election.id);
+        setBranding(ov.branding);
         setCandidates(
-          candidateData.candidates.map((c) => ({
+          ov.candidates.map((c) => ({
             id: c.id,
             name: c.name,
             position: c.position,
             image: c.image_url,
             manifesto: c.manifesto || "",
             color: c.color,
-            votes: c.vote_count ?? 0,
+            votes: c.vote_count,
           }))
         );
-      })
-      .catch(console.error);
-  }, [slug]);
+        setUsers(
+          ov.voters.map((v) => ({
+            id: v.id,
+            matric: v.matric,
+            name: v.name,
+            email: v.email,
+            hasVoted: v.has_voted,
+            votedAt: v.voted_at,
+            role: "STUDENT",
+          }))
+        );
+        setActivityLog(
+          ov.auditLog.map((e) => ({
+            id: e.id,
+            type: e.event_type,
+            message: e.message,
+            timestamp: new Date(e.created_at).toLocaleTimeString(),
+            date: new Date(e.created_at).toLocaleDateString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+            }),
+            iso: e.created_at,
+          }))
+        );
+      } catch (_) {}
+    };
+
+    load();
+    const interval = setInterval(load, 15_000);
+    return () => clearInterval(interval);
+  }, [accessToken, slug]);
 
   const { total, voted, pct } = getTurnout(users);
   const ActiveComponent = OBSERVER_TABS.find(
