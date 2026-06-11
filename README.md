@@ -2,7 +2,7 @@
 
 A secure, multi-tenant online voting platform for organizations. Voters authenticate via OTP, cast ballots on a clean interface, and receive tamper-evident receipts. Admins manage elections, candidates, and voter rosters through a full dashboard. Observers monitor live results in real time via WebSocket.
 
-**Live site:** [virtualballot.online](https://virtualballot.online)
+**Live site:** <a href="https://virtualballot.online" target="_blank" rel="noopener noreferrer">virtualballot.online</a>
 
 ---
 

@@ -24,6 +24,7 @@ const ObserverLoginPage = lazy(() => import("./pages/ObserverLogin"));
 const ObserverPage = lazy(() => import("./pages/Observer"));
 const SuperAdminLoginPage = lazy(() => import("./pages/SuperAdminLogin"));
 const SuperAdminPage = lazy(() => import("./pages/SuperAdmin"));
+const NotFoundPage = lazy(() => import("./pages/NotFound"));
 
 // ── Route guard — redirects unauthenticated users at the router level ─────────
 function ProtectedRoute({ children, role }) {
@@ -140,7 +141,7 @@ function AppRoutes() {
           <Route path="/superadmin" element={<SuperAdminPage />} />
 
           {/* ── Fallback ───────────────────────────────────────────────────── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       <GlobalModal />
