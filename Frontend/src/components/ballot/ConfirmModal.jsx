@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import VBLoader from "../ui/VBLoader";
 import { submitBallot } from "../../api";
-import { useSlug } from "../../context/SlugContext"
+import { useSlug } from "../../context/SlugContext";
 
 function genSerial() {
   return "BLT-" + Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -26,7 +26,7 @@ export default function ConfirmModal() {
   } = useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const slug = useSlug()
+  const slug = useSlug();
 
   const entries = Object.entries(ballot).map(([pos, id]) => ({
     pos,
@@ -65,9 +65,22 @@ export default function ConfirmModal() {
       setShowConfirmModal(false);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
-      navigate(`/vote/${slug}/receipt`)
+      navigate(`/vote/${slug}/receipt`);
     } catch (err) {
-      showAlert("Vote Failed", err.message);
+      // Network failure vs server rejection — different messages
+      const isNetworkError =
+        !navigator.onLine ||
+        err.message === "Failed to fetch" ||
+        err.name === "TypeError";
+
+      if (isNetworkError) {
+        showAlert(
+          "Network Lost",
+          "Your vote was NOT cast — the connection dropped before it reached the server. Your selections are still saved on this screen. Reconnect and tap Cast My Vote again."
+        );
+      } else {
+        showAlert("Vote Failed", err.message);
+      }
       setLoading(false);
     }
   };

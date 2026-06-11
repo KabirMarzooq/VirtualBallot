@@ -4,6 +4,7 @@ import { AppProvider, useApp } from "./context/AppContext";
 import { SlugProvider } from "./context/SlugContext";
 
 import GlobalModal from "./components/ui/GlobalModal";
+import NetworkIndicator from "./components/ui/NetworkIndicator";
 import VBLoader from "./components/ui/VBLoader";
 
 // ── Lazy-load every page for code splitting ───────────────────────────────────
@@ -109,7 +110,10 @@ function AppRoutes() {
 
           {/* ── Admin ──────────────────────────────────────────────────────── */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
+          <Route
+            path="/admin/forgot-password"
+            element={<ForgotPasswordPage />}
+          />
           <Route path="/admin/reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/admin"
@@ -140,6 +144,7 @@ function AppRoutes() {
         </Routes>
       </Suspense>
       <GlobalModal />
+      <NetworkIndicator />
     </>
   );
 }

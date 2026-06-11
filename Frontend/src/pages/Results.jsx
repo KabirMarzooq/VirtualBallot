@@ -114,20 +114,38 @@ export default function ResultsPage() {
   const navigate = useNavigate();
   const [resultsData, setResultsData] = useState(null);
   const [loadingResults, setLoadingResults] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isStale, setIsStale] = useState(false);
   const slug = useSlug();
 
   useEffect(() => {
-    fetchPublicResults(slug)
-      .then((data) => setResultsData(data))
-      .catch(() =>
-        setResultsData({
-          published: false,
-          candidates: [],
-          stats: { total: 0, voted: 0 },
+    const load = () => {
+      fetchPublicResults(slug)
+        .then((data) => {
+          setResultsData(data);
+          setLastUpdated(new Date());
+          setIsStale(false);
         })
-      )
-      .finally(() => setLoadingResults(false));
-  }, []);
+        .catch(() => {
+          // Keep showing the last good data, just flag it as stale
+          if (resultsData) {
+            setIsStale(true);
+          } else {
+            setResultsData({
+              published: false,
+              candidates: [],
+              stats: { total: 0, voted: 0 },
+            });
+          }
+        })
+        .finally(() => setLoadingResults(false));
+    };
+
+    load();
+    // Poll every 30s — keeps live results fresh and recovers automatically after an outage
+    const interval = setInterval(load, 30_000);
+    return () => clearInterval(interval);
+  }, [slug]);
 
   const displayCandidates = resultsData?.candidates?.length
     ? resultsData.candidates.map((c) => ({
@@ -160,6 +178,22 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-slate-950">
       <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
+        {isStale && lastUpdated && (
+          <div
+            className="flex items-center gap-2 bg-amber-950/40 border border-amber-700/40
+    rounded-xl px-4 py-2.5 mb-4"
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <p className="text-xs text-amber-300 font-bold">
+              Connection lost — showing results from{" "}
+              {lastUpdated.toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              . Will refresh automatically when back online.
+            </p>
+          </div>
+        )}
         {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
