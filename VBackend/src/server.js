@@ -7,6 +7,13 @@ import rateLimit from "express-rate-limit"
 import dotenv from "dotenv"
 dotenv.config()
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://virtualballot.online",
+  "https://www.virtualballot.online",
+  "http://localhost:5173",
+].filter(Boolean)
+
 import authRoutes from "./routes/auth.js"
 import electionRoutes from "./routes/elections.js"
 import voteRoutes from "./routes/vote.js"
@@ -21,7 +28,7 @@ const PORT = process.env.PORT || 5000
 // ── Socket.io ─────────────────────────────────────────────────────────────────
 export const io = new SocketIO(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
 })
@@ -43,7 +50,7 @@ app.use(helmet())
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }))
