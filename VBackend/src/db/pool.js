@@ -5,7 +5,7 @@ dotenv.config()
 const { Pool } = pg
 
 const pool = new Pool({
-  connectionString: process.env.DB_URL,
+  connectionString: process.env.DATABASE_URL,
   // Connection pool settings — good defaults for a small-medium election
   max: 20,               // max 20 simultaneous DB connections
   idleTimeoutMillis: 30000,
