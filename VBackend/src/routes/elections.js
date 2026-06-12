@@ -276,6 +276,48 @@ router.get("/:slug/admin/overview", resolveOrg, requireAdmin, async (req, res) =
   }
 })
 
+// ─── GET /elections/:slug/observer/overview — Observer: read-only dashboard ──
+router.get("/:slug/observer/overview", resolveOrg, requireObserver, async (req, res) => {
+  try {
+    const electionResult = await query(
+      `SELECT * FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+    if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
+    const election = electionResult.rows[0]
+
+    const [candidatesResult, votersResult, auditResult, orgResult] = await Promise.all([
+      query(`SELECT * FROM candidates WHERE election_id = $1 ORDER BY position, name`, [election.id]),
+      query(`SELECT id, matric, name, has_voted, voted_at FROM voters WHERE election_id = $1 ORDER BY name`, [election.id]),
+      query(`SELECT * FROM audit_logs WHERE election_id = $1 ORDER BY created_at DESC LIMIT 100`, [election.id]),
+      query(`SELECT name, logo_url FROM organizations WHERE id = $1`, [req.orgId]),
+    ])
+
+    return ok(res, {
+      election: {
+        id: election.id,
+        name: election.name,
+        status: election.status,
+        isPublished: election.is_published,
+        registryLocked: election.registry_locked,
+        showCountdown: election.show_countdown,
+        endsAt: election.ends_at,
+      },
+      branding: {
+        institutionName: orgResult.rows[0]?.name || "",
+        electionName: election.name,
+        logoUrl: orgResult.rows[0]?.logo_url || "",
+      },
+      candidates: candidatesResult.rows,
+      voters: votersResult.rows,  // no emails exposed to observers
+      auditLog: auditResult.rows,
+    })
+  } catch (err) {
+    console.error("Observer overview error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
 // ─── GET /elections/:slug/history ─────────────────────────────────────────────
 // Admin: all past elections for this org, with winner summaries
 router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {

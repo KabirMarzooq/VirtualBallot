@@ -188,6 +188,10 @@ export const uploadRoster = (voters, token, slug = ORG_SLUG, replaceExisting = f
 export const fetchAdminOverview = (token, slug = ORG_SLUG) =>
     request(`/elections/${slug}/admin/overview`, {}, token)
 
+/** Observer read-only overview */
+export const fetchObserverOverview = (token, slug = ORG_SLUG) =>
+    request(`/elections/${slug}/observer/overview`, {}, token)
+
 /** Update organization branding (election name, institution name, logo URL) */
 export const updateBranding = (patch, token, slug = ORG_SLUG) =>
     request(`/elections/${slug}/branding`, {

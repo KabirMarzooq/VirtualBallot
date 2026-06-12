@@ -22,6 +22,8 @@ export default function ObserverLoginPage() {
     try {
       const data = await observerLogin(pin, slug);
       setAccessToken(data.accessToken);
+      sessionStorage.setItem("vb_observer_token", data.accessToken);
+      sessionStorage.setItem("vb_observer_slug", slug);
       setElectionId(data.electionId);
       addLog("Observer authenticated and entered dashboard", "admin");
       navigate(`/observer?slug=${slug}`);

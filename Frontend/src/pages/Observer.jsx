@@ -4,12 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { OBSERVER_TABS } from "../components/observer/ObserverTabs";
 import { getTurnout } from "../utils";
-import {
-  fetchElection,
-  fetchCandidates,
-  fetchAdminOverview,
-  ORG_SLUG,
-} from "../api";
+import { fetchObserverOverview, ORG_SLUG } from "../api";
 
 export default function ObserverPage() {
   const {
@@ -30,15 +25,26 @@ export default function ObserverPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("tally");
   const [searchParams] = useSearchParams();
-  const slug = searchParams.get("slug") || orgSlug || ORG_SLUG;
+  const slug =
+    searchParams.get("slug") ||
+    sessionStorage.getItem("vb_observer_slug") ||
+    orgSlug ||
+    ORG_SLUG;
+
+  // Re-hydrate observer session on reload
+  const storedToken = sessionStorage.getItem("vb_observer_token");
+  const effectiveToken = accessToken || storedToken;
 
   // Fetch full overview on mount and poll every 15s while ACTIVE
   useEffect(() => {
-    if (!accessToken) return;
+    if (!effectiveToken) {
+      navigate(slug ? `/observer/login?slug=${slug}` : "/observer/login");
+      return;
+    }
 
     const load = async () => {
       try {
-        const ov = await fetchAdminOverview(accessToken, slug);
+        const ov = await fetchObserverOverview(effectiveToken, slug);
         setElectionConfig({
           status: ov.election.status,
           isPublished: ov.election.isPublished,
@@ -88,7 +94,7 @@ export default function ObserverPage() {
     load();
     const interval = setInterval(load, 15_000);
     return () => clearInterval(interval);
-  }, [accessToken, slug]);
+  }, [effectiveToken, slug]);
 
   const { total, voted, pct } = getTurnout(users);
   const ActiveComponent = OBSERVER_TABS.find(
@@ -151,7 +157,11 @@ export default function ObserverPage() {
             </div>
 
             <button
-              onClick={() => navigate("/")}
+              onClick={() => {
+                sessionStorage.removeItem("vb_observer_token");
+                sessionStorage.removeItem("vb_observer_slug");
+                navigate(`/observer/login?slug=${slug}`);
+              }}
               title="Exit observer mode"
               className="flex items-center gap-2 text-slate-500 hover:text-white text-sm font-bold px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
             >

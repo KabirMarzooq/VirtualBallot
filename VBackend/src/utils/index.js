@@ -49,7 +49,11 @@ export const verifyRefreshToken = (token) =>
 // ─── Email ────────────────────────────────────────────────────────────────────
 
 
-const getResend = () => new Resend(process.env.RESEND_API_KEY);
+let _resend = null;
+const getResend = () => {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+};
 
 /**
  * Send OTP email to a voter.
@@ -64,7 +68,7 @@ export const sendOTPEmail = async ({ to, name, otp, electionName }) => {
     return true
   }
 
-  await getResend.emails.send({
+  await getResend().emails.send({
     from: `Virtual Ballot <noreply@virtualballot.online>`,
     to,
     subject: `${otp} — Your Virtual Ballot verification code`,
@@ -106,7 +110,7 @@ export const sendPasswordResetEmail = async ({ to, orgName, resetUrl }) => {
     return true
   }
 
-  await getResend.emails.send({
+  await getResend().emails.send({
     from: `Virtual Ballot <noreply@virtualballot.online>`,
     to,
     subject: `Reset your Virtual Ballot admin password — ${orgName}`,

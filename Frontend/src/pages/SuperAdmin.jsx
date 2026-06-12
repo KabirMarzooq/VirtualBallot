@@ -89,7 +89,15 @@ export default function SuperAdminPage() {
   };
 
   useEffect(() => {
-    if (token) loadOverview();
+    if (!token) return;
+    loadOverview();
+    // Poll every 30s so stats and live elections stay current
+    const interval = setInterval(() => {
+      fetchSuperAdminOverview(token)
+        .then(setData)
+        .catch(() => {});
+    }, 30_000);
+    return () => clearInterval(interval);
   }, []);
   useEffect(() => {
     if (activeTab === "logs") loadLogs(0);

@@ -27,18 +27,42 @@ export const genSerialId = (prefix = "BLT") =>
 
 export const parseVoterCSV = (text) => {
     const lines = text.split("\n").map((l) => l.replace(/\r/g, "").trim()).filter(Boolean)
-    return lines
-        // skip header row (starts with "matric" case-insensitive)
-        .filter((row) => !/^matric/i.test(row))
-        .map((row) => {
-            // Handle quoted CSV fields properly (Excel wraps fields containing
-            // commas in double quotes — e.g. "Obi, Chukwuemeka",U/25/002)
-            const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
-            if (!cols || cols.length < 2) return null
+    if (lines.length === 0) return []
 
-            const matric = cols[0].replace(/^"|"$/g, "").trim().toUpperCase()
-            const name = cols[1].replace(/^"|"$/g, "").trim()
-            const email = cols[2]?.replace(/^"|"$/g, "").trim() || null
+    // Split a CSV row into columns, handling quoted fields
+    const splitRow = (row) => {
+        const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
+        return cols ? cols.map((c) => c.replace(/^"|"$/g, "").trim()) : []
+    }
+
+    const firstRow = splitRow(lines[0]).map((c) => c.toLowerCase())
+
+    // Detect a header row: any cell contains "matric", "name", or "email"
+    const headerKeywords = ["matric", "name", "email", "mail"]
+    const hasHeader = firstRow.some((cell) =>
+        headerKeywords.some((k) => cell.includes(k))
+    )
+
+    // Work out which column index holds which field
+    let matricIdx = 0, nameIdx = 1, emailIdx = 2  // positional defaults
+    if (hasHeader) {
+        firstRow.forEach((cell, i) => {
+            if (cell.includes("matric")) matricIdx = i
+            else if (cell.includes("name")) nameIdx = i
+            else if (cell.includes("email") || cell.includes("mail")) emailIdx = i
+        })
+    }
+
+    const dataLines = hasHeader ? lines.slice(1) : lines
+
+    return dataLines
+        .map((row) => {
+            const cols = splitRow(row)
+            if (cols.length < 2) return null
+
+            const matric = cols[matricIdx]?.toUpperCase() || ""
+            const name = cols[nameIdx] || ""
+            const email = cols[emailIdx] || null
 
             return matric && name ? { matric, name, email } : null
         })

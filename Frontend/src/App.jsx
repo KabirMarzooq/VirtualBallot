@@ -32,7 +32,16 @@ function ProtectedRoute({ children, role }) {
   if (appLoading) return null;
   // Observer uses accessToken only (no currentUser), Admin uses currentUser
   if (role === "OBSERVER") {
-    if (!accessToken) return <Navigate to="/observer/login" replace />;
+    const obsToken = accessToken || sessionStorage.getItem("vb_observer_token");
+    const obsSlug = sessionStorage.getItem("vb_observer_slug");
+    if (!obsToken) {
+      return (
+        <Navigate
+          to={obsSlug ? `/observer/login?slug=${obsSlug}` : "/observer/login"}
+          replace
+        />
+      );
+    }
     return children;
   }
   if (!currentUser)

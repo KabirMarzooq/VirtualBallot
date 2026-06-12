@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Play,
   StopCircle,
@@ -54,9 +54,19 @@ export default function ElectionTab() {
     addLog,
   } = useApp();
 
-  const [durH, setDurH] = useState(0);
-  const [durM, setDurM] = useState(15);
-  const [durS, setDurS] = useState(0);
+  const [durH, setDurH] = useState(() => Number(sessionStorage.getItem("vb_dur_h")) || 0);
+  const [durM, setDurM] = useState(() => {
+    const saved = sessionStorage.getItem("vb_dur_m");
+    return saved !== null ? Number(saved) : 15;
+  });
+  const [durS, setDurS] = useState(() => Number(sessionStorage.getItem("vb_dur_s")) || 0);
+  
+  // Persist duration so it survives tab switches
+  useEffect(() => {
+    sessionStorage.setItem("vb_dur_h", durH);
+    sessionStorage.setItem("vb_dur_m", durM);
+    sessionStorage.setItem("vb_dur_s", durS);
+  }, [durH, durM, durS]);
   const [saving, setSaving] = useState(false);
 
   const patch = async (changes, logMsg, logType = "system") => {
