@@ -162,6 +162,13 @@ export const submitBallot = (selections, token) =>
 export const verifyReceipt = (receiptId) =>
     request(`/vote/verify/${receiptId}`)
 
+/** Email the voter's receipt to their registered address */
+export const emailReceipt = (receiptId, token) =>
+    request(`/vote/email-receipt`, {
+        method: "POST",
+        body: JSON.stringify({ receiptId }),
+    }, token)
+
 // ─── Election History ─────────────────────────────────────────────────────────
 
 /** Fetch all ended elections for this org */

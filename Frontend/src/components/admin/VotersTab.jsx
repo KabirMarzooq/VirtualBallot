@@ -48,7 +48,7 @@ export default function VotersTab() {
   const voters = users.filter((u) => u.role !== "ADMIN");
   const voted = voters.filter((u) => u.hasVoted);
   const pending = voters.filter((u) => !u.hasVoted);
-  const { pct } = getTurnout(users);
+  const { pct, accredited } = getTurnout(users);
 
   const filtered = voters.filter((u) => {
     const matchText =
@@ -56,6 +56,7 @@ export default function VotersTab() {
       u.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter =
       filter === "all" ||
+      (filter === "accredited" && u.email) ||
       (filter === "voted" && u.hasVoted) ||
       (filter === "pending" && !u.hasVoted);
     return matchText && matchFilter;
@@ -199,9 +200,10 @@ export default function VotersTab() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           ["Registered", voters.length, "text-white", "all"],
+          ["Accredited", accredited, "text-blue-400", "accredited"],
           ["Voted", voted.length, "text-green-400", "voted"],
           ["Pending", pending.length, "text-amber-400", "pending"],
         ].map(([l, v, c, f]) => (
@@ -344,6 +346,7 @@ export default function VotersTab() {
           <div className="flex gap-2 flex-wrap items-center">
             {[
               ["all", "All"],
+              ["accredited", "Accredited"],
               ["voted", "Voted"],
               ["pending", "Pending"],
             ].map(([v, l]) => (

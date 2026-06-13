@@ -62,7 +62,8 @@ export default function AdminPage() {
 
   // ── Real-time auto-refresh every 30 s while election is ACTIVE ────────────────
   useEffect(() => {
-    if (electionConfig.status !== "ACTIVE" || !accessToken || !orgSlug) return;
+    if (electionConfig.status === "ENDED" || !accessToken || !orgSlug) return;
+    const pollInterval = electionConfig.status === "ACTIVE" ? 30_000 : 15_000;
     const id = setInterval(async () => {
       try {
         const ov = await fetchAdminOverview(accessToken, orgSlug);
@@ -89,7 +90,7 @@ export default function AdminPage() {
           }))
         );
       } catch (_) {}
-    }, 30_000);
+    }, pollInterval);
     return () => clearInterval(id);
   }, [electionConfig.status, accessToken, orgSlug]);
 

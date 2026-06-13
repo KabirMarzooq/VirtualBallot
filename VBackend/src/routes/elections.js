@@ -98,9 +98,10 @@ router.get("/:slug/results", resolveOrg, async (req, res) => {
     // Voter stats
     const statsResult = await query(
       `SELECT
-         COUNT(*) AS total,
-         COUNT(*) FILTER (WHERE has_voted = TRUE) AS voted
-       FROM voters WHERE election_id = $1`,
+     COUNT(*) AS total,
+     COUNT(*) FILTER (WHERE email IS NOT NULL) AS accredited,
+     COUNT(*) FILTER (WHERE has_voted = TRUE) AS voted
+   FROM voters WHERE election_id = $1`,
       [election.id]
     )
 
@@ -109,6 +110,7 @@ router.get("/:slug/results", resolveOrg, async (req, res) => {
       candidates: candidatesResult.rows,
       stats: {
         total: Number(statsResult.rows[0].total),
+        accredited: Number(statsResult.rows[0].accredited),
         voted: Number(statsResult.rows[0].voted),
       },
     })
@@ -326,6 +328,7 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
     const result = await query(
       `SELECT e.id, e.name, e.status, e.started_at, e.ends_at, e.created_at,
               COUNT(DISTINCT v.id) FILTER (WHERE v.has_voted = TRUE) AS votes_cast,
+              COUNT(DISTINCT v.id) FILTER (WHERE v.email IS NOT NULL) AS accredited_count,
               COUNT(DISTINCT v.id) AS total_voters,
               COUNT(DISTINCT c.id) AS candidate_count
        FROM elections e
@@ -396,6 +399,7 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
         endsAt: e.ends_at,
         createdAt: e.created_at,
         votesCast: Number(e.votes_cast),
+        accredited: Number(e.accredited_count),
         totalVoters: Number(e.total_voters),
         didNotVote: Number(e.total_voters) - Number(e.votes_cast),
         candidateCount: Number(e.candidate_count),

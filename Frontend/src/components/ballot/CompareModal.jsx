@@ -95,6 +95,8 @@ export default function CompareModal({
   pos,
   candidateA,
   candidateB,
+  otherCandidates = [],
+  onSwitchB,
   ballot,
   onSelect,
   onClose,
@@ -106,26 +108,53 @@ export default function CompareModal({
     >
       <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <SplitSquareHorizontal className="w-5 h-5 text-slate-400" />
-            <div>
+        {/* Header */}
+        <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-slate-100 gap-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <SplitSquareHorizontal className="w-5 h-5 text-slate-400 shrink-0" />
+            <div className="min-w-0">
               <h2 className="text-base font-black text-slate-800 leading-tight">
                 Compare candidates
               </h2>
               <p className="text-xs text-slate-400 font-medium">{pos}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-          >
-            <X className="w-4 h-4 text-slate-500" />
-          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Switch second candidate — only shown when there's a 3rd+ candidate */}
+            {otherCandidates.length > 0 && (
+              <select
+                value={candidateB.id}
+                onChange={(e) => onSwitchB(e.target.value)}
+                className="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200
+                  rounded-full px-3 py-2 outline-none cursor-pointer border border-slate-200
+                  max-w-[140px] truncate"
+              >
+                <option value={candidateB.id}>
+                  vs {candidateB.name.split(" ")[0]}
+                </option>
+                {otherCandidates
+                  .filter((c) => c.id !== candidateB.id)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      vs {c.name.split(" ")[0]}
+                    </option>
+                  ))}
+              </select>
+            )}
+
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors shrink-0"
+            >
+              <X className="w-4 h-4 text-slate-500" />
+            </button>
+          </div>
         </div>
 
         {/* Panels */}
-        <div className="flex items-stretch p-5 gap-4">
+        {/* Panels */}
+        <div className="flex flex-col md:flex-row items-stretch p-5 gap-4">
           <CandidatePanel
             candidate={candidateA}
             ballot={ballot}
@@ -135,7 +164,7 @@ export default function CompareModal({
           />
           <div className="flex items-center justify-center shrink-0">
             <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider rotate-90 md:rotate-0">
                 vs
               </span>
             </div>

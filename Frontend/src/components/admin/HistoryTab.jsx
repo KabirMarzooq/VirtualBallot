@@ -14,6 +14,7 @@ import {
   Medal,
   ChevronRight,
   UserX,
+  UserCheck,
   BarChart3,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
@@ -179,6 +180,9 @@ function ElectionDetailModal({ election, branding, onClose }) {
         <div class="stat-box"><div class="stat-val" style="color:#1e293b">${
           election.totalVoters
         }</div><div class="stat-lbl">Registered</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
+          election.accredited ?? 0
+        }</div><div class="stat-lbl">Accredited</div></div>
         <div class="stat-box"><div class="stat-val" style="color:#16a34a">${
           election.votesCast
         }</div><div class="stat-lbl">Votes Cast</div></div>
@@ -315,13 +319,19 @@ function ElectionDetailModal({ election, branding, onClose }) {
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
               Voter Statistics
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {[
                 {
                   icon: Users,
                   label: "Registered",
                   value: election.totalVoters,
                   color: "text-white",
+                },
+                {
+                  icon: UserCheck,
+                  label: "Accredited",
+                  value: election.accredited ?? 0,
+                  color: "text-blue-400",
                 },
                 {
                   icon: Vote,

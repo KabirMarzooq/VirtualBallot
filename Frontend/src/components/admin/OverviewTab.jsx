@@ -24,7 +24,7 @@ export default function OverviewTab({ onSwitchTab }) {
     activityLog,
     branding,
   } = useApp();
-  const { total, voted, pct } = getTurnout(users);
+  const { total, accredited, voted, pct } = getTurnout(users);
   const positions = getPositions(candidates);
 
   // Determine setup completion — drives the checklist
@@ -184,13 +184,19 @@ export default function OverviewTab({ onSwitchTab }) {
       )}
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
           {
             label: "Registered",
             value: total,
             color: "text-white",
             bg: "bg-blue-600",
+          },
+          {
+            label: "Accredited",
+            value: accredited,
+            color: "text-blue-200",
+            bg: "bg-slate-800",
           },
           {
             label: "Votes Cast",

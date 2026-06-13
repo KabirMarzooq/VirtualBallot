@@ -62,7 +62,8 @@ export const parseVoterCSV = (text) => {
 
             const matric = cols[matricIdx]?.toUpperCase() || ""
             const name = cols[nameIdx] || ""
-            const email = cols[emailIdx] || null
+            let email = cols[emailIdx] || null
+            if (email && (email.trim() === "-" || email.trim() === "")) email = null
 
             return matric && name ? { matric, name, email } : null
         })
@@ -106,8 +107,10 @@ export const getPositions = (candidates) =>
 export const getTurnout = (users) => {
     const voters = users.filter((u) => u.role !== "ADMIN")
     const voted = voters.filter((u) => u.hasVoted)
+    const accredited = voters.filter((u) => u.email)  // verified + email added
     return {
-        total: voters.length,
+        total: voters.length,                          // Registered (full roster)
+        accredited: accredited.length,                 // Accredited (verified, can vote)
         voted: voted.length,
         pct: voters.length > 0 ? Math.round((voted.length / voters.length) * 100) : 0,
     }

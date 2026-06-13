@@ -96,7 +96,7 @@ export default function ObserverPage() {
     return () => clearInterval(interval);
   }, [effectiveToken, slug]);
 
-  const { total, voted, pct } = getTurnout(users);
+  const { total, accredited, voted, pct } = getTurnout(users);
   const ActiveComponent = OBSERVER_TABS.find(
     (t) => t.id === activeTab
   )?.Component;
@@ -184,6 +184,12 @@ export default function ObserverPage() {
               bg: "bg-teal-700",
             },
             {
+              label: "Accredited",
+              value: accredited,
+              color: "text-blue-300",
+              bg: "bg-slate-900",
+            },
+            {
               label: "Votes Cast",
               value: voted,
               color: "text-green-300",
@@ -193,12 +199,6 @@ export default function ObserverPage() {
               label: "Turnout",
               value: `${pct}%`,
               color: "text-amber-300",
-              bg: "bg-slate-900",
-            },
-            {
-              label: "Candidates",
-              value: candidates.length,
-              color: "text-teal-300",
               bg: "bg-slate-900",
             },
           ].map((s) => (

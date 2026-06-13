@@ -1,15 +1,31 @@
 import { CheckCircle, Mail, PartyPopper, BarChart3 } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import ProgressBar from "../components/ui/ProgressBar";
 import { useSlug } from "../context/SlugContext";
+import { emailReceipt } from "../api";
+import VBLoader from "../components/ui/VBLoader";
 
 export default function ReceiptPage() {
-  const { receiptHash, showConfetti, emailSent, setEmailSent, setCurrentUser, resetBallotSession } = useApp();
+  const {
+    receiptHash,
+    showConfetti,
+    emailSent,
+    setEmailSent,
+    setCurrentUser,
+    resetBallotSession,
+    accessToken,
+    showAlert,
+  } = useApp();
+  const [emailing, setEmailing] = useState(false);
   const navigate = useNavigate();
   const slug = useSlug();
 
-  if (!receiptHash) { navigate(`/vote/${slug}`); return null; }
+  if (!receiptHash) {
+    navigate(`/vote/${slug}`);
+    return null;
+  }
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -47,16 +63,31 @@ export default function ReceiptPage() {
               {receiptHash}
             </p>
             <p className="text-xs text-slate-600 text-center mt-3">
-              Keep this ID — you can use it to verify your vote was recorded correctly.
+              Keep this ID — you can use it to verify your vote was recorded
+              correctly.
             </p>
           </div>
 
           {/* Actions */}
           <div className="space-y-3">
             <button
-              onClick={() => setEmailSent(true)}
-              disabled={emailSent}
-              title={emailSent ? "Receipt already emailed" : "Send receipt to your registered email"}
+              onClick={async () => {
+                setEmailing(true);
+                try {
+                  await emailReceipt(receiptHash, accessToken);
+                  setEmailSent(true);
+                } catch (err) {
+                  showAlert("Failed to Send", err.message);
+                } finally {
+                  setEmailing(false);
+                }
+              }}
+              disabled={emailSent || emailing}
+              title={
+                emailSent
+                  ? "Receipt already emailed"
+                  : "Send receipt to your registered email"
+              }
               className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                 emailSent
                   ? "bg-green-500/20 text-green-400 border border-green-500/30"
@@ -64,9 +95,17 @@ export default function ReceiptPage() {
               }`}
             >
               {emailSent ? (
-                <><CheckCircle className="w-5 h-5" /> Receipt Emailed</>
+                <>
+                  <CheckCircle className="w-5 h-5" /> Receipt Emailed
+                </>
+              ) : emailing ? (
+                <>
+                  <VBLoader size="sm" /> Sending...
+                </>
               ) : (
-                <><Mail className="w-5 h-5" /> Email me this receipt</>
+                <>
+                  <Mail className="w-5 h-5" /> Email me this receipt
+                </>
               )}
             </button>
 

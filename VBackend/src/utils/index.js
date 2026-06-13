@@ -99,6 +99,55 @@ export const sendOTPEmail = async ({ to, name, otp, electionName }) => {
 }
 
 /**
+ * Email a voter their receipt confirmation.
+ * In development without Resend configured, logs to console instead.
+ */
+export const sendReceiptEmail = async ({ to, name, receiptId, electionName, orgName, castAt }) => {
+  if (!process.env.RESEND_API_KEY || process.env.NODE_ENV !== "production") {
+    console.log(`\n📧 RECEIPT EMAIL (dev mode — not actually sent)`)
+    console.log(`   To: ${to} (${name})`)
+    console.log(`   Receipt: ${receiptId}`)
+    console.log(`   Election: ${electionName}\n`)
+    return true
+  }
+
+  const dateStr = new Date(castAt).toLocaleString("en-GB", {
+    day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+  })
+
+  await getResend().emails.send({
+    from: `Virtual Ballot <noreply@virtualballot.online>`,
+    to,
+    subject: `Your vote receipt — ${electionName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="UTF-8"></head>
+      <body style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:40px 20px;background:#f8fafc;">
+        <div style="background:white;border-radius:16px;padding:40px;border:1px solid #e2e8f0;">
+          <div style="text-align:center;margin-bottom:32px;">
+            <div style="display:inline-block;background:#16a34a;color:white;font-weight:900;font-size:20px;width:56px;height:56px;line-height:56px;border-radius:14px;text-align:center;">✓</div>
+            <h2 style="margin:16px 0 4px;color:#0f172a;font-size:22px;">Your vote was recorded</h2>
+            <p style="margin:0;color:#64748b;font-size:14px;">${electionName}</p>
+          </div>
+          <p style="color:#475569;margin-bottom:8px;">Hi ${name},</p>
+          <p style="color:#475569;margin-bottom:24px;">This confirms your vote was successfully cast and recorded in the ${orgName} election system.</p>
+          <div style="background:#f1f5f9;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px;">
+            <p style="font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#94a3b8;margin:0 0 8px;">Receipt ID</p>
+            <p style="font-family:monospace;font-size:24px;font-weight:900;letter-spacing:4px;color:#16a34a;margin:0;">${receiptId}</p>
+          </div>
+          <p style="color:#64748b;font-size:13px;margin-bottom:4px;"><strong>Cast at:</strong> ${dateStr}</p>
+          <p style="color:#94a3b8;font-size:12px;margin-top:24px;">Keep this receipt safe. You can use it to verify your vote was counted, but it does not reveal who you voted for — your ballot remains secret.</p>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+
+  return true
+}
+
+/**
  * Send a password-reset link to an admin.
  * In development without SMTP configured, logs the link to console instead.
  */

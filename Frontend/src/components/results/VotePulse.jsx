@@ -49,6 +49,13 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
 
     socket.on("disconnect", () => setConnected(false));
 
+    socket.on("reconnect", () => {
+      setConnected(true);
+      socket.emit("join:election", electionId);
+    });
+
+    socket.on("connect_error", () => setConnected(false));
+
     socket.on("vote:update", (data) => {
       if (data.electionId !== electionId) return;
 
@@ -58,36 +65,42 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
         votes: c.vote_count,
         image: c.image_url,
       }));
-      setCandidates(updated);
 
-      // Work out which candidate just gained a vote by comparing totals
+      // Use the functional form so we always compare against the LATEST state,
+      // not a stale closure from when the effect first ran
+      setCandidates((prevCandidates) => {
+        const prevMap = prevCandidates.reduce((acc, c) => {
+          acc[c.id] = c.vote_count ?? c.votes ?? 0;
+          return acc;
+        }, {});
+
+        updated.forEach((c) => {
+          if ((c.vote_count ?? 0) > (prevMap[c.id] ?? 0)) {
+            setPulsing((p) => ({ ...p, [c.id]: true }));
+            setTimeout(
+              () => setPulsing((p) => ({ ...p, [c.id]: false })),
+              1200
+            );
+
+            setFeed((f) =>
+              [
+                {
+                  id: data.receiptId,
+                  candidate: c.name,
+                  position: c.position,
+                  time: new Date(data.timestamp).toLocaleTimeString(),
+                },
+                ...f,
+              ].slice(0, 12)
+            );
+          }
+        });
+
+        return updated;
+      });
+
       const newTotal = updated.reduce((acc, c) => acc + c.vote_count, 0);
       setTotalVotes(newTotal);
-
-      // Pulse the candidate whose count went up
-      const prev = candidates.reduce((acc, c) => {
-        acc[c.id] = c.vote_count ?? c.votes ?? 0;
-        return acc;
-      }, {});
-      updated.forEach((c) => {
-        if ((c.vote_count ?? 0) > (prev[c.id] ?? 0)) {
-          setPulsing((p) => ({ ...p, [c.id]: true }));
-          setTimeout(() => setPulsing((p) => ({ ...p, [c.id]: false })), 1200);
-
-          // Add to live feed
-          setFeed((f) =>
-            [
-              {
-                id: data.receiptId,
-                candidate: c.name,
-                position: c.position,
-                time: new Date(data.timestamp).toLocaleTimeString(),
-              },
-              ...f,
-            ].slice(0, 12)
-          ); // keep last 12
-        }
-      });
     });
 
     return () => {

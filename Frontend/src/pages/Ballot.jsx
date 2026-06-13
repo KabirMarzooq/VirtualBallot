@@ -84,17 +84,26 @@ export default function BallotPage() {
     setCompareState({ pos, idA: thisId, idB: opponent.id });
   };
 
+  const switchCompareB = (newIdB) => {
+    setCompareState((prev) => ({ ...prev, idB: newIdB }));
+  };
+
   return (
     <>
       {compareState &&
         (() => {
           const cA = candidates.find((c) => c.id === compareState.idA);
           const cB = candidates.find((c) => c.id === compareState.idB);
+          const others = candidates.filter(
+            (c) => c.position === compareState.pos && c.id !== compareState.idA
+          );
           return cA && cB ? (
             <CompareModal
               pos={compareState.pos}
               candidateA={cA}
               candidateB={cB}
+              otherCandidates={others}
+              onSwitchB={switchCompareB}
               ballot={ballot}
               onSelect={toggleBallotSelection}
               onClose={() => setCompareState(null)}

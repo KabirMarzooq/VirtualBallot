@@ -2,7 +2,7 @@ import express from "express"
 import { io } from "../server.js"
 import { getClient, query } from "../db/pool.js"
 import { requireVoter } from "../middleware/auth.js"
-import { generateReceiptId, ok, fail } from "../utils/index.js"
+import { generateReceiptId, sendReceiptEmail, ok, fail } from "../utils/index.js"
 
 const router = express.Router()
 
@@ -170,6 +170,42 @@ router.get("/verify/:receiptId", async (req, res) => {
       })),
     })
   } catch (err) {
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /vote/email-receipt — Voter: email their receipt ───────────────────
+router.post("/email-receipt", requireVoter, async (req, res) => {
+  const { receiptId } = req.body
+  if (!receiptId) return fail(res, "Receipt ID required")
+
+  try {
+    const result = await query(
+      `SELECT b.receipt_id, b.cast_at, v.email, v.name, e.name AS election_name, o.name AS org_name
+       FROM ballots b
+       JOIN voters v ON v.id = b.voter_id
+       JOIN elections e ON e.id = b.election_id
+       JOIN organizations o ON o.id = v.org_id
+       WHERE b.receipt_id = $1 AND v.id = $2`,
+      [receiptId, req.voterId]
+    )
+
+    if (result.rows.length === 0) return fail(res, "Receipt not found", 404)
+    const r = result.rows[0]
+    if (!r.email) return fail(res, "No email address on file for this voter")
+
+    await sendReceiptEmail({
+      to: r.email,
+      name: r.name,
+      receiptId: r.receipt_id,
+      electionName: r.election_name,
+      orgName: r.org_name,
+      castAt: r.cast_at,
+    })
+
+    return ok(res, { message: "Receipt sent to your email" })
+  } catch (err) {
+    console.error("Email receipt error:", err)
     return fail(res, "Server error", 500)
   }
 })

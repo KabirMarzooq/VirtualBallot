@@ -134,7 +134,7 @@ export default function ResultsPage() {
             setResultsData({
               published: false,
               candidates: [],
-              stats: { total: 0, voted: 0 },
+              stats: { total: 0, accredited:0, voted: 0 },
             });
           }
         })
@@ -160,13 +160,14 @@ export default function ResultsPage() {
 
   const displayStats = resultsData?.stats || {
     total: getTurnout(users).total,
+    accredited: getTurnout(users).accredited,
     voted: getTurnout(users).voted,
   };
   const isPublished =
     resultsData?.published ??
     (electionConfig.isPublished || electionConfig.status === "ENDED");
   const positions = getPositions(displayCandidates);
-  const { total, voted } = displayStats;
+  const { total, accredited, voted } = displayStats;
   const pct = total > 0 ? Math.round((voted / total) * 100) : 0;
 
   const handleHome = () => {
@@ -254,9 +255,10 @@ export default function ResultsPage() {
             )}
 
             {/* Stats strip */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
                 { label: "Total Registered", value: total, accent: false },
+                { label: "Accredited", value: accredited ?? 0, accent: false },
                 { label: "Votes Cast", value: voted, accent: true },
                 { label: "Voter Turnout", value: `${pct}%`, accent: false },
               ].map(({ label, value, accent }) => (

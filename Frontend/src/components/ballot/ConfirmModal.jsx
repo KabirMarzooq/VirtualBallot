@@ -92,20 +92,28 @@ export default function ConfirmModal() {
         style={{ fontFamily: "Georgia, serif" }}
       >
         {/* Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
           <span className="text-[7rem] font-black text-slate-100 rotate-[-35deg] select-none tracking-tighter leading-none">
             BALLOT
           </span>
         </div>
 
         {/* Header strip */}
-        <div className="bg-slate-900 px-6 py-2 flex items-center justify-between">
+        <div className="bg-slate-900 px-6 py-2 flex items-center justify-between relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center">
-              <span className="text-white text-[8px] font-black">VB</span>
-            </div>
-            <span className="text-white text-xs font-bold tracking-widest uppercase">
-              Virtual Ballot
+            {branding.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt="logo"
+                className="w-5 h-5 rounded object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center shrink-0">
+                <span className="text-white text-[8px] font-black">VB</span>
+              </div>
+            )}
+            <span className="text-white text-xs font-bold tracking-widest uppercase truncate max-w-[180px]">
+              {branding.institutionName || "Virtual Ballot"}
             </span>
           </div>
           <span className="text-slate-400 text-[10px] font-mono tracking-widest">
@@ -114,7 +122,7 @@ export default function ConfirmModal() {
         </div>
 
         {/* Ballot header */}
-        <div className="border-b-4 border-double border-slate-800 px-8 pt-6 pb-4 text-center">
+        <div className="border-b-4 border-double border-slate-800 px-8 pt-6 pb-4 text-center relative z-10">
           <p className="text-[10px] tracking-[0.25em] uppercase text-slate-500 mb-1">
             {branding.institutionName || "Electoral Commission"}
           </p>
@@ -130,7 +138,7 @@ export default function ConfirmModal() {
           </div>
         </div>
 
-        <div className="bg-slate-50 border-b border-slate-200 px-8 py-2">
+        <div className="bg-slate-50 border-b border-slate-200 px-8 py-2 relative z-10">
           <p className="text-[10px] text-slate-500 text-center tracking-wide">
             Please review your selections carefully. This action is final and
             cannot be undone.
@@ -188,7 +196,7 @@ export default function ConfirmModal() {
           ))}
         </div>
 
-        <div className="border-t-4 border-double border-slate-800 bg-slate-50 px-8 py-3 flex items-start gap-3">
+        <div className="border-t-4 border-double border-slate-800 bg-slate-50 px-8 py-3 flex items-start gap-3 relative z-10">
           <AlertTriangle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
           <p className="text-[10px] text-slate-500 font-sans leading-relaxed">
             By casting this ballot you confirm these selections are your own and
@@ -196,7 +204,7 @@ export default function ConfirmModal() {
           </p>
         </div>
 
-        <div className="px-8 py-5 flex gap-3 bg-white border-t border-slate-100">
+        <div className="px-8 py-5 flex gap-3 bg-white border-t border-slate-100 relative z-10">
           <button
             onClick={() => setShowConfirmModal(false)}
             disabled={loading}
