@@ -37,7 +37,14 @@ export default function SuperAdminPage() {
   const navigate = useNavigate();
   const token = sessionStorage.getItem("sa_token");
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("vb_sa_tab") || "overview"
+  );
+
+  // Persist the active tab so a reload returns to the same tab
+  useEffect(() => {
+    sessionStorage.setItem("vb_sa_tab", activeTab);
+  }, [activeTab]);
   const [data, setData] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +112,7 @@ export default function SuperAdminPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem("sa_token");
+    sessionStorage.removeItem("vb_sa_tab");
     navigate("/");
   };
 

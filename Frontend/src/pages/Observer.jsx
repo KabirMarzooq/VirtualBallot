@@ -23,7 +23,14 @@ export default function ObserverPage() {
     orgSlug,
   } = useApp();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("tally");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("vb_observer_tab") || "tally"
+  );
+
+  // Persist the active tab so a reload returns to the same tab
+  useEffect(() => {
+    sessionStorage.setItem("vb_observer_tab", activeTab);
+  }, [activeTab]);
   const [searchParams] = useSearchParams();
   const slug =
     searchParams.get("slug") ||
@@ -160,6 +167,7 @@ export default function ObserverPage() {
               onClick={() => {
                 sessionStorage.removeItem("vb_observer_token");
                 sessionStorage.removeItem("vb_observer_slug");
+                sessionStorage.removeItem("vb_observer_tab");
                 navigate(`/observer/login?slug=${slug}`);
               }}
               title="Exit observer mode"

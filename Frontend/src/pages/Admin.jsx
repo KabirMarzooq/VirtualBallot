@@ -54,7 +54,15 @@ export default function AdminPage() {
   } = useApp();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("vb_admin_tab") || "overview"
+  );
+
+  // Persist the active tab so a reload returns to the same tab
+  useEffect(() => {
+    sessionStorage.setItem("vb_admin_tab", activeTab);
+  }, [activeTab]);
+
   const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -145,6 +153,7 @@ export default function AdminPage() {
   const handleLogout = () => {
     setCurrentUser(null);
     resetBallotSession();
+    sessionStorage.removeItem("vb_admin_tab");
     navigate("/");
   };
 
