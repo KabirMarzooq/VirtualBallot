@@ -30,6 +30,8 @@ router.get("/:slug", resolveOrg, async (req, res) => {
         name: e.name,
         status: e.status,
         isPublished: e.is_published,
+        votingMode: e.voting_mode,
+        fraudTier: e.fraud_tier,
         registryLocked: e.registry_locked,
         showCountdown: e.show_countdown,
         endsAt: e.ends_at,
@@ -199,7 +201,7 @@ router.patch("/:slug/observer-pin", resolveOrg, requireAdmin, async (req, res) =
 
 // ─── PATCH /elections/:slug/config — Admin: update election settings ──────────
 router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
-  const { status, isPublished, registryLocked, showCountdown, endsAt } = req.body
+  const { status, isPublished, votingMode, fraudTier, registryLocked, showCountdown, endsAt } = req.body
 
   try {
     const updates = []
@@ -208,6 +210,8 @@ router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
 
     if (status !== undefined) { updates.push(`status = $${idx++}`); values.push(status) }
     if (isPublished !== undefined) { updates.push(`is_published = $${idx++}`); values.push(isPublished) }
+    if (votingMode !== undefined) { updates.push(`voting_mode = $${idx++}`); values.push(votingMode) }
+    if (fraudTier !== undefined) { updates.push(`fraud_tier = $${idx++}`); values.push(fraudTier) }
     if (registryLocked !== undefined) { updates.push(`registry_locked = $${idx++}`); values.push(registryLocked) }
     if (showCountdown !== undefined) { updates.push(`show_countdown = $${idx++}`); values.push(showCountdown) }
     if (endsAt !== undefined) { updates.push(`ends_at = $${idx++}`); values.push(endsAt) }
@@ -264,6 +268,8 @@ router.get("/:slug/admin/overview", resolveOrg, requireAdmin, async (req, res) =
         name: election.name,
         status: election.status,
         isPublished: election.is_published,
+        votingMode: election.voting_mode,
+        fraudTier: election.fraud_tier,
         registryLocked: election.registry_locked,
         showCountdown: election.show_countdown,
         endsAt: election.ends_at,
@@ -301,6 +307,8 @@ router.get("/:slug/observer/overview", resolveOrg, requireObserver, async (req, 
         name: election.name,
         status: election.status,
         isPublished: election.is_published,
+        votingMode: election.voting_mode,
+        fraudTier: election.fraud_tier,
         registryLocked: election.registry_locked,
         showCountdown: election.show_countdown,
         endsAt: election.ends_at,
@@ -420,12 +428,18 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
 
 // ─── POST /elections/:slug/new ────────────────────────────────────────────────
 // Admin: archive current election and create a fresh one
+// ─── POST /elections/:slug/new ────────────────────────────────────────────────
+// Admin: start a fresh election. If the current one is a pristine blank
+// (NOT_STARTED with zero votes), reset it in place — no history clutter.
+// Otherwise archive the current one (ENDED) and create a new blank.
 router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
-  const { name } = req.body
-  if (!name?.trim()) return fail(res, "Election name is required")
+  const { votingMode = "CLOSED", fraudTier = "EMAIL" } = req.body
+  if (!["CLOSED", "OPEN"].includes(votingMode)) return fail(res, "Invalid voting mode")
+  if (!["EMAIL", "DEVICE"].includes(fraudTier)) return fail(res, "Invalid fraud tier")
+
+  const safeTier = votingMode === "OPEN" ? fraudTier : "EMAIL"
 
   try {
-    // Verify current election is not ACTIVE before allowing a new one
     const currentResult = await query(
       `SELECT id, status FROM elections
        WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -434,11 +448,51 @@ router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
 
     if (currentResult.rows.length > 0) {
       const current = currentResult.rows[0]
+
       if (current.status === "ACTIVE") {
-        return fail(res, "Cannot create a new election while one is still active. End it first.", 400)
+        return fail(res, "Cannot start a new election while one is still active. End it first.", 400)
       }
-      // Mark the current election as ENDED so it shows in history
-      // (it may already be ENDED, or it may be NOT_STARTED — either way archive it)
+
+      // Does the current election have any votes?
+      const voteCheck = await query(
+        `SELECT
+           (SELECT COUNT(*) FROM ballots WHERE election_id = $1) AS closed_votes,
+           (SELECT COUNT(*) FROM open_votes WHERE election_id = $1) AS open_votes`,
+        [current.id]
+      )
+      const hasVotes =
+        Number(voteCheck.rows[0].closed_votes) > 0 ||
+        Number(voteCheck.rows[0].open_votes) > 0
+
+      // Pristine blank (never ran, no votes) → reset IN PLACE, no history entry
+      if (current.status === "NOT_STARTED" && !hasVotes) {
+        await query(`DELETE FROM voters     WHERE election_id = $1`, [current.id])
+        await query(`DELETE FROM candidates WHERE election_id = $1`, [current.id])
+        await query(`DELETE FROM open_votes WHERE election_id = $1`, [current.id])
+        await query(
+          `UPDATE elections
+           SET name = $2, voting_mode = $3, fraud_tier = $4,
+               is_published = FALSE, registry_locked = FALSE,
+               show_countdown = FALSE, ends_at = NULL, started_at = NULL,
+               updated_at = NOW()
+           WHERE id = $1`,
+          [current.id, "Untitled Election", votingMode, safeTier]
+        )
+
+        await query(
+          `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+           VALUES ($1, $2, 'system', 'Election reset for fresh setup', $3)`,
+          [req.orgId, current.id, req.adminEmail]
+        )
+
+        const reset = await query(
+          `SELECT id, name, status, voting_mode, fraud_tier FROM elections WHERE id = $1`,
+          [current.id]
+        )
+        return ok(res, { message: "Election reset", election: reset.rows[0] }, 200)
+      }
+
+      // Otherwise archive the current one so it shows in history
       if (current.status !== "ENDED") {
         await query(
           `UPDATE elections SET status = 'ENDED', ends_at = NOW(), updated_at = NOW() WHERE id = $1`,
@@ -447,26 +501,22 @@ router.post("/:slug/new", resolveOrg, requireAdmin, async (req, res) => {
       }
     }
 
-    // Create the new blank election
+    // Create a fresh blank election
     const newResult = await query(
-      `INSERT INTO elections (org_id, name, status)
-       VALUES ($1, $2, 'NOT_STARTED')
-       RETURNING id, name, status`,
-      [req.orgId, name.trim()]
+      `INSERT INTO elections (org_id, name, status, voting_mode, fraud_tier)
+       VALUES ($1, $2, 'NOT_STARTED', $3, $4)
+       RETURNING id, name, status, voting_mode, fraud_tier`,
+      [req.orgId, "Untitled Election", votingMode, safeTier]
     )
     const newElection = newResult.rows[0]
 
-    // Audit log
     await query(
       `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
-       VALUES ($1, $2, 'system', $3, $4)`,
-      [req.orgId, newElection.id, `New election created: "${name.trim()}"`, req.adminEmail]
+       VALUES ($1, $2, 'system', 'New election created', $3)`,
+      [req.orgId, newElection.id, req.adminEmail]
     )
 
-    return ok(res, {
-      message: "New election created successfully",
-      election: newElection,
-    }, 201)
+    return ok(res, { message: "New election created", election: newElection }, 201)
   } catch (err) {
     console.error("New election error:", err)
     return fail(res, "Server error", 500)

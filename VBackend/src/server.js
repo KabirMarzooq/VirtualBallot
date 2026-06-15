@@ -20,6 +20,7 @@ import voteRoutes from "./routes/vote.js"
 import voterRoutes from "./routes/voters.js"
 import candidateRoutes from "./routes/candidates.js"
 import superadminRoutes from "./routes/superadmin.js"
+import openRoutes from "./routes/open.js"
 
 const app = express()
 const httpServer = createServer(app)   // ← wrap Express in an HTTP server
@@ -82,6 +83,7 @@ app.use("/vote", voteRoutes)
 app.use("/voters", voterRoutes)
 app.use("/candidates", candidateRoutes)
 app.use("/superadmin", superadminRoutes)
+app.use("/open", openRoutes)
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/health", (req, res) => {

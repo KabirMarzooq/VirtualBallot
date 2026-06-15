@@ -1,9 +1,10 @@
 // ─── Time Formatting ──────────────────────────────────────────────────────────
 
 export const formatCountdown = (totalMs) => {
-    if (totalMs <= 0) return { h: "00", m: "00", s: "00" }
+    if (totalMs <= 0) return { d: "0", h: "00", m: "00", s: "00" }
     return {
-        h: String(Math.floor(totalMs / 3600000)).padStart(2, "0"),
+        d: String(Math.floor(totalMs / 86400000)),
+        h: String(Math.floor((totalMs % 86400000) / 3600000)).padStart(2, "0"),
         m: String(Math.floor((totalMs % 3600000) / 60000)).padStart(2, "0"),
         s: String(Math.floor((totalMs % 60000) / 1000)).padStart(2, "0"),
     }
@@ -11,8 +12,11 @@ export const formatCountdown = (totalMs) => {
 
 export const formatTimeLeft = (ms) => {
     if (ms <= 0) return "00h : 00m : 00s"
-    const { h, m, s } = formatCountdown(ms)
-    return `${h}h : ${m}m : ${s}s`
+    const { d, h, m, s } = formatCountdown(ms)
+    // Only show the days segment when there's at least a day left
+    return Number(d) > 0
+        ? `${d}d : ${h}h : ${m}m : ${s}s`
+        : `${h}h : ${m}m : ${s}s`
 }
 
 // ─── ID / Receipt Generation ──────────────────────────────────────────────────
@@ -120,4 +124,30 @@ export const getTurnout = (users) => {
 export const isTied = (sortedCandidates) => {
     if (sortedCandidates.length < 2) return false;
     return sortedCandidates[0].votes === sortedCandidates[1].votes && sortedCandidates[0].votes > 0;
+}
+
+/**
+ * Generate a lightweight device fingerprint for open (DEVICE-tier) voting.
+ * Combines stable browser/device signals into a single hash.
+ * Not foolproof — it's a deterrent against casual double-voting, not a
+ * security guarantee. The backend IP check + DB unique index back it up.
+ */
+export const getDeviceFingerprint = async () => {
+    const signals = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + "x" + screen.height,
+        screen.colorDepth,
+        new Date().getTimezoneOffset(),
+        navigator.hardwareConcurrency || "",
+        navigator.platform || "",
+    ].join("|")
+
+    // Hash via SubtleCrypto for a compact, stable string
+    const buf = new TextEncoder().encode(signals)
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf)
+    return Array.from(new Uint8Array(hashBuf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .slice(0, 32)
 }

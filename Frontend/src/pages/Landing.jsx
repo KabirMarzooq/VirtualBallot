@@ -221,7 +221,7 @@ export default function LandingPage() {
             Virtual Ballot
           </div>
           <p>Built for transparent, secure elections.</p>
-          <p>Built By <a href="https://github.com/KabirMarzooq" target="_blank" className="text-blue-600">MaZq</a>.</p>
+          <p>Built By <a href="https://github.com/KabirMarzooq" target="_blank" className="text-blue-600">MaZq</a>&<a href="https://github.com/Muyiez101" target="_blank" className="text-blue-600">Muiz</a>.</p>
         </div>
       </footer>
     </div>

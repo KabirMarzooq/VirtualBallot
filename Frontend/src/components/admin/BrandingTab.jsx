@@ -1,20 +1,54 @@
 import { useState } from "react";
-import { Palette, Image, CheckCircle, Eye, X, Key } from "lucide-react";
+import { Palette, Image, CheckCircle, Eye, X, Key, Vote } from "lucide-react";
 import { useApp } from "../../context/AppContext";
-import { updateBranding, updateObserverPin } from "../../api";
+import {
+  updateBranding,
+  updateObserverPin,
+  updateElectionConfig,
+} from "../../api";
 import VBLoader from "../ui/VBLoader";
 
 export default function BrandingTab() {
-  const { branding, setBranding, accessToken, orgSlug, showAlert, addLog } =
-    useApp();
+  const {
+    branding,
+    setBranding,
+    accessToken,
+    orgSlug,
+    showAlert,
+    addLog,
+    electionConfig,
+    setElectionConfig,
+  } = useApp();
   const [form, setForm] = useState({ ...branding });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [pinSaving, setPinSaving] = useState(false);
+  const [savingType, setSavingType] = useState(false);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(branding);
+
+  const saveElectionType = async (votingMode, fraudTier) => {
+    setSavingType(true);
+    try {
+      await updateElectionConfig(
+        { votingMode, fraudTier: votingMode === "OPEN" ? fraudTier : "EMAIL" },
+        accessToken,
+        orgSlug
+      );
+      setElectionConfig((prev) => ({
+        ...prev,
+        votingMode,
+        fraudTier: votingMode === "OPEN" ? fraudTier : "EMAIL",
+      }));
+      addLog(`Election type set to ${votingMode}`, "admin");
+    } catch (err) {
+      showAlert("Failed", err.message);
+    } finally {
+      setSavingType(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -79,6 +113,96 @@ export default function BrandingTab() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+      {/* ── Election Type ──────────────────────────────────────────────────── */}
+      <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
+        <div className="flex items-center gap-2">
+          <Vote className="w-4 h-4 text-blue-400" />
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Election Type
+          </p>
+          {electionConfig.status !== "NOT_STARTED" && (
+            <span className="text-[10px] font-bold text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-700/40">
+              Locked — election already{" "}
+              {electionConfig.status === "ACTIVE" ? "running" : "ended"}
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            disabled={electionConfig.status !== "NOT_STARTED" || savingType}
+            onClick={() => saveElectionType("CLOSED", electionConfig.fraudTier)}
+            className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              electionConfig.votingMode === "CLOSED"
+                ? "bg-blue-950/40 border-blue-500"
+                : "bg-slate-900 border-slate-700 hover:border-slate-600"
+            }`}
+          >
+            <p className="font-black text-white text-sm">Closed</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Roster-based. Voters register with matric + email, verified by
+              OTP.
+            </p>
+          </button>
+          <button
+            disabled={electionConfig.status !== "NOT_STARTED" || savingType}
+            onClick={() =>
+              saveElectionType(
+                "OPEN",
+                electionConfig.fraudTier === "DEVICE" ? "DEVICE" : "EMAIL"
+              )
+            }
+            className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              electionConfig.votingMode === "OPEN"
+                ? "bg-blue-950/40 border-blue-500"
+                : "bg-slate-900 border-slate-700 hover:border-slate-600"
+            }`}
+          >
+            <p className="font-black text-white text-sm">Open</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Public link. Anyone can vote — no roster or registration.
+            </p>
+          </button>
+        </div>
+
+        {electionConfig.votingMode === "OPEN" && (
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Vote Protection
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                disabled={electionConfig.status !== "NOT_STARTED" || savingType}
+                onClick={() => saveElectionType("OPEN", "DEVICE")}
+                className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 ${
+                  electionConfig.fraudTier === "DEVICE"
+                    ? "bg-teal-950/40 border-teal-500"
+                    : "bg-slate-900 border-slate-700 hover:border-slate-600"
+                }`}
+              >
+                <p className="font-bold text-white text-sm">Frictionless</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  One vote per device. No email needed.
+                </p>
+              </button>
+              <button
+                disabled={electionConfig.status !== "NOT_STARTED" || savingType}
+                onClick={() => saveElectionType("OPEN", "EMAIL")}
+                className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 ${
+                  electionConfig.fraudTier === "EMAIL"
+                    ? "bg-teal-950/40 border-teal-500"
+                    : "bg-slate-900 border-slate-700 hover:border-slate-600"
+                }`}
+              >
+                <p className="font-bold text-white text-sm">Email verified</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  One vote per email. Stronger integrity.
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       {/* ── Election Identity ──────────────────────────────────────────────── */}
       <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-5">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">

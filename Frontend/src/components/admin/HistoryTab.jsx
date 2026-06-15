@@ -3,8 +3,6 @@ import {
   Archive,
   Trophy,
   Calendar,
-  Plus,
-  RefreshCw,
   X,
   Download,
   Users,
@@ -18,11 +16,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
-import {
-  fetchElectionHistory,
-  createNewElection,
-  fetchAdminOverview,
-} from "../../api";
+import { fetchElectionHistory } from "../../api";
 import VBLoader from "../ui/VBLoader";
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
@@ -638,25 +632,10 @@ function ElectionDetailModal({ election, branding, onClose }) {
 
 // ─── Main HistoryTab ──────────────────────────────────────────────────────────
 export default function HistoryTab() {
-  const {
-    accessToken,
-    orgSlug,
-    electionConfig,
-    branding,
-    setCandidates,
-    setUsers,
-    setElectionConfig,
-    setElectionId,
-    addLog,
-    showAlert,
-    showConfirm,
-  } = useApp();
+  const { accessToken, orgSlug, branding } = useApp();
 
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [newName, setNewName] = useState("");
   const [selected, setSelected] = useState(null); // election open in modal
 
   useEffect(() => {
@@ -672,62 +651,6 @@ export default function HistoryTab() {
     };
     load();
   }, [accessToken, orgSlug]);
-
-  const handleCreateNew = () => {
-    if (electionConfig.status === "ACTIVE") {
-      return showAlert(
-        "Election Active",
-        "You cannot start a new election while one is still running. End the current election first."
-      );
-    }
-    setShowNewForm(true);
-    setNewName("");
-  };
-
-  const confirmCreate = () => {
-    if (!newName.trim())
-      return showAlert(
-        "Name Required",
-        "Please enter a name for the new election."
-      );
-    showConfirm(
-      "Create New Election?",
-      `This will archive the current election and create a fresh one called "${newName.trim()}". Past results are saved in history.`,
-      async () => {
-        setCreating(true);
-        try {
-          const data = await createNewElection(
-            newName.trim(),
-            accessToken,
-            orgSlug
-          );
-          const overview = await fetchAdminOverview(accessToken, orgSlug);
-          setElectionId(data.election.id);
-          setElectionConfig({
-            status: overview.election.status,
-            isPublished: overview.election.isPublished,
-            registryLocked: overview.election.registryLocked,
-            showCountdown: overview.election.showCountdown,
-            endsAt: overview.election.endsAt,
-          });
-          setCandidates([]);
-          setUsers([]);
-          addLog(`New election created: "${newName.trim()}"`, "system");
-          const historyData = await fetchElectionHistory(accessToken, orgSlug);
-          setHistory(historyData.elections);
-          setShowNewForm(false);
-          showAlert(
-            "New Election Ready",
-            `"${newName.trim()}" is set up. Head to Branding, Candidates, and Voters to configure it.`
-          );
-        } catch (err) {
-          showAlert("Failed", err.message);
-        } finally {
-          setCreating(false);
-        }
-      }
-    );
-  };
 
   const formatDate = (d) => {
     if (!d) return "—";
@@ -748,58 +671,7 @@ export default function HistoryTab() {
             All concluded elections for your organization
           </p>
         </div>
-        {electionConfig.status !== "ACTIVE" && (
-          <button
-            onClick={handleCreateNew}
-            disabled={creating}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5
-              rounded-xl flex items-center gap-2 text-sm transition-colors cursor-pointer
-              disabled:opacity-50 shrink-0"
-          >
-            <Plus className="w-4 h-4" /> New Election
-          </button>
-        )}
       </div>
-
-      {/* ── New Election Form ────────────────────────────────────────────────── */}
-      {showNewForm && (
-        <div className="bg-slate-800 border border-blue-500/40 rounded-2xl p-5 space-y-4">
-          <p className="text-white font-bold">Name the new election</p>
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && confirmCreate()}
-            placeholder="e.g. Senate Elections 2025"
-            autoFocus
-            className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3
-              text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
-          />
-          <div className="flex gap-3">
-            <button
-              onClick={confirmCreate}
-              disabled={creating || !newName.trim()}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3
-                rounded-xl disabled:opacity-50 cursor-pointer transition-colors
-                flex items-center justify-center gap-2"
-            >
-              {creating ? (
-                <VBLoader size="sm" />
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" /> Create & Archive Current
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setShowNewForm(false)}
-              className="px-5 py-3 rounded-xl text-slate-400 hover:text-white
-                font-bold transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── History List ─────────────────────────────────────────────────────── */}
       {loading ? (

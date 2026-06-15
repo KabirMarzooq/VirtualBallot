@@ -77,6 +77,8 @@ export function AppProvider({ children }) {
     registryLocked: false,
     showCountdown: false,
     endsAt: null,
+    votingMode: "CLOSED",
+    fraudTier: "EMAIL",
   });
   const [branding, setBranding] = useState({
     electionName: "",
@@ -135,6 +137,8 @@ export function AppProvider({ children }) {
             registryLocked: overview.election.registryLocked,
             showCountdown: overview.election.showCountdown,
             endsAt: overview.election.endsAt,
+            votingMode: overview.election.votingMode || "CLOSED",
+            fraudTier: overview.election.fraudTier || "EMAIL",
           });
 
           // institutionName is in branding stored separately; fall back to slug
@@ -204,6 +208,8 @@ export function AppProvider({ children }) {
         registryLocked: electionData.election.registryLocked,
         showCountdown: electionData.election.showCountdown,
         endsAt: electionData.election.endsAt,
+        votingMode: electionData.election.votingMode || "CLOSED",
+        fraudTier: electionData.election.fraudTier || "EMAIL",
       });
       setBranding(electionData.branding);
       setElectionId(electionData.election.id);

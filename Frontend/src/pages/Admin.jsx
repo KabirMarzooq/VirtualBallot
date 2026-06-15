@@ -55,8 +55,6 @@ export default function AdminPage() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [showNewInput, setShowNewInput] = useState(false);
-  const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -94,6 +92,13 @@ export default function AdminPage() {
     return () => clearInterval(id);
   }, [electionConfig.status, accessToken, orgSlug]);
 
+  // If election is OPEN and user lands on the now-hidden voters tab, redirect
+  useEffect(() => {
+    if (electionConfig.votingMode === "OPEN" && activeTab === "voters") {
+      setActiveTab("overview");
+    }
+  }, [electionConfig.votingMode, activeTab]);
+
   const handleRefresh = async () => {
     if (!accessToken || !orgSlug) return;
     setRefreshing(true);
@@ -105,6 +110,8 @@ export default function AdminPage() {
         registryLocked: ov.election.registryLocked,
         showCountdown: ov.election.showCountdown,
         endsAt: ov.election.endsAt,
+        votingMode: ov.election.votingMode || "CLOSED",
+        fraudTier: ov.election.fraudTier || "EMAIL",
       });
       setCandidates(
         ov.candidates.map((c) => ({
@@ -147,24 +154,13 @@ export default function AdminPage() {
         "Election Active",
         "End the current election before starting a new one."
       );
-    setShowNewInput(true);
-    setNewName("");
-  };
-
-  const confirmNew = () => {
-    if (!newName.trim())
-      return showAlert("Name Required", "Enter a name for the new election.");
     showConfirm(
-      "Start Fresh?",
-      `Archive the current election and create "${newName.trim()}"? Voters and candidates will be cleared. Results are saved in History.`,
+      "Start a New Election?",
+      "This clears the current voters, candidates, and settings and gives you a blank election to set up. If the current election has already run, its results are saved to History first.",
       async () => {
         setCreating(true);
         try {
-          const data = await createNewElection(
-            newName.trim(),
-            accessToken,
-            orgSlug
-          );
+          const data = await createNewElection(accessToken, orgSlug);
           const ov = await fetchAdminOverview(accessToken, orgSlug);
           setElectionId(data.election.id);
           setElectionConfig({
@@ -173,15 +169,17 @@ export default function AdminPage() {
             registryLocked: ov.election.registryLocked,
             showCountdown: ov.election.showCountdown,
             endsAt: ov.election.endsAt,
+            votingMode: ov.election.votingMode || "CLOSED",
+            fraudTier: ov.election.fraudTier || "EMAIL",
           });
           setCandidates([]);
           setUsers([]);
-          addLog(`New election created: "${newName.trim()}"`, "system");
-          setShowNewInput(false);
-          setActiveTab("overview");
+          setActivityLog([]);
+          addLog("New election started", "system");
+          setActiveTab("branding");
           showAlert(
-            "Ready!",
-            `"${newName.trim()}" is set up. Follow the checklist to configure it.`
+            "New Election Ready",
+            "Set the election name, logo, and type in the Branding tab, then add candidates."
           );
         } catch (err) {
           showAlert("Failed", err.message);
@@ -246,47 +244,15 @@ export default function AdminPage() {
             </div>
 
             {/* New Election — show when not actively running */}
-            {electionConfig.status !== "ACTIVE" && !showNewInput && (
+            {electionConfig.status !== "ACTIVE" && (
               <button
                 onClick={handleNewElection}
+                disabled={creating}
                 title="Create a new election"
                 className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> New Election
               </button>
-            )}
-
-            {/* Inline name input */}
-            {showNewInput && (
-              <div className="flex items-center gap-2">
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && confirmNew()}
-                  placeholder="Election name…"
-                  autoFocus
-                  className="bg-slate-800 border border-slate-700 text-white text-xs font-bold px-3 py-2 rounded-xl outline-none focus:border-blue-500 w-44 placeholder:text-slate-500"
-                />
-                <button
-                  onClick={confirmNew}
-                  disabled={creating || !newName.trim()}
-                  title="Create this election"
-                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
-                >
-                  {creating ? (
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                  ) : (
-                    "Create"
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowNewInput(false)}
-                  title="Cancel"
-                  className="text-slate-500 hover:text-white text-xs font-bold px-2 py-2 cursor-pointer transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
             )}
 
             {/* Manual refresh */}
@@ -318,7 +284,12 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Tab bar */}
         <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 overflow-x-auto scrollbar-hide">
-          {TABS.map((t) => {
+          {TABS.filter((t) => {
+            // Open elections have no roster — hide the Voters tab
+            if (electionConfig.votingMode === "OPEN" && t.id === "voters")
+              return false;
+            return true;
+          }).map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.id;
             return (

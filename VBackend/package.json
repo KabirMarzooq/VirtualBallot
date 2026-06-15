@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "db:setup": "node src/db/setup.js",
+    "migrate:open": "node src/db/migrate-open-voting.js",
     "db:seed": "node src/db/seed.js"
   },
   "dependencies": {

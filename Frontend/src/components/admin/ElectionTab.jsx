@@ -54,20 +54,31 @@ export default function ElectionTab() {
     addLog,
   } = useApp();
 
-  const [durH, setDurH] = useState(() => Number(sessionStorage.getItem("vb_dur_h")) || 0);
+  const [durD, setDurD] = useState(
+    () => Number(sessionStorage.getItem("vb_dur_d")) || 0
+  );
+
+  const [durH, setDurH] = useState(
+    () => Number(sessionStorage.getItem("vb_dur_h")) || 0
+  );
   const [durM, setDurM] = useState(() => {
     const saved = sessionStorage.getItem("vb_dur_m");
     return saved !== null ? Number(saved) : 15;
   });
-  const [durS, setDurS] = useState(() => Number(sessionStorage.getItem("vb_dur_s")) || 0);
-  
+  const [durS, setDurS] = useState(
+    () => Number(sessionStorage.getItem("vb_dur_s")) || 0
+  );
+
   // Persist duration so it survives tab switches
   useEffect(() => {
+    sessionStorage.setItem("vb_dur_d", durD);
     sessionStorage.setItem("vb_dur_h", durH);
     sessionStorage.setItem("vb_dur_m", durM);
     sessionStorage.setItem("vb_dur_s", durS);
-  }, [durH, durM, durS]);
+  }, [durD, durH, durM, durS]);
   const [saving, setSaving] = useState(false);
+  const [copiedOpen, setCopiedOpen] = useState(false);
+  const [copiedObs, setCopiedObs] = useState(false);
 
   const patch = async (changes, logMsg, logType = "system") => {
     setSaving(true);
@@ -83,12 +94,12 @@ export default function ElectionTab() {
   };
 
   const start = () => {
-    const ms = durH * 3600000 + durM * 60000 + durS * 1000;
+    const ms = durD * 86400000 + durH * 3600000 + durM * 60000 + durS * 1000;
     if (ms <= 0) return showAlert("Setup Error", "Set a valid duration.");
     const endsAt = new Date(Date.now() + ms).toISOString();
     showConfirm(
       "Start Election",
-      `Begin a ${durH}h ${durM}m ${durS}s election?`,
+      `Begin a ${durD > 0 ? durD + "d " : ""}${durH}h ${durM}m ${durS}s election?`,
       () =>
         patch(
           { status: "ACTIVE", endsAt, registryLocked: true },
@@ -159,6 +170,69 @@ export default function ElectionTab() {
 
   return (
     <div className="space-y-6">
+      {electionConfig.votingMode === "OPEN" && (
+        <div className="space-y-3">
+          {/* Public voting link */}
+          <div className="bg-slate-900 border border-teal-700/40 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1">
+                Public Voting Link · Open Election
+              </p>
+              <p className="text-sm font-mono text-teal-300 truncate">
+                {`${window.location.origin}/open/${orgSlug}`}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(`${window.location.origin}/open/${orgSlug}`)
+                  .then(() => {
+                    setCopiedOpen(true);
+                    setTimeout(() => setCopiedOpen(false), 2000);
+                  });
+              }}
+              className={`text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0 ${
+                copiedOpen
+                  ? "bg-green-600 text-white"
+                  : "bg-teal-700 hover:bg-teal-600 text-white"
+              }`}
+            >
+              {copiedOpen ? "Copied!" : "Copy Link"}
+            </button>
+          </div>
+
+          {/* Observer link */}
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Observer Link · Live Monitoring
+              </p>
+              <p className="text-sm font-mono text-slate-300 truncate">
+                {`${window.location.origin}/observer/login?slug=${orgSlug}`}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(
+                    `${window.location.origin}/observer/login?slug=${orgSlug}`
+                  )
+                  .then(() => {
+                    setCopiedObs(true);
+                    setTimeout(() => setCopiedObs(false), 2000);
+                  });
+              }}
+              className={`text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0 ${
+                copiedObs
+                  ? "bg-green-600 text-white"
+                  : "bg-slate-700 hover:bg-slate-600 text-white"
+              }`}
+            >
+              {copiedObs ? "Copied!" : "Copy Link"}
+            </button>
+          </div>
+        </div>
+      )}
       {/* Phase stepper */}
       <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">
@@ -208,8 +282,9 @@ export default function ElectionTab() {
           {electionConfig.status === "NOT_STARTED" && (
             <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
               <p className="text-sm font-bold text-slate-300">Set Duration</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 {[
+                  ["Days", durD, setDurD],
                   ["Hours", durH, setDurH],
                   ["Mins", durM, setDurM],
                   ["Secs", durS, setDurS],

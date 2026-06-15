@@ -169,6 +169,30 @@ export const emailReceipt = (receiptId, token) =>
         body: JSON.stringify({ receiptId }),
     }, token)
 
+// ─── Open Voting (public) ──────────────────────────────────────────────────────
+
+/** Fetch open election config + candidates */
+export const fetchOpenElection = (slug) =>
+    request(`/open/${slug}`)
+
+/** EMAIL tier — request a verification code */
+export const requestOpenOtp = (email, slug) =>
+    request(`/open/${slug}/request-otp`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+    })
+
+/** Cast an open ballot. Pass either {fingerprint} or {email, otp} */
+export const castOpenVote = (payload, slug) =>
+    request(`/open/${slug}/vote`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    })
+
+/** Open election public results */
+export const fetchOpenResults = (slug) =>
+    request(`/open/${slug}/results`)
+
 // ─── Election History ─────────────────────────────────────────────────────────
 
 /** Fetch all ended elections for this org */
@@ -176,10 +200,10 @@ export const fetchElectionHistory = (token, slug = ORG_SLUG) =>
     request(`/elections/${slug}/history`, {}, token)
 
 /** Create a new blank election (archives the current one implicitly) */
-export const createNewElection = (name, token, slug = ORG_SLUG) =>
+export const createNewElection = (token, slug = ORG_SLUG, votingMode = "CLOSED", fraudTier = "EMAIL") =>
     request(`/elections/${slug}/new`, {
         method: "POST",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ votingMode, fraudTier }),
     }, token)
 
 /** Upload roster with replace option */

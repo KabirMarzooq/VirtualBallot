@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS elections (
   is_published      BOOLEAN NOT NULL DEFAULT FALSE,
   registry_locked   BOOLEAN NOT NULL DEFAULT FALSE,
   show_countdown    BOOLEAN NOT NULL DEFAULT FALSE,
+  voting_mode       TEXT NOT NULL DEFAULT 'CLOSED' CHECK (voting_mode IN ('CLOSED','OPEN')),
+  fraud_tier        TEXT NOT NULL DEFAULT 'EMAIL' CHECK (fraud_tier IN ('EMAIL','DEVICE')),
   started_at        TIMESTAMPTZ,
   ends_at           TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -74,6 +76,40 @@ CREATE TABLE IF NOT EXISTS candidates (
   color       TEXT NOT NULL DEFAULT 'from-blue-400 to-blue-600',
   vote_count  INTEGER NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── Open Votes (public voting, no roster) ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS open_votes (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  election_id   UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  org_id        UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  candidate_id  UUID NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+  position      TEXT NOT NULL,
+  voter_ip      TEXT,
+  fingerprint   TEXT,
+  email         TEXT,
+  receipt_id    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- DEVICE tier: one ballot per fingerprint per position
+CREATE UNIQUE INDEX IF NOT EXISTS open_votes_device_unique
+  ON open_votes (election_id, position, fingerprint)
+  WHERE fingerprint IS NOT NULL;
+
+-- EMAIL tier: one ballot per email per position
+CREATE UNIQUE INDEX IF NOT EXISTS open_votes_email_unique
+  ON open_votes (election_id, position, email)
+  WHERE email IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS open_otp_codes (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  election_id   UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  email         TEXT NOT NULL,
+  code_hash     TEXT NOT NULL,
+  expires_at    TIMESTAMPTZ NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (election_id, email)
 );
 
 -- ── Ballots (immutable — never updated, never deleted) ────────────────────────
