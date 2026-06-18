@@ -43,7 +43,7 @@ router.post("/login", async (req, res) => {
 // Platform-wide stats — all orgs, elections, votes
 router.get("/overview", requireSuperAdmin, async (req, res) => {
     try {
-        const [orgsResult, statsResult, activeResult] = await Promise.all([
+        const [orgsResult, statsResult, activeResult, paymentHealthResult] = await Promise.all([
             // All orgs with their latest election info
             query(`
         SELECT
@@ -57,7 +57,9 @@ router.get("/overview", requireSuperAdmin, async (req, res) => {
           COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'ACTIVE')    AS active_elections,
           COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'ENDED')     AS ended_elections,
           COUNT(DISTINCT v.id)                                        AS total_voters,
-          COUNT(DISTINCT v.id) FILTER (WHERE v.has_voted = TRUE)     AS total_votes_cast
+          COUNT(DISTINCT v.id) FILTER (WHERE v.has_voted = TRUE)     AS total_votes_cast,
+          (SELECT voting_mode FROM elections WHERE org_id = o.id ORDER BY created_at DESC LIMIT 1) AS latest_voting_mode,
+          (SELECT vote_type   FROM elections WHERE org_id = o.id ORDER BY created_at DESC LIMIT 1) AS latest_vote_type
         FROM organizations o
         LEFT JOIN elections  e ON e.org_id = o.id
         LEFT JOIN voters     v ON v.election_id = e.id
@@ -77,24 +79,43 @@ router.get("/overview", requireSuperAdmin, async (req, res) => {
         LEFT JOIN voters    v ON v.election_id = e.id
       `),
 
-            // Currently active elections with live voter counts
+            // Currently active elections — votes from candidate counts (works for all types)
             query(`
-        SELECT
-          e.id,
-          e.name          AS election_name,
-          e.status,
-          e.started_at,
-          e.ends_at,
-          o.name          AS org_name,
-          o.slug,
-          COUNT(DISTINCT v.id)                                    AS total_voters,
-          COUNT(DISTINCT v.id) FILTER (WHERE v.has_voted = TRUE) AS votes_cast
-        FROM elections e
-        JOIN organizations o ON o.id = e.org_id
-        LEFT JOIN voters v   ON v.election_id = e.id
-        WHERE e.status = 'ACTIVE'
+    SELECT
+      e.id,
+      e.name          AS election_name,
+      e.status,
+      e.started_at,
+      e.ends_at,
+      e.voting_mode,
+      e.vote_type,
+      e.fraud_tier,
+      o.name          AS org_name,
+      o.slug,
+      COUNT(DISTINCT v.id)                                    AS total_voters,
+      COALESCE((SELECT SUM(vote_count) FROM candidates WHERE election_id = e.id), 0) AS votes_cast
+    FROM elections e
+    JOIN organizations o ON o.id = e.org_id
+    LEFT JOIN voters v   ON v.election_id = e.id
+    WHERE e.status = 'ACTIVE'
         GROUP BY e.id, o.id
         ORDER BY e.started_at DESC
+      `),
+
+            // Payment health — elections with stuck PENDING transactions
+            query(`
+        SELECT
+          e.id, e.name AS election_name, o.name AS org_name, o.slug,
+          COUNT(*) FILTER (WHERE pt.status = 'PENDING') AS pending,
+          COUNT(*) FILTER (WHERE pt.status = 'SUCCESS') AS success,
+          COUNT(*) AS total
+        FROM paid_transactions pt
+        JOIN elections e     ON e.id = pt.election_id
+        JOIN organizations o ON o.id = pt.org_id
+        GROUP BY e.id, o.id
+        HAVING COUNT(*) FILTER (WHERE pt.status = 'PENDING') >= 3
+           AND COUNT(*) FILTER (WHERE pt.status = 'PENDING') > COUNT(*) FILTER (WHERE pt.status = 'SUCCESS')
+        ORDER BY pending DESC
       `),
         ])
 
@@ -102,6 +123,7 @@ router.get("/overview", requireSuperAdmin, async (req, res) => {
             orgs: orgsResult.rows,
             stats: statsResult.rows[0],
             liveElections: activeResult.rows,
+            paymentAlerts: paymentHealthResult.rows,
         })
     } catch (err) {
         console.error("Superadmin overview error:", err)
@@ -215,6 +237,70 @@ router.patch("/orgs/:orgId/reactivate", requireSuperAdmin, async (req, res) => {
 
         return ok(res, { message: `${result.rows[0].name} has been reactivated` })
     } catch (err) {
+        return fail(res, "Server error", 500)
+    }
+})
+
+// ─── GET /superadmin/invoices — every paid transaction, platform-wide ─────────
+router.get("/invoices", requireSuperAdmin, async (req, res) => {
+    const { org, status, search, limit = 50, offset = 0 } = req.query
+    try {
+        const conditions = []
+        const values = []
+        let idx = 1
+
+        if (org) { conditions.push(`o.slug ILIKE $${idx++}`); values.push(`%${org}%`) }
+        if (status) { conditions.push(`pt.status = $${idx++}`); values.push(status) }
+        if (search) {
+            conditions.push(`(pt.voter_email ILIKE $${idx} OR pt.reference ILIKE $${idx} OR c.name ILIKE $${idx} OR o.name ILIKE $${idx})`)
+            values.push(`%${search}%`); idx++
+        }
+        const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""
+
+        const result = await query(
+            `SELECT pt.id, pt.reference, pt.voter_email, pt.amount_kobo, pt.fee_kobo,
+                pt.votes_purchased, pt.status, pt.created_at, pt.position,
+                c.name AS candidate_name,
+                e.name AS election_name,
+                o.name AS org_name, o.slug AS org_slug
+         FROM paid_transactions pt
+         JOIN candidates c    ON c.id = pt.candidate_id
+         JOIN elections  e    ON e.id = pt.election_id
+         JOIN organizations o ON o.id = pt.org_id
+         ${where}
+         ORDER BY pt.created_at DESC
+         LIMIT $${idx++} OFFSET $${idx++}`,
+            [...values, Number(limit), Number(offset)]
+        )
+
+        const countResult = await query(
+            `SELECT COUNT(*) AS total
+         FROM paid_transactions pt
+         JOIN candidates c    ON c.id = pt.candidate_id
+         JOIN organizations o ON o.id = pt.org_id
+         ${where}`,
+            values
+        )
+
+        const totals = await query(
+            `SELECT
+           COALESCE(SUM(amount_kobo) FILTER (WHERE status='SUCCESS'),0) AS revenue_kobo,
+           COUNT(*) FILTER (WHERE status='SUCCESS') AS success_count,
+           COUNT(*) FILTER (WHERE status='PENDING') AS pending_count
+         FROM paid_transactions`
+        )
+
+        return ok(res, {
+            invoices: result.rows,
+            total: Number(countResult.rows[0].total),
+            summary: {
+                revenueKobo: Number(totals.rows[0].revenue_kobo),
+                successCount: Number(totals.rows[0].success_count),
+                pendingCount: Number(totals.rows[0].pending_count),
+            },
+        })
+    } catch (err) {
+        console.error("Superadmin invoices error:", err)
         return fail(res, "Server error", 500)
     }
 })

@@ -9,6 +9,7 @@
     "start": "node src/server.js",
     "db:setup": "node src/db/setup.js",
     "migrate:open": "node src/db/migrate-open-voting.js",
+    "migrate:paid": "node src/db/migrate-paid-voting.js",
     "db:seed": "node src/db/seed.js"
   },
   "dependencies": {

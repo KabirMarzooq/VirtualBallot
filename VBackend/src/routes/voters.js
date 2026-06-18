@@ -2,7 +2,7 @@ import express from "express"
 import { query } from "../db/pool.js"
 import { requireAdmin } from "../middleware/auth.js"
 import { resolveOrg } from "../middleware/auth.js"
-import { ok, fail } from "../utils/index.js"
+import { ok, fail, isValidEmail } from "../utils/index.js"
 
 const router = express.Router()
 
@@ -169,7 +169,7 @@ router.post("/:slug/register", resolveOrg, async (req, res) => {
   if (!voterId || !email) return fail(res, "Voter ID and email required")
 
   // Basic email format check
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!isValidEmail(email)) {
     return fail(res, "Please enter a valid email address")
   }
 

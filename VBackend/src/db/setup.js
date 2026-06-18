@@ -28,7 +28,11 @@ CREATE TABLE IF NOT EXISTS organizations (
   admin_password  TEXT NOT NULL,          -- bcrypt hashed
   observer_pin    TEXT NOT NULL DEFAULT '$2a$10$placeholder',  -- bcrypt hashed
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  is_active       BOOLEAN NOT NULL DEFAULT TRUE
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  paystack_subaccount_code  TEXT,
+  settlement_bank_name      TEXT,
+  settlement_account_number TEXT,
+  settlement_business_name  TEXT
 );
 
 -- ── Elections ─────────────────────────────────────────────────────────────────
@@ -43,6 +47,10 @@ CREATE TABLE IF NOT EXISTS elections (
   show_countdown    BOOLEAN NOT NULL DEFAULT FALSE,
   voting_mode       TEXT NOT NULL DEFAULT 'CLOSED' CHECK (voting_mode IN ('CLOSED','OPEN')),
   fraud_tier        TEXT NOT NULL DEFAULT 'EMAIL' CHECK (fraud_tier IN ('EMAIL','DEVICE')),
+  vote_type         TEXT NOT NULL DEFAULT 'STANDARD' CHECK (vote_type IN ('STANDARD','PAID')),
+  pricing_model     TEXT NOT NULL DEFAULT 'FIXED' CHECK (pricing_model IN ('FIXED','BUNDLE')),
+  price_per_vote    INTEGER NOT NULL DEFAULT 0,
+  vote_bundles      JSONB NOT NULL DEFAULT '[]'::jsonb,
   started_at        TIMESTAMPTZ,
   ends_at           TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -77,6 +85,27 @@ CREATE TABLE IF NOT EXISTS candidates (
   vote_count  INTEGER NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ── Paid Transactions (pay-per-vote) ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS paid_transactions (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  election_id       UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  org_id            UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  candidate_id      UUID NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+  position          TEXT NOT NULL,
+  voter_email       TEXT NOT NULL,
+  reference         TEXT NOT NULL UNIQUE,
+  amount_kobo       INTEGER NOT NULL,
+  fee_kobo          INTEGER NOT NULL DEFAULT 0,
+  votes_purchased   INTEGER NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'PENDING'
+                    CHECK (status IN ('PENDING','SUCCESS','FAILED')),
+  paystack_data     JSONB,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_paid_tx_election ON paid_transactions(election_id);
+CREATE INDEX IF NOT EXISTS idx_paid_tx_status   ON paid_transactions(status);
 
 -- ── Open Votes (public voting, no roster) ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS open_votes (

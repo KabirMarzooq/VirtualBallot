@@ -19,6 +19,13 @@ export const formatTimeLeft = (ms) => {
         : `${h}h : ${m}m : ${s}s`
 }
 
+// ─── Email Validation ──────────────────────────────────────────────────
+
+export const isValidEmail = (email) =>
+    typeof email === "string" &&
+    email.trim().length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
 // ─── ID / Receipt Generation ──────────────────────────────────────────────────
 
 export const genReceiptId = () =>
@@ -68,6 +75,9 @@ export const parseVoterCSV = (text) => {
             const name = cols[nameIdx] || ""
             let email = cols[emailIdx] || null
             if (email && (email.trim() === "-" || email.trim() === "")) email = null
+            // Drop malformed emails to null rather than storing junk;
+            // the voter can add a valid one at registration.
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) email = null
 
             return matric && name ? { matric, name, email } : null
         })

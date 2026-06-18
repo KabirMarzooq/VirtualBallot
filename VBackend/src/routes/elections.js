@@ -32,6 +32,10 @@ router.get("/:slug", resolveOrg, async (req, res) => {
         isPublished: e.is_published,
         votingMode: e.voting_mode,
         fraudTier: e.fraud_tier,
+        voteType: e.vote_type,
+        pricingModel: e.pricing_model,
+        pricePerVote: e.price_per_vote,
+        voteBundles: e.vote_bundles || [],
         registryLocked: e.registry_locked,
         showCountdown: e.show_countdown,
         endsAt: e.ends_at,
@@ -201,7 +205,7 @@ router.patch("/:slug/observer-pin", resolveOrg, requireAdmin, async (req, res) =
 
 // ─── PATCH /elections/:slug/config — Admin: update election settings ──────────
 router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
-  const { status, isPublished, votingMode, fraudTier, registryLocked, showCountdown, endsAt } = req.body
+  const { status, isPublished, votingMode, fraudTier, registryLocked, showCountdown, endsAt, voteType, pricingModel, pricePerVote, voteBundles } = req.body
 
   try {
     const updates = []
@@ -212,6 +216,10 @@ router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
     if (isPublished !== undefined) { updates.push(`is_published = $${idx++}`); values.push(isPublished) }
     if (votingMode !== undefined) { updates.push(`voting_mode = $${idx++}`); values.push(votingMode) }
     if (fraudTier !== undefined) { updates.push(`fraud_tier = $${idx++}`); values.push(fraudTier) }
+    if (voteType !== undefined) { updates.push(`vote_type = $${idx++}`); values.push(voteType) }
+    if (pricingModel !== undefined) { updates.push(`pricing_model = $${idx++}`); values.push(pricingModel) }
+    if (pricePerVote !== undefined) { updates.push(`price_per_vote = $${idx++}`); values.push(pricePerVote) }
+    if (voteBundles !== undefined) { updates.push(`vote_bundles = $${idx++}`); values.push(JSON.stringify(voteBundles)) }
     if (registryLocked !== undefined) { updates.push(`registry_locked = $${idx++}`); values.push(registryLocked) }
     if (showCountdown !== undefined) { updates.push(`show_countdown = $${idx++}`); values.push(showCountdown) }
     if (endsAt !== undefined) { updates.push(`ends_at = $${idx++}`); values.push(endsAt) }
@@ -270,6 +278,10 @@ router.get("/:slug/admin/overview", resolveOrg, requireAdmin, async (req, res) =
         isPublished: election.is_published,
         votingMode: election.voting_mode,
         fraudTier: election.fraud_tier,
+        voteType: election.vote_type,
+        pricingModel: election.pricing_model,
+        pricePerVote: election.price_per_vote,
+        voteBundles: election.vote_bundles || [],
         registryLocked: election.registry_locked,
         showCountdown: election.show_countdown,
         endsAt: election.ends_at,
@@ -309,6 +321,10 @@ router.get("/:slug/observer/overview", resolveOrg, requireObserver, async (req, 
         isPublished: election.is_published,
         votingMode: election.voting_mode,
         fraudTier: election.fraud_tier,
+        voteType: election.vote_type,
+        pricingModel: election.pricing_model,
+        pricePerVote: election.price_per_vote,
+        voteBundles: election.vote_bundles || [],
         registryLocked: election.registry_locked,
         showCountdown: election.show_countdown,
         endsAt: election.ends_at,
@@ -334,7 +350,7 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
   try {
     // Get all elections except the current (most recent) one
     const result = await query(
-      `SELECT e.id, e.name, e.status, e.started_at, e.ends_at, e.created_at,
+      `SELECT e.id, e.name, e.status, e.started_at, e.ends_at, e.created_at, e.voting_mode, e.vote_type,
               COUNT(DISTINCT v.id) FILTER (WHERE v.has_voted = TRUE) AS votes_cast,
               COUNT(DISTINCT v.id) FILTER (WHERE v.email IS NOT NULL) AS accredited_count,
               COUNT(DISTINCT v.id) AS total_voters,
@@ -406,6 +422,8 @@ router.get("/:slug/history", resolveOrg, requireAdmin, async (req, res) => {
         startedAt: e.started_at,
         endsAt: e.ends_at,
         createdAt: e.created_at,
+        votingMode: e.voting_mode,
+        voteType: e.vote_type,
         votesCast: Number(e.votes_cast),
         accredited: Number(e.accredited_count),
         totalVoters: Number(e.total_voters),

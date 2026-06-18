@@ -21,6 +21,8 @@ import voterRoutes from "./routes/voters.js"
 import candidateRoutes from "./routes/candidates.js"
 import superadminRoutes from "./routes/superadmin.js"
 import openRoutes from "./routes/open.js"
+import paymentRoutes from "./routes/payments.js"
+import paidRoutes from "./routes/paid.js"
 
 const app = express()
 const httpServer = createServer(app)   // ← wrap Express in an HTTP server
@@ -57,6 +59,10 @@ app.use(cors({
 }))
 
 // ── Body parsing ──────────────────────────────────────────────────────────────
+
+// Paystack webhook MUST receive the raw body for signature verification —
+// register it before express.json() so the body isn't parsed.
+app.use("/paid/webhook", express.raw({ type: "application/json" }))
 app.use(express.json({ limit: "2mb" }))
 app.use(express.urlencoded({ extended: true }))
 
@@ -84,6 +90,8 @@ app.use("/voters", voterRoutes)
 app.use("/candidates", candidateRoutes)
 app.use("/superadmin", superadminRoutes)
 app.use("/open", openRoutes)
+app.use("/payments", paymentRoutes)
+app.use("/paid", paidRoutes)
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/health", (req, res) => {

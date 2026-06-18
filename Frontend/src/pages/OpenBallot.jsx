@@ -9,7 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { fetchOpenElection, requestOpenOtp, castOpenVote } from "../api";
-import { getDeviceFingerprint } from "../utils";
+import { getDeviceFingerprint, isValidEmail } from "../utils";
 import { ACCENT_MAP } from "../constants";
 import VBLoader from "../components/ui/VBLoader";
 
@@ -53,6 +53,7 @@ export default function OpenBallotPage() {
 
   const handleRequestOtp = async () => {
     if (!email.trim()) return;
+    if (!isValidEmail(email)) { setError("Please enter a valid email address."); return; }
     setOtpSending(true);
     try {
       await requestOpenOtp(email.trim(), slug);

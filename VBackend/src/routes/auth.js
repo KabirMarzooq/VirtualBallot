@@ -4,8 +4,8 @@ import { query } from "../db/pool.js"
 import crypto from "crypto"
 import {
   generateOTP, hashOTP, verifyOTP,
-  signAccessToken, signRefreshToken,
-  sendOTPEmail, sendPasswordResetEmail, generateReceiptId,
+  signAccessToken, signRefreshToken, verifyRefreshToken,
+  sendOTPEmail, sendPasswordResetEmail, generateReceiptId, isValidEmail,
   ok, fail,
 } from "../utils/index.js"
 import dotenv from "dotenv"
@@ -23,6 +23,7 @@ router.post("/org/register", async (req, res) => {
   if (!orgName?.trim()) return fail(res, "Organization name is required")
   if (!slug?.trim()) return fail(res, "URL slug is required")
   if (!adminEmail?.trim()) return fail(res, "Admin email is required")
+  if (!isValidEmail(adminEmail)) return fail(res, "Please enter a valid email address")
   if (!password) return fail(res, "Password is required")
   if (password !== confirmPassword) return fail(res, "Passwords do not match")
   if (password.length < 8) return fail(res, "Password must be at least 8 characters")
@@ -93,6 +94,7 @@ router.post("/org/register", async (req, res) => {
 router.post("/admin/login", async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) return fail(res, "Email and password required")
+  if (!isValidEmail(email)) return fail(res, "Please enter a valid email address")
 
   try {
     const orgResult = await query(
@@ -125,9 +127,15 @@ router.post("/admin/login", async (req, res) => {
       email: org.admin_email,
       role: "admin",
     })
+    const refreshToken = signRefreshToken({
+      orgId: org.id,
+      email: org.admin_email,
+      role: "admin",
+    })
 
     return ok(res, {
       accessToken,
+      refreshToken,
       org: { id: org.id, name: org.name, slug: org.slug },
       electionId,
     })
@@ -324,6 +332,7 @@ router.post("/:slug/observer/login", async (req, res) => {
 router.post("/admin/forgot-password", async (req, res) => {
   const { email } = req.body
   if (!email?.trim()) return fail(res, "Email is required")
+  if (!isValidEmail(email)) return fail(res, "Please enter a valid email address")
 
   try {
     const orgResult = await query(
@@ -406,6 +415,57 @@ router.post("/admin/reset-password", async (req, res) => {
   } catch (err) {
     console.error("Reset password error:", err)
     return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/refresh ───────────────────────────────────────────────────────
+// Exchanges a valid refresh token for a new access token.
+// Body: { refreshToken }
+router.post("/refresh", async (req, res) => {
+  const { refreshToken } = req.body
+  if (!refreshToken) return fail(res, "Refresh token required", 401)
+
+  try {
+    const payload = verifyRefreshToken(refreshToken)
+
+    // Only admin refresh is supported here
+    if (payload.role !== "admin") {
+      return fail(res, "Invalid refresh token", 401)
+    }
+
+    // Confirm the org still exists and is active
+    const orgResult = await query(
+      `SELECT id, name, slug, admin_email, is_active FROM organizations WHERE id = $1`,
+      [payload.orgId]
+    )
+    if (orgResult.rows.length === 0) return fail(res, "Account not found", 404)
+    const org = orgResult.rows[0]
+    if (!org.is_active) {
+      return fail(res, "This organization has been deactivated.", 403)
+    }
+
+    // Get the current election for the fresh token
+    const electionResult = await query(
+      `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [org.id]
+    )
+    const electionId = electionResult.rows[0]?.id || null
+
+    const accessToken = signAccessToken({
+      orgId: org.id,
+      electionId,
+      email: org.admin_email,
+      role: "admin",
+    })
+
+    return ok(res, {
+      accessToken,
+      org: { id: org.id, name: org.name, slug: org.slug },
+      electionId,
+    })
+  } catch (err) {
+    // Refresh token itself expired or invalid → user must log in again
+    return fail(res, "Session expired — please log in again", 401)
   }
 })
 

@@ -5,7 +5,6 @@ import {
   Radio,
   Lock,
   Clock,
-  RefreshCw,
   CheckCircle,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
@@ -99,7 +98,9 @@ export default function ElectionTab() {
     const endsAt = new Date(Date.now() + ms).toISOString();
     showConfirm(
       "Start Election",
-      `Begin a ${durD > 0 ? durD + "d " : ""}${durH}h ${durM}m ${durS}s election?`,
+      `Begin a ${
+        durD > 0 ? durD + "d " : ""
+      }${durH}h ${durM}m ${durS}s election?`,
       () =>
         patch(
           { status: "ACTIVE", endsAt, registryLocked: true },
@@ -111,59 +112,6 @@ export default function ElectionTab() {
   const end = () =>
     showConfirm("End Early?", "Stop voting now? Cannot be undone.", () =>
       patch({ status: "ENDED" }, "Election ended early by admin", "warning")
-    );
-
-  const reset = () =>
-    showConfirm(
-      "End Election",
-      "Mark this election as ended? Results will be preserved. Head to the History tab to create a new election.",
-      async () => {
-        await patch({ status: "ENDED" }, "Election ended by admin", "system");
-
-        try {
-          const overview = await fetchAdminOverview(accessToken, orgSlug);
-          setCandidates(
-            overview.candidates.map((c) => ({
-              id: c.id,
-              name: c.name,
-              position: c.position,
-              image: c.image_url,
-              manifesto: c.manifesto || "",
-              color: c.color,
-              votes: c.vote_count,
-            }))
-          );
-          setUsers(
-            overview.voters.map((v) => ({
-              id: v.id,
-              matric: v.matric,
-              name: v.name,
-              email: v.email,
-              hasVoted: v.has_voted,
-              votedAt: v.voted_at,
-              role: "STUDENT",
-            }))
-          );
-          setActivityLog(
-            overview.auditLog.map((e) => ({
-              id: e.id,
-              type: e.event_type,
-              message: e.message,
-              timestamp: new Date(e.created_at).toLocaleTimeString(),
-              date: new Date(e.created_at).toLocaleDateString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-              }),
-              iso: e.created_at,
-            }))
-          );
-        } catch (_) {}
-
-        showAlert(
-          "Election Ended",
-          "Head to the History tab to archive results and start a new election."
-        );
-      }
     );
 
   const phases = PHASES(electionConfig);
@@ -179,13 +127,19 @@ export default function ElectionTab() {
                 Public Voting Link · Open Election
               </p>
               <p className="text-sm font-mono text-teal-300 truncate">
-                {`${window.location.origin}/open/${orgSlug}`}
+                {`${window.location.origin}/${
+                  electionConfig.voteType === "PAID" ? "paid" : "open"
+                }/${orgSlug}`}
               </p>
             </div>
             <button
               onClick={() => {
                 navigator.clipboard
-                  .writeText(`${window.location.origin}/open/${orgSlug}`)
+                  .writeText(
+                    `${window.location.origin}/${
+                      electionConfig.voteType === "PAID" ? "paid" : "open"
+                    }/${orgSlug}`
+                  )
                   .then(() => {
                     setCopiedOpen(true);
                     setTimeout(() => setCopiedOpen(false), 2000);
@@ -320,7 +274,7 @@ export default function ElectionTab() {
           )}
 
           {electionConfig.status === "ACTIVE" && (
-            <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+            <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                 Time Remaining
               </p>
@@ -341,19 +295,9 @@ export default function ElectionTab() {
             <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 text-center">
               <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
               <p className="font-bold text-white mb-1">Election Concluded</p>
-              <button
-                onClick={reset}
-                disabled={saving}
-                className="w-full mt-4 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 border border-slate-600 transition-colors cursor-pointer"
-              >
-                {saving ? (
-                  <VBLoader size="sm" />
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" /> Archive & Restart
-                  </>
-                )}
-              </button>
+              <p className="text-sm text-slate-400 mt-1">
+                Results are saved. Use “New Election” at the top to start a fresh one.
+              </p>
             </div>
           )}
 

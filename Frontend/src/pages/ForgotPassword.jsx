@@ -3,6 +3,7 @@ import { ShieldAlert, Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { adminForgotPassword } from "../api";
 import VBLoader from "../components/ui/VBLoader";
+import { isValidEmail } from "../utils";
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
 
   const submit = async () => {
     if (!email.trim()) return;
+    if (!isValidEmail(email)) { setError("Please enter a valid email address."); return; }
     setLoading(true);
     setError("");
     try {

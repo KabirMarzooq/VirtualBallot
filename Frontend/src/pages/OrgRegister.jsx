@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import VBLoader from "../components/ui/VBLoader";
 import { registerOrg, checkSlugAvailable } from "../api";
+import { isValidEmail } from "../utils";
 
 const toSlug = (str) =>
   str.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 30);
@@ -51,6 +52,7 @@ export default function OrgRegisterPage() {
 
   const handleSubmit = async () => {
     if (!form.adminEmail.trim())     return setError("Admin email is required");
+    if (!isValidEmail(form.adminEmail.trim())) { setError("Please enter a valid email address."); return; }
     if (!form.password)              return setError("Password is required");
     if (form.password.length < 8)    return setError("Password must be at least 8 characters");
     if (form.password !== form.confirmPassword) return setError("Passwords do not match");

@@ -10,6 +10,7 @@ import {
   ScrollText,
   Archive,
   Plus,
+  Receipt,
   RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,7 @@ import CandidatesTab from "../components/admin/CandidatesTab";
 import BrandingTab from "../components/admin/BrandingTab";
 import AuditLogTab from "../components/admin/AuditLogTab";
 import HistoryTab from "../components/admin/HistoryTab";
+import InvoiceTab from "../components/admin/InvoiceTab";
 import { fetchAdminOverview, createNewElection } from "../api";
 
 const TABS = [
@@ -29,6 +31,7 @@ const TABS = [
   { id: "voters", label: "Voters", icon: Users },
   { id: "candidates", label: "Candidates", icon: UserSquare2 },
   { id: "branding", label: "Branding", icon: Palette },
+  { id: "invoices", label: "Invoices", icon: Receipt },
   { id: "history", label: "History", icon: Archive },
   { id: "audit", label: "Audit Log", icon: ScrollText },
 ];
@@ -107,6 +110,25 @@ export default function AdminPage() {
     }
   }, [electionConfig.votingMode, activeTab]);
 
+  // Guard: if there's no session (e.g. user hit back after logout), bounce to login
+  useEffect(() => {
+    const token = sessionStorage.getItem("vb_admin_token");
+    if (!token) {
+      navigate("/admin/login", { replace: true });
+    }
+  }, [navigate]);
+
+  // Defeat Chrome bfcache restoring a logged-out dashboard on back-button
+  useEffect(() => {
+    const onPageShow = (e) => {
+      if (e.persisted && !sessionStorage.getItem("vb_admin_token")) {
+        navigate("/admin/login", { replace: true });
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [navigate]);
+
   const handleRefresh = async () => {
     if (!accessToken || !orgSlug) return;
     setRefreshing(true);
@@ -120,6 +142,10 @@ export default function AdminPage() {
         endsAt: ov.election.endsAt,
         votingMode: ov.election.votingMode || "CLOSED",
         fraudTier: ov.election.fraudTier || "EMAIL",
+        voteType: ov.election.voteType || "STANDARD",
+        pricingModel: ov.election.pricingModel || "FIXED",
+        pricePerVote: ov.election.pricePerVote || 0,
+        voteBundles: ov.election.voteBundles || [],
       });
       setCandidates(
         ov.candidates.map((c) => ({
@@ -154,6 +180,7 @@ export default function AdminPage() {
     setCurrentUser(null);
     resetBallotSession();
     sessionStorage.removeItem("vb_admin_tab");
+    sessionStorage.removeItem("vb_admin_refresh");
     navigate("/");
   };
 
@@ -180,6 +207,10 @@ export default function AdminPage() {
             endsAt: ov.election.endsAt,
             votingMode: ov.election.votingMode || "CLOSED",
             fraudTier: ov.election.fraudTier || "EMAIL",
+            voteType: ov.election.voteType || "STANDARD",
+            pricingModel: ov.election.pricingModel || "FIXED",
+            pricePerVote: ov.election.pricePerVote || 0,
+            voteBundles: ov.election.voteBundles || [],
           });
           setCandidates([]);
           setUsers([]);
@@ -297,6 +328,9 @@ export default function AdminPage() {
             // Open elections have no roster — hide the Voters tab
             if (electionConfig.votingMode === "OPEN" && t.id === "voters")
               return false;
+            // Invoices only relevant for paid elections
+            if (electionConfig.voteType !== "PAID" && t.id === "invoices")
+              return false;
             return true;
           }).map((t) => {
             const Icon = t.icon;
@@ -338,6 +372,7 @@ export default function AdminPage() {
           {activeTab === "voters" && <VotersTab />}
           {activeTab === "candidates" && <CandidatesTab />}
           {activeTab === "branding" && <BrandingTab />}
+          {activeTab === "invoices" && <InvoiceTab />}
           {activeTab === "history" && <HistoryTab />}
           {activeTab === "audit" && <AuditLogTab />}
         </div>

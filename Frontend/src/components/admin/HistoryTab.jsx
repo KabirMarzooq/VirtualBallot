@@ -56,6 +56,12 @@ function ElectionDetailModal({ election, branding, onClose }) {
     byPosition[pos].sort((a, b) => b.votes - a.votes);
   });
 
+  const isRosterless = election.votingMode === "OPEN";
+  const totalVotesCast = (election.candidates || []).reduce(
+    (s, c) => s + (c.votes || 0),
+    0
+  );
+
   const handleDownload = () => {
     const org = branding?.institutionName || "Organization";
     const date = new Date().toLocaleString("en-GB", {
@@ -170,24 +176,37 @@ function ElectionDetailModal({ election, branding, onClose }) {
         </div>
       </div>
   
-      <div class="stats-grid">
-        <div class="stat-box"><div class="stat-val" style="color:#1e293b">${
-          election.totalVoters
-        }</div><div class="stat-lbl">Registered</div></div>
-        <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
-          election.accredited ?? 0
-        }</div><div class="stat-lbl">Accredited</div></div>
-        <div class="stat-box"><div class="stat-val" style="color:#16a34a">${
-          election.votesCast
-        }</div><div class="stat-lbl">Votes Cast</div></div>
-        <div class="stat-box"><div class="stat-val" style="color:#dc2626">${
-          election.didNotVote ?? election.totalVoters - election.votesCast
-        }</div><div class="stat-lbl">Did Not Vote</div></div>
-        <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
-          election.turnout
-        }%</div><div class="stat-lbl">Turnout</div></div>
-      </div>
-      <div class="turnout-bar"><div class="turnout-fill"></div></div>
+      ${
+        isRosterless
+          ? `
+        <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stat-box"><div class="stat-val" style="color:#16a34a">${totalVotesCast}</div><div class="stat-lbl">Total Votes</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
+            (election.candidates || []).length
+          }</div><div class="stat-lbl">Candidates</div></div>
+        </div>
+        `
+          : `
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-val" style="color:#1e293b">${
+            election.totalVoters
+          }</div><div class="stat-lbl">Registered</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
+            election.accredited ?? 0
+          }</div><div class="stat-lbl">Accredited</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#16a34a">${
+            election.votesCast
+          }</div><div class="stat-lbl">Votes Cast</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#dc2626">${
+            election.didNotVote ?? election.totalVoters - election.votesCast
+          }</div><div class="stat-lbl">Did Not Vote</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
+            election.turnout
+          }%</div><div class="stat-lbl">Turnout</div></div>
+        </div>
+        <div class="turnout-bar"><div class="turnout-fill"></div></div>
+        `
+      }
   
       <div class="section-title">Results by Position</div>
       ${positionBlocks}
@@ -311,43 +330,63 @@ function ElectionDetailModal({ election, branding, onClose }) {
           {/* ── Voter Stats ─────────────────────────────────────────────────── */}
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-              Voter Statistics
+              {isRosterless ? "Vote Statistics" : "Voter Statistics"}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {[
-                {
-                  icon: Users,
-                  label: "Registered",
-                  value: election.totalVoters,
-                  color: "text-white",
-                },
-                {
-                  icon: UserCheck,
-                  label: "Accredited",
-                  value: election.accredited ?? 0,
-                  color: "text-blue-400",
-                },
-                {
-                  icon: Vote,
-                  label: "Votes Cast",
-                  value: election.votesCast,
-                  color: "text-green-400",
-                },
-                {
-                  icon: UserX,
-                  label: "Did Not Vote",
-                  value:
-                    election.didNotVote ??
-                    election.totalVoters - election.votesCast,
-                  color: "text-red-400",
-                },
-                {
-                  icon: TrendingUp,
-                  label: "Turnout",
-                  value: `${election.turnout}%`,
-                  color: "text-blue-400",
-                },
-              ].map((s) => (
+            <div
+              className={`grid gap-3 ${
+                isRosterless ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"
+              }`}
+            >
+              {(isRosterless
+                ? [
+                    {
+                      icon: Vote,
+                      label: "Total Votes",
+                      value: totalVotesCast,
+                      color: "text-green-400",
+                    },
+                    {
+                      icon: BarChart3,
+                      label: "Candidates",
+                      value: (election.candidates || []).length,
+                      color: "text-blue-400",
+                    },
+                  ]
+                : [
+                    {
+                      icon: Users,
+                      label: "Registered",
+                      value: election.totalVoters,
+                      color: "text-white",
+                    },
+                    {
+                      icon: UserCheck,
+                      label: "Accredited",
+                      value: election.accredited ?? 0,
+                      color: "text-blue-400",
+                    },
+                    {
+                      icon: Vote,
+                      label: "Votes Cast",
+                      value: election.votesCast,
+                      color: "text-green-400",
+                    },
+                    {
+                      icon: UserX,
+                      label: "Did Not Vote",
+                      value:
+                        election.didNotVote ??
+                        election.totalVoters - election.votesCast,
+                      color: "text-red-400",
+                    },
+                    {
+                      icon: TrendingUp,
+                      label: "Turnout",
+                      value: `${election.turnout}%`,
+                      color: "text-blue-400",
+                    },
+                  ]
+              ).map((s) => (
                 <div
                   key={s.label}
                   className="bg-slate-800 rounded-2xl p-4 border border-slate-700"
@@ -365,23 +404,25 @@ function ElectionDetailModal({ election, branding, onClose }) {
               ))}
             </div>
 
-            {/* Turnout bar */}
-            <div className="mt-3 bg-slate-800 rounded-2xl p-4 border border-slate-700">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                  Participation
-                </p>
-                <p className="text-xs font-mono text-slate-400">
-                  {election.votesCast} / {election.totalVoters}
-                </p>
+            {/* Turnout bar — roster elections only */}
+            {!isRosterless && (
+              <div className="mt-3 bg-slate-800 rounded-2xl p-4 border border-slate-700">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    Participation
+                  </p>
+                  <p className="text-xs font-mono text-slate-400">
+                    {election.votesCast} / {election.totalVoters}
+                  </p>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-3">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all"
+                    style={{ width: `${election.turnout}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-slate-700 rounded-full h-3">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all"
-                  style={{ width: `${election.turnout}%` }}
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           {/* ── Results by Position ─────────────────────────────────────────── */}

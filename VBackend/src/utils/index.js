@@ -48,6 +48,28 @@ export const verifyRefreshToken = (token) =>
 
 // ─── Email ────────────────────────────────────────────────────────────────────
 
+// ─── Email validation ─────────────────────────────────────────────────────────
+// Format check that catches typos and junk. Deliverability is separately proven
+// by OTP/receipt emails actually arriving, so no third-party service needed.
+const DISPOSABLE_DOMAINS = new Set([
+  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
+  "throwawaymail.com", "yopmail.com", "trashmail.com", "getnada.com",
+  "temp-mail.org", "fakeinbox.com", "sharklasers.com", "maildrop.cc",
+])
+
+export const isValidEmail = (email) => {
+  if (!email || typeof email !== "string") return false
+  const trimmed = email.trim().toLowerCase()
+  if (trimmed.length > 254) return false
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+}
+
+// Stricter check for paid voting — also rejects known disposable domains
+export const isValidNonDisposableEmail = (email) => {
+  if (!isValidEmail(email)) return false
+  const domain = email.trim().toLowerCase().split("@")[1]
+  return !DISPOSABLE_DOMAINS.has(domain)
+}
 
 let _resend = null;
 const getResend = () => {

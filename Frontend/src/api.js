@@ -29,7 +29,60 @@ async function request(path, options = {}, token = null) {
     const data = await res.json()
 
     if (!res.ok) {
-        // Throw the server's message so callers can display it directly
+        // Access token expired → try to silently refresh, then retry once
+        if (
+            res.status === 401 &&
+            token &&
+            !path.includes("/auth/refresh") &&
+            !options._isRetry
+        ) {
+            const refreshToken = sessionStorage.getItem("vb_admin_refresh")
+            if (refreshToken) {
+                try {
+                    const refreshed = await request(`/auth/refresh`, {
+                        method: "POST",
+                        body: JSON.stringify({ refreshToken }),
+                    })
+                    // Store the new access token
+                    sessionStorage.setItem("vb_admin_token", refreshed.accessToken)
+                    // Tell the app so React context updates its in-memory token
+                    window.dispatchEvent(
+                        new CustomEvent("vb:token-refreshed", {
+                            detail: { accessToken: refreshed.accessToken },
+                        })
+                    )
+                    // Retry the original request with the new token
+                    return await request(
+                        path,
+                        { ...options, _isRetry: true },
+                        refreshed.accessToken
+                    )
+                } catch (_) {
+                    // Refresh failed → fall through to logout
+                }
+            }
+            // No refresh token or refresh failed → clean logout
+            sessionStorage.removeItem("vb_admin_token")
+            sessionStorage.removeItem("vb_admin_refresh")
+            sessionStorage.removeItem("vb_admin_slug")
+            sessionStorage.removeItem("vb_admin_user")
+            sessionStorage.removeItem("vb_admin_tab")
+            sessionStorage.removeItem("vb_observer_token")
+            sessionStorage.removeItem("vb_observer_slug")
+            sessionStorage.removeItem("vb_observer_tab")
+            window.dispatchEvent(new CustomEvent("vb:session-expired"))
+            // Keep context's accessToken in sync when api.js silently refreshes it
+            useEffect(() => {
+                const handleRefreshed = (e) => {
+                    if (e.detail?.accessToken) {
+                        setAccessToken(e.detail.accessToken);
+                        sessionStorage.setItem("vb_admin_token", e.detail.accessToken);
+                    }
+                };
+                window.addEventListener("vb:token-refreshed", handleRefreshed);
+                return () => window.removeEventListener("vb:token-refreshed", handleRefreshed);
+            }, []);
+        }
         throw new Error(data.message || "Something went wrong")
     }
 
@@ -95,6 +148,12 @@ export const adminLogin = (email, password) =>
     request(`/auth/admin/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
+    })
+
+export const refreshAccessToken = (refreshToken) =>
+    request(`/auth/refresh`, {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
     })
 
 /** Request a password reset email for the given admin email */
@@ -192,6 +251,45 @@ export const castOpenVote = (payload, slug) =>
 /** Open election public results */
 export const fetchOpenResults = (slug) =>
     request(`/open/${slug}/results`)
+
+// ─── Payments / Paystack subaccount ────────────────────────────────────────────
+export const fetchBanks = (token, slug = ORG_SLUG) =>
+    request(`/payments/${slug}/banks`, {}, token)
+
+export const resolveBankAccount = (accountNumber, bankCode, token, slug = ORG_SLUG) =>
+    request(`/payments/${slug}/resolve-account`, {
+        method: "POST",
+        body: JSON.stringify({ accountNumber, bankCode }),
+    }, token)
+
+export const createOrgSubaccount = (payload, token, slug = ORG_SLUG) =>
+    request(`/payments/${slug}/subaccount`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    }, token)
+
+export const fetchOrgPaymentAccount = (token, slug = ORG_SLUG) =>
+    request(`/payments/${slug}/account`, {}, token)
+
+// ─── Paid voting ────────────────────────────────────────────────────────────────
+export const initializePaidVote = (payload, slug) =>
+    request(`/paid/${slug}/initialize`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    })
+
+export const verifyPaidVote = (reference, slug) =>
+    request(`/paid/${slug}/verify/${reference}`)
+
+export const fetchInvoices = (token, slug = ORG_SLUG) =>
+    request(`/paid/${slug}/invoices`, {}, token)
+
+export const fetchSuperAdminInvoices = (token, params = {}) => {
+    const qs = new URLSearchParams(
+        Object.entries(params).filter(([, v]) => v != null && v !== "")
+    ).toString()
+    return request(`/superadmin/invoices${qs ? `?${qs}` : ""}`, {}, token)
+}
 
 // ─── Election History ─────────────────────────────────────────────────────────
 

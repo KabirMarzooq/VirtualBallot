@@ -4,7 +4,7 @@ import { getClient, query } from "../db/pool.js"
 import { resolveOrg } from "../middleware/auth.js"
 import {
     generateReceiptId, generateOTP, hashOTP, verifyOTP,
-    sendOTPEmail, ok, fail,
+    sendOTPEmail, isValidEmail, ok, fail,
 } from "../utils/index.js"
 
 const router = express.Router()
@@ -19,7 +19,8 @@ router.get("/:slug", resolveOrg, async (req, res) => {
     try {
         const electionResult = await query(
             `SELECT id, name, status, is_published, show_countdown, ends_at,
-              voting_mode, fraud_tier
+              voting_mode, fraud_tier, vote_type, pricing_model,
+              price_per_vote, vote_bundles
        FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
             [req.orgId]
         )
@@ -51,6 +52,10 @@ router.get("/:slug", resolveOrg, async (req, res) => {
                 endsAt: e.ends_at,
                 votingMode: e.voting_mode,
                 fraudTier: e.fraud_tier,
+                voteType: e.vote_type,
+                pricingModel: e.pricing_model,
+                pricePerVote: e.price_per_vote,   // kobo
+                voteBundles: e.vote_bundles || [],
             },
             branding: {
                 institutionName: orgResult.rows[0]?.name || "",
@@ -68,7 +73,7 @@ router.get("/:slug", resolveOrg, async (req, res) => {
 // ─── POST /open/:slug/request-otp — EMAIL tier: send a code ──────────────────
 router.post("/:slug/request-otp", resolveOrg, async (req, res) => {
     const { email } = req.body
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!isValidEmail(email)) {
         return fail(res, "Please enter a valid email address")
     }
 
@@ -281,7 +286,7 @@ router.get("/:slug/results", resolveOrg, async (req, res) => {
         )
 
         const totalResult = await query(
-            `SELECT COUNT(*) AS total FROM open_votes WHERE election_id = $1`,
+            `SELECT COALESCE(SUM(vote_count), 0) AS total FROM candidates WHERE election_id = $1`,
             [e.id]
         )
 

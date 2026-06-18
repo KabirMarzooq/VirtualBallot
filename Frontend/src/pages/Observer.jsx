@@ -58,6 +58,9 @@ export default function ObserverPage() {
           registryLocked: ov.election.registryLocked,
           showCountdown: ov.election.showCountdown,
           endsAt: ov.election.endsAt,
+          votingMode: ov.election.votingMode || "CLOSED",
+          fraudTier: ov.election.fraudTier || "EMAIL",
+          voteType: ov.election.voteType || "STANDARD",
         });
         setBranding(ov.branding);
         setCandidates(
@@ -103,7 +106,28 @@ export default function ObserverPage() {
     return () => clearInterval(interval);
   }, [effectiveToken, slug]);
 
+  // Guard: if there's no session (e.g. user hit back after logout), bounce to login
+  useEffect(() => {
+    const token = sessionStorage.getItem("vb_observer_token");
+    if (!token) {
+      navigate(`/observer/login?slug=${slug}`, { replace: true });
+    }
+  }, [navigate, slug]);
+
+  // Defeat Chrome bfcache restoring a logged-out dashboard on back-button
+  useEffect(() => {
+    const onPageShow = (e) => {
+      if (e.persisted && !sessionStorage.getItem("vb_observer_token")) {
+        navigate(`/observer/login?slug=${slug}`, { replace: true });
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [navigate, slug]);
+
   const { total, accredited, voted, pct } = getTurnout(users);
+  const isRosterless = electionConfig.votingMode === "OPEN";
+  const totalVotesCast = candidates.reduce((sum, c) => sum + (c.votes ?? 0), 0);
   const ActiveComponent = OBSERVER_TABS.find(
     (t) => t.id === activeTab
   )?.Component;
@@ -183,33 +207,55 @@ export default function ObserverPage() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
         {/* KPI strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[
-            {
-              label: "Registered",
-              value: total,
-              color: "text-white",
-              bg: "bg-teal-700",
-            },
-            {
-              label: "Accredited",
-              value: accredited,
-              color: "text-blue-300",
-              bg: "bg-slate-900",
-            },
-            {
-              label: "Votes Cast",
-              value: voted,
-              color: "text-green-300",
-              bg: "bg-slate-900",
-            },
-            {
-              label: "Turnout",
-              value: `${pct}%`,
-              color: "text-amber-300",
-              bg: "bg-slate-900",
-            },
-          ].map((s) => (
+        <div
+          className={`grid gap-3 mb-6 ${
+            isRosterless
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-2 md:grid-cols-4"
+          }`}
+        >
+          {(isRosterless
+            ? [
+                {
+                  label: "Total Votes",
+                  value: totalVotesCast,
+                  color: "text-green-300",
+                  bg: "bg-teal-700",
+                },
+                {
+                  label: "Candidates",
+                  value: candidates.length,
+                  color: "text-blue-300",
+                  bg: "bg-slate-900",
+                },
+              ]
+            : [
+                {
+                  label: "Registered",
+                  value: total,
+                  color: "text-white",
+                  bg: "bg-teal-700",
+                },
+                {
+                  label: "Accredited",
+                  value: accredited,
+                  color: "text-blue-300",
+                  bg: "bg-slate-900",
+                },
+                {
+                  label: "Votes Cast",
+                  value: voted,
+                  color: "text-green-300",
+                  bg: "bg-slate-900",
+                },
+                {
+                  label: "Turnout",
+                  value: `${pct}%`,
+                  color: "text-amber-300",
+                  bg: "bg-slate-900",
+                },
+              ]
+          ).map((s) => (
             <div
               key={s.label}
               className={`${s.bg} rounded-2xl p-5 border border-white/10`}
@@ -225,22 +271,24 @@ export default function ObserverPage() {
         </div>
 
         {/* Turnout bar */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Turnout Progress
-            </p>
-            <p className="text-xs font-mono font-bold text-white">
-              {voted} / {total}
-            </p>
+        {!isRosterless && (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Turnout Progress
+              </p>
+              <p className="text-xs font-mono font-bold text-white">
+                {voted} / {total}
+              </p>
+            </div>
+            <div className="w-full bg-slate-800 rounded-full h-3">
+              <div
+                className="bg-gradient-to-r from-teal-500 to-teal-400 h-3 rounded-full transition-all duration-700"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-slate-800 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-teal-500 to-teal-400 h-3 rounded-full transition-all duration-700"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Tab bar */}
         <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 overflow-x-auto">

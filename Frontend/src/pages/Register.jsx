@@ -5,6 +5,7 @@ import { useApp } from "../context/AppContext";
 import VBLoader from "../components/ui/VBLoader";
 import { checkEligibility, registerVoter } from "../api";
 import { useSlug } from "../context/SlugContext";
+import { isValidEmail } from "../utils";
 
 export default function RegisterPage() {
   const { electionConfig, showAlert } = useApp();
@@ -57,6 +58,7 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     if (!email.trim()) return showAlert("Email Required", "Please enter your email address.");
+    if (!isValidEmail(email)) { showAlert("Please enter a valid email address."); return; }
     setLoading(true);
     try {
       await registerVoter(voterInfo.id, email.trim(), slug);

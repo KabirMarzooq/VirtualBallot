@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import VBLoader from "../components/ui/VBLoader";
 import { adminLogin, fetchAdminOverview } from "../api";
+import { isValidEmail } from "../utils";
 
 export default function AdminLoginPage() {
   const {
@@ -32,6 +33,7 @@ export default function AdminLoginPage() {
 
   const submit = async () => {
     if (!email || !password) return;
+    if (!isValidEmail(email)) { setError("Please enter a valid email address."); return; }
     setLoading(true);
     setError("");
     try {
@@ -39,6 +41,7 @@ export default function AdminLoginPage() {
       const loginData = await adminLogin(email.trim().toLowerCase(), password);
       const token = loginData.accessToken;
       setAccessToken(token);
+      sessionStorage.setItem("vb_admin_refresh", loginData.refreshToken);
       setElectionId(loginData.electionId);
       setOrgId(loginData.org.id);
       setOrgSlug(loginData.org.slug);
@@ -53,6 +56,12 @@ export default function AdminLoginPage() {
         registryLocked: overview.election.registryLocked,
         showCountdown: overview.election.showCountdown,
         endsAt: overview.election.endsAt,
+        votingMode: overview.election.votingMode || "CLOSED",
+        fraudTier: overview.election.fraudTier || "EMAIL",
+        voteType: overview.election.voteType || "STANDARD",
+        pricingModel: overview.election.pricingModel || "FIXED",
+        pricePerVote: overview.election.pricePerVote || 0,
+        voteBundles: overview.election.voteBundles || [],
       });
       setBranding({
         electionName: overview.election.name,

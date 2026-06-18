@@ -4,6 +4,7 @@ import {
   fetchCandidates,
   fetchAdminOverview,
   updateElectionConfig,
+  refreshAccessToken,
 } from "../api";
 import { formatTimeLeft } from "./utils";
 
@@ -79,6 +80,10 @@ export function AppProvider({ children }) {
     endsAt: null,
     votingMode: "CLOSED",
     fraudTier: "EMAIL",
+    voteType: "STANDARD",
+    pricingModel: "FIXED",
+    pricePerVote: 0,
+    voteBundles: [],
   });
   const [branding, setBranding] = useState({
     electionName: "",
@@ -109,15 +114,51 @@ export function AppProvider({ children }) {
   });
   const logId = useRef(0);
 
+  // Auto-logout when any API call reports the token expired
+  useEffect(() => {
+    const handleExpiry = () => {
+      setCurrentUser(null);
+      setAccessToken(null);
+      setOrgSlug(null);
+      // Hard redirect so all state resets cleanly
+      const path = window.location.pathname;
+      if (path.startsWith("/observer")) {
+        const obsSlug =
+          sessionStorage.getItem("vb_observer_slug") ||
+          new URLSearchParams(window.location.search).get("slug");
+        window.location.href = obsSlug
+          ? `/observer/login?slug=${obsSlug}`
+          : "/observer/login";
+      } else if (path.startsWith("/superadmin")) {
+        window.location.href = "/superadmin/login";
+      } else if (path.startsWith("/admin")) {
+        window.location.href = "/admin/login";
+      }
+    };
+    window.addEventListener("vb:session-expired", handleExpiry);
+    return () => window.removeEventListener("vb:session-expired", handleExpiry);
+  }, []);
+
   // ── On mount: try to restore admin session or load voter election data ────────
   useEffect(() => {
     const token = sessionStorage.getItem("vb_admin_token");
+    const refresh = sessionStorage.getItem("vb_admin_refresh");
     const slug = sessionStorage.getItem("vb_admin_slug");
     const isVoter = window.location.pathname.startsWith("/vote/");
 
-    if (token && slug && !isVoter) {
-      // Re-hydrate admin session without requiring a fresh login
-      fetchAdminOverview(token, slug)
+    if ((token || refresh) && slug && !isVoter) {
+      // If the access token is missing but a refresh token exists, get a fresh
+      // access token first, then load. Otherwise use the existing access token.
+      const ensureToken = async () => {
+        const existing = sessionStorage.getItem("vb_admin_token");
+        if (existing) return existing;
+        const refreshed = await refreshAccessToken(refresh);
+        sessionStorage.setItem("vb_admin_token", refreshed.accessToken);
+        return refreshed.accessToken;
+      };
+
+      ensureToken()
+        .then((liveToken) => fetchAdminOverview(liveToken, slug))
         .then((overview) => {
           const storedUser = (() => {
             try {
@@ -127,7 +168,7 @@ export function AppProvider({ children }) {
             }
           })();
           if (storedUser) setCurrentUser(storedUser);
-          setAccessToken(token);
+          setAccessToken(sessionStorage.getItem("vb_admin_token") || token);
           setOrgSlug(slug);
           setElectionId(overview.election.id);
 
@@ -139,6 +180,10 @@ export function AppProvider({ children }) {
             endsAt: overview.election.endsAt,
             votingMode: overview.election.votingMode || "CLOSED",
             fraudTier: overview.election.fraudTier || "EMAIL",
+            voteType: overview.election.voteType || "STANDARD",
+            pricingModel: overview.election.pricingModel || "FIXED",
+            pricePerVote: overview.election.pricePerVote || 0,
+            voteBundles: overview.election.voteBundles || [],
           });
 
           // institutionName is in branding stored separately; fall back to slug
@@ -160,11 +205,16 @@ export function AppProvider({ children }) {
           setActivityLog(overview.auditLog.map(mapLog));
         })
         .catch(() => {
-          // Token expired — clear stored session so login page shows
-          sessionStorage.removeItem("vb_admin_token");
-          sessionStorage.removeItem("vb_admin_slug");
-          sessionStorage.removeItem("vb_admin_user");
-          sessionStorage.removeItem("vb_admin_branding");
+          // Only clear if the refresh token is ALSO gone/expired.
+          // If a refresh token still exists, api.js will have refreshed the
+          // access token during the failed call — so don't wipe the session here.
+          const refresh = sessionStorage.getItem("vb_admin_refresh");
+          if (!refresh) {
+            sessionStorage.removeItem("vb_admin_token");
+            sessionStorage.removeItem("vb_admin_slug");
+            sessionStorage.removeItem("vb_admin_user");
+            sessionStorage.removeItem("vb_admin_branding");
+          }
         })
         .finally(() => setAppLoading(false));
     } else if (!isVoter) {
@@ -210,6 +260,10 @@ export function AppProvider({ children }) {
         endsAt: electionData.election.endsAt,
         votingMode: electionData.election.votingMode || "CLOSED",
         fraudTier: electionData.election.fraudTier || "EMAIL",
+        voteType: electionData.election.voteType || "STANDARD",
+        pricingModel: electionData.election.pricingModel || "FIXED",
+        pricePerVote: electionData.election.pricePerVote || 0,
+        voteBundles: electionData.election.voteBundles || [],
       });
       setBranding(electionData.branding);
       setElectionId(electionData.election.id);

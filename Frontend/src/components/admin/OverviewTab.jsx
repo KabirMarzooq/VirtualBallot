@@ -25,6 +25,8 @@ export default function OverviewTab({ onSwitchTab }) {
     branding,
   } = useApp();
   const { total, accredited, voted, pct } = getTurnout(users);
+  const isRosterless = electionConfig.votingMode === "OPEN";
+  const totalVotesCast = candidates.reduce((sum, c) => sum + (c.votes ?? 0), 0);
   const positions = getPositions(candidates);
 
   // Determine setup completion — drives the checklist
@@ -184,39 +186,60 @@ export default function OverviewTab({ onSwitchTab }) {
       )}
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {[
-          {
-            label: "Registered",
-            value: total,
-            color: "text-white",
-            bg: "bg-blue-600",
-          },
-          {
-            label: "Accredited",
-            value: accredited,
-            color: "text-blue-200",
-            bg: "bg-slate-800",
-          },
-          {
-            label: "Votes Cast",
-            value: voted,
-            color: "text-green-300",
-            bg: "bg-slate-800",
-          },
-          {
-            label: "Turnout",
-            value: `${pct}%`,
-            color: "text-amber-300",
-            bg: "bg-slate-800",
-          },
-          {
-            label: "Candidates",
-            value: candidates.length,
-            color: "text-indigo-300",
-            bg: "bg-slate-800",
-          },
-        ].map((s) => (
+      {/* KPI strip */}
+      <div
+        className={`grid gap-3 ${
+          isRosterless ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"
+        }`}
+      >
+        {(isRosterless
+          ? [
+              {
+                label: "Total Votes",
+                value: totalVotesCast,
+                color: "text-green-300",
+                bg: "bg-blue-600",
+              },
+              {
+                label: "Candidates",
+                value: candidates.length,
+                color: "text-indigo-300",
+                bg: "bg-slate-800",
+              },
+            ]
+          : [
+              {
+                label: "Registered",
+                value: total,
+                color: "text-white",
+                bg: "bg-blue-600",
+              },
+              {
+                label: "Accredited",
+                value: accredited,
+                color: "text-blue-200",
+                bg: "bg-slate-800",
+              },
+              {
+                label: "Votes Cast",
+                value: voted,
+                color: "text-green-300",
+                bg: "bg-slate-800",
+              },
+              {
+                label: "Turnout",
+                value: `${pct}%`,
+                color: "text-amber-300",
+                bg: "bg-slate-800",
+              },
+              {
+                label: "Candidates",
+                value: candidates.length,
+                color: "text-indigo-300",
+                bg: "bg-slate-800",
+              },
+            ]
+        ).map((s) => (
           <div
             key={s.label}
             className={`${s.bg} rounded-2xl p-5 border border-white/10`}

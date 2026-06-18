@@ -26,6 +26,13 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
   const [feed, setFeed] = useState([]); // recent vote events
   const [totalVotes, setTotalVotes] = useState(0);
 
+  // Re-sync local state whenever the parent provides fresh data (poll updates)
+  useEffect(() => {
+    if (initialCandidates && initialCandidates.length > 0) {
+      setCandidates(initialCandidates);
+    }
+  }, [initialCandidates]);
+
   // Compute total once from candidates
   useEffect(() => {
     const sum = candidates.reduce(
@@ -39,7 +46,12 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
   useEffect(() => {
     if (!electionId) return;
 
-    const socket = io(BASE, { transports: ["websocket", "polling"] });
+    const socket = io(BASE, {
+      transports: ["polling", "websocket"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -47,9 +59,15 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
       socket.emit("join:election", electionId);
     });
 
+    socket.on("connect_error", (err) => {
+      console.error("Socket connect_error:", err.message);
+      setConnected(false);
+    });
+
     socket.on("disconnect", () => setConnected(false));
 
-    socket.on("reconnect", () => {
+    // reconnect fires on the manager (socket.io), not the socket itself
+    socket.io.on("reconnect", () => {
       setConnected(true);
       socket.emit("join:election", electionId);
     });

@@ -27,6 +27,7 @@ const SuperAdminPage = lazy(() => import("./pages/SuperAdmin"));
 const NotFoundPage = lazy(() => import("./pages/NotFound"));
 const OpenBallotPage = lazy(() => import("./pages/OpenBallot"));
 const OpenResultsPage = lazy(() => import("./pages/OpenResults"));
+const PaidBallotPage = lazy(() => import("./pages/PaidBallot"));
 
 // ── Route guard — redirects unauthenticated users at the router level ─────────
 function ProtectedRoute({ children, role }) {
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="/org/register" element={<OrgRegisterPage />} />
           <Route path="/open/:slug" element={<OpenBallotPage />} />
           <Route path="/open/:slug/results" element={<OpenResultsPage />} />
+          <Route path="/paid/:slug" element={<PaidBallotPage />} />
 
           {/* ── Voter flow — scoped to org slug ─────────────────────────────── */}
           <Route

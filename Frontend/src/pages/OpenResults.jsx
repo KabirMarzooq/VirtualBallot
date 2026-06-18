@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BarChart3, Trophy, ArrowLeft } from "lucide-react";
+import { BarChart3, Trophy, ArrowLeft, Clock } from "lucide-react";
 import { fetchOpenResults, fetchOpenElection } from "../api";
 import VBLoader from "../components/ui/VBLoader";
+import { formatTimeLeft } from "../utils";
 
 export default function OpenResultsPage() {
   const { slug } = useParams();
@@ -12,11 +13,18 @@ export default function OpenResultsPage() {
   const [data, setData] = useState(null);
   const [branding, setBranding] = useState({});
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [timeLeft, setTimeLeft] = useState("");
+  const [endsAt, setEndsAt] = useState(null);
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     // Branding once
     fetchOpenElection(slug)
-      .then((d) => setBranding(d.branding))
+      .then((d) => {
+        setBranding(d.branding);
+        setEndsAt(d.election.endsAt);
+        setStatus(d.election.status);
+      })
       .catch(() => {});
 
     const load = () => {
@@ -32,6 +40,25 @@ export default function OpenResultsPage() {
     const interval = setInterval(load, 30_000);
     return () => clearInterval(interval);
   }, [slug]);
+
+  // Live countdown to election end
+  useEffect(() => {
+    if (!endsAt || status !== "ACTIVE") {
+      setTimeLeft("");
+      return;
+    }
+    const tick = () => {
+      const ms = new Date(endsAt).getTime() - Date.now();
+      if (ms <= 0) {
+        setTimeLeft("Ended");
+        return;
+      }
+      setTimeLeft(formatTimeLeft(ms));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [endsAt, status]);
 
   if (loading) {
     return (
@@ -108,6 +135,11 @@ export default function OpenResultsPage() {
           <p className="text-slate-500 mt-1">
             {totalVotes} total vote{totalVotes !== 1 ? "s" : ""} cast
           </p>
+          {timeLeft && timeLeft !== "Ended" && (
+            <div className="inline-flex items-center gap-1.5 mt-3 bg-amber-600/20 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-600/30">
+              <Clock className="w-3.5 h-3.5" /> {timeLeft} remaining
+            </div>
+          )}
         </div>
 
         {/* Per-position results */}
