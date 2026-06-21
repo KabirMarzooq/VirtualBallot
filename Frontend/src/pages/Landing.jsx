@@ -7,6 +7,14 @@ import {
   ArrowRight,
   CheckCircle,
   Building2,
+  Lock,
+  Globe,
+  Wallet,
+  Telescope,
+  Radio,
+  Scale,
+  Sparkles,
+  MessageCircleQuestion,
 } from "lucide-react";
 
 const FEATURES = [
@@ -163,6 +171,176 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Election Types ── */}
+      <section className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-black mb-4">
+              Pick the format that fits your election
+            </h2>
+            <p className="text-slate-400 text-lg max-w-xl mx-auto">
+              One platform, two ways to vote — switch per election, never locked
+              in.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Closed */}
+            <div className="relative bg-slate-800/60 border border-slate-700/50 rounded-3xl p-8 overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl" />
+              <div className="relative">
+                <div className="w-12 h-12 bg-blue-500/15 text-blue-400 rounded-2xl flex items-center justify-center mb-5">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <h3 className="font-black text-white text-xl mb-2">Closed</h3>
+                <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                  Upload a voter roster. Each person verifies by email OTP and
+                  gets exactly one ballot. Built for student unions, staff
+                  elections, and member votes where eligibility matters.
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    "Matric / ID roster upload",
+                    "One-time email verification",
+                    "Per-voter audit trail",
+                  ].map((t) => (
+                    <li
+                      key={t}
+                      className="flex items-center gap-2.5 text-sm text-slate-300"
+                    >
+                      <CheckCircle className="w-4 h-4 text-blue-400 shrink-0" />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Open */}
+            <div className="relative bg-slate-800/60 border border-slate-700/50 rounded-3xl p-8 overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-12 h-12 bg-amber-500/15 text-amber-400 rounded-2xl flex items-center justify-center">
+                    <Globe className="w-6 h-6" />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300 bg-amber-900/30 border border-amber-700/40 px-2.5 py-1 rounded-full">
+                    <Wallet className="w-3 h-3" /> Paid voting available
+                  </span>
+                </div>
+                <h3 className="font-black text-white text-xl mb-2">Open</h3>
+                <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                  No roster required — share one public link. Perfect for
+                  pageants, public polls, and fan-driven contests. Optionally
+                  let voters pay per vote, with earnings settled straight to
+                  your bank account.
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    "Public link, anyone can vote",
+                    "Device or email fraud protection",
+                    "Buy votes in bundles, paid via Paystack",
+                  ].map((t) => (
+                    <li
+                      key={t}
+                      className="flex items-center gap-2.5 text-sm text-slate-300"
+                    >
+                      <CheckCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Built for Trust ── */}
+      <section className="py-24 px-6 bg-slate-900/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-black mb-4">
+              Results no one can dispute
+            </h2>
+            <p className="text-slate-400 text-lg max-w-xl mx-auto">
+              Every election needs more than a tally — it needs witnesses.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-3xl p-7">
+              <div className="w-11 h-11 bg-teal-500/15 text-teal-400 rounded-2xl flex items-center justify-center mb-4">
+                <Telescope className="w-5 h-5" />
+              </div>
+              <h3 className="font-black text-white mb-2">Observer access</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Hand scrutineers a read-only PIN. They watch the live tally,
+                vote ledger, and audit stream in real time — no ability to
+                change anything, full visibility into everything.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-3xl p-7">
+              <div className="w-11 h-11 bg-blue-500/15 text-blue-400 rounded-2xl flex items-center justify-center mb-4">
+                <Radio className="w-5 h-5" />
+              </div>
+              <h3 className="font-black text-white mb-2">
+                Live, or on your terms
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Broadcast results as votes land, or keep the count private until
+                you publish it yourself. You decide when the public sees
+                anything.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-3xl p-7">
+              <div className="w-11 h-11 bg-indigo-500/15 text-indigo-400 rounded-2xl flex items-center justify-center mb-4">
+                <Scale className="w-5 h-5" />
+              </div>
+              <h3 className="font-black text-white mb-2">
+                Honest tie handling
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                A genuine tie is shown as a tie — joint leaders, clearly flagged
+                — never silently broken by the system. The call stays with your
+                commission.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI Assistant — coming soon ── */}
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative bg-gradient-to-br from-indigo-600/15 to-blue-600/10 border border-indigo-500/20 rounded-[2.5rem] p-10 sm:p-12 overflow-hidden">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-8">
+              <div className="w-16 h-16 bg-indigo-500/20 text-indigo-300 rounded-2xl flex items-center justify-center shrink-0">
+                <MessageCircleQuestion className="w-8 h-8" />
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-300 bg-indigo-900/30 border border-indigo-700/40 px-2.5 py-1 rounded-full mb-3 uppercase tracking-widest">
+                  <Sparkles className="w-3 h-3" /> Coming soon
+                </span>
+                <h3 className="font-black text-white text-2xl mb-2">
+                  An assistant for every role
+                </h3>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                  A built-in guide that answers questions as you go — whether
+                  you're an admin setting up your first paid election, a voter
+                  unsure how to verify your email, or an observer learning what
+                  you can and can't see. Ask in plain language, get a straight
+                  answer, no support ticket required.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ── */}
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
@@ -221,7 +399,25 @@ export default function LandingPage() {
             Virtual Ballot
           </div>
           <p>Built for transparent, secure elections.</p>
-          <p>Built By <a href="https://github.com/KabirMarzooq" target="_blank" className="text-blue-600">MaZq</a>&<a href="https://github.com/Muyiez101" target="_blank" className="text-blue-600">Muiz</a>.</p>
+          <p>
+            Built By{" "}
+            <a
+              href="https://github.com/KabirMarzooq"
+              target="_blank"
+              className="text-blue-600"
+            >
+              MaZq
+            </a>
+            &
+            <a
+              href="https://github.com/Muyiez101"
+              target="_blank"
+              className="text-blue-600"
+            >
+              Muiz
+            </a>
+            .
+          </p>
         </div>
       </footer>
     </div>
