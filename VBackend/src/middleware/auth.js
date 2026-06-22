@@ -112,16 +112,31 @@ export const resolveOrg = async (req, res, next) => {
     req.orgId = result.rows[0].id
     req.orgName = result.rows[0].name
 
-    // Auto-end any election whose timer has expired
-    await query(
+    // Auto-end any election whose timer has expired, and capture which ended
+    const justEnded = await query(
       `UPDATE elections
-   SET status = 'ENDED', updated_at = NOW()
-   WHERE org_id = $1
-     AND status = 'ACTIVE'
-     AND ends_at IS NOT NULL
-     AND ends_at < NOW()`,
+ SET status = 'ENDED', updated_at = NOW()
+ WHERE org_id = $1
+   AND status = 'ACTIVE'
+   AND ends_at IS NOT NULL
+   AND ends_at < NOW()
+ RETURNING id`,
       [req.orgId]
     )
+
+    // Write the definitive final anchor for each election that just ended,
+    // so timer-ended elections get the same airtight final checkpoint as
+    // manually-ended ones (not just the periodic ~10-min snapshot).
+    if (justEnded.rows.length > 0) {
+      try {
+        const { anchorChain } = await import("../utils/voteChain.js")
+        for (const row of justEnded.rows) {
+          await anchorChain(row.id)
+        }
+      } catch (e) {
+        console.error("Auto-end final anchor failed:", e.message)
+      }
+    }
 
     next()
   } catch (err) {

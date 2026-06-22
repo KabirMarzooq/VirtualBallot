@@ -179,6 +179,37 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── Vote Chain (tamper-evident hash chain) ────────────────────────────────────
+-- One row per vote across ALL election types (closed, open, paid).
+-- Each entry's hash includes the previous entry's hash, forming a chain where
+-- altering any past vote breaks every entry after it.
+CREATE TABLE IF NOT EXISTS vote_chain (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  election_id   UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  seq           BIGINT NOT NULL,            -- position in this election's chain (1,2,3…)
+  vote_type     TEXT NOT NULL,              -- 'CLOSED' | 'OPEN' | 'PAID' (provenance)
+  candidate_id  UUID NOT NULL,
+  position      TEXT NOT NULL,
+  receipt_id    TEXT NOT NULL,              -- the voter-facing code tied to this entry
+  data_hash     TEXT NOT NULL,             -- SHA-256 of this vote's own content
+  prev_hash     TEXT NOT NULL,             -- the previous entry's chain_hash ('GENESIS' for first)
+  chain_hash    TEXT NOT NULL,             -- SHA-256(seq + data_hash + prev_hash) — the link
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (election_id, seq)
+);
+CREATE INDEX IF NOT EXISTS idx_vote_chain_election ON vote_chain(election_id, seq);
+CREATE INDEX IF NOT EXISTS idx_vote_chain_receipt  ON vote_chain(receipt_id);
+CREATE INDEX IF NOT EXISTS idx_vote_chain_hash     ON vote_chain(chain_hash);
+
+CREATE TABLE IF NOT EXISTS chain_anchors (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  election_id  UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  head_hash    TEXT NOT NULL,
+  chain_length BIGINT NOT NULL,
+  anchored_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_chain_anchors_election ON chain_anchors(election_id, anchored_at);
+
 -- ── Password reset tokens (added via migration) ──────────────────────────────
 ALTER TABLE organizations
   ADD COLUMN IF NOT EXISTS password_reset_token      TEXT,

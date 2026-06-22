@@ -17,6 +17,7 @@ export default function ConfirmModal() {
     setShowConfirmModal,
     accessToken,
     setReceiptHash,
+    setVerificationHash,
     setShowConfetti,
     setCandidates,
     setCurrentUser,
@@ -54,6 +55,7 @@ export default function ConfirmModal() {
       );
       const data = await submitBallot(selections, accessToken);
       setReceiptHash(data.receiptId);
+      setVerificationHash(data.verificationHash || "");
       // Optimistically update local vote counts so UI reflects immediately
       setCandidates((prev) =>
         prev.map((c) =>

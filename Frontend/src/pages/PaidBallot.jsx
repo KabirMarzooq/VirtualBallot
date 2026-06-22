@@ -29,6 +29,7 @@ export default function PaidBallotPage() {
   const [verifying, setVerifying] = useState(false);
   const [done, setDone] = useState(false);
   const [doneVotes, setDoneVotes] = useState(0);
+  const [verificationHash, setVerificationHash] = useState("");
 
   // Load election
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function PaidBallotPage() {
             sessionStorage.removeItem("vb_paid_draft");
             setDone(true);
             setDoneVotes(d.votes);
+            setVerificationHash(d.verificationHash || "");
           } else {
             setError("Payment was not completed.");
           }
@@ -89,7 +91,8 @@ export default function PaidBallotPage() {
   const handlePay = async () => {
     if (!chosen) return setError("Select a candidate first.");
     if (!email.trim()) return setError("Enter your email for the receipt.");
-    if (!isValidEmail(email)) return setError("Please enter a valid email address.");
+    if (!isValidEmail(email))
+      return setError("Please enter a valid email address.");
     setError("");
     setSubmitting(true);
     try {
@@ -197,6 +200,27 @@ export default function PaidBallotPage() {
             {doneVotes} vote{doneVotes !== 1 ? "s" : ""} recorded. A receipt has
             been emailed to you.
           </p>
+          {verificationHash && (
+            <div className="mb-6 bg-slate-800/60 border border-slate-700 rounded-xl p-4 text-left">
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2">
+                Verify your vote
+              </p>
+              <p className="font-mono text-[11px] text-green-400 break-all mb-3">
+                {verificationHash}
+              </p>
+
+              <a
+                href={`/verify/${slug}?hash=${encodeURIComponent(
+                  verificationHash
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded-lg cursor-pointer inline-block"
+              >
+                Verify my vote →
+              </a>
+            </div>
+          )}
           <button
             onClick={() => navigate(`/open/${slug}/results`)}
             className="text-blue-400 font-bold text-sm hover:text-blue-300 cursor-pointer transition-colors"

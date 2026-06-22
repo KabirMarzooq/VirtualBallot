@@ -1,4 +1,10 @@
-import { CheckCircle, Mail, PartyPopper, BarChart3 } from "lucide-react";
+import {
+  CheckCircle,
+  Mail,
+  PartyPopper,
+  BarChart3,
+  ShieldCheck,
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -10,6 +16,8 @@ import VBLoader from "../components/ui/VBLoader";
 export default function ReceiptPage() {
   const {
     receiptHash,
+    verificationHash,
+    orgSlug,
     showConfetti,
     emailSent,
     setEmailSent,
@@ -67,6 +75,47 @@ export default function ReceiptPage() {
               correctly.
             </p>
           </div>
+
+          {verificationHash && (
+            <div className="mt-6 bg-slate-800/60 border border-slate-700 rounded-2xl p-5 text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck className="w-4 h-4 text-green-400" />
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">
+                  Cryptographic Proof
+                </p>
+              </div>
+              <p className="text-xs text-slate-500 mb-3">
+                This is your vote's unique fingerprint in the tamper-evident
+                ledger. Anyone can use it to confirm your vote was recorded and
+                never altered — without seeing who you voted for.
+              </p>
+              <div className="bg-slate-950 rounded-xl p-3 mb-3">
+                <p className="font-mono text-[11px] text-green-400 break-all leading-relaxed">
+                  {verificationHash}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(verificationHash);
+                  }}
+                  className="text-xs font-bold bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg cursor-pointer transition-colors"
+                >
+                  Copy hash
+                </button>
+                <a
+                  href={`/verify/${orgSlug}?hash=${encodeURIComponent(
+                    verificationHash
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded-lg cursor-pointer transition-colors"
+                >
+                  Verify my vote →
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="space-y-3">

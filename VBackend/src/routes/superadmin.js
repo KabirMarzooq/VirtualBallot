@@ -1,5 +1,6 @@
 import express from "express"
-import { query } from "../db/pool.js"
+import { getClient, query } from "../db/pool.js"
+import { recomputeChain } from "../utils/voteChain.js"
 import { signAccessToken, ok, fail } from "../utils/index.js"
 import { requireSuperAdmin } from "../middleware/auth.js"
 import dotenv from "dotenv"
@@ -302,6 +303,37 @@ router.get("/invoices", requireSuperAdmin, async (req, res) => {
     } catch (err) {
         console.error("Superadmin invoices error:", err)
         return fail(res, "Server error", 500)
+    }
+})
+
+// ─── GET /superadmin/verify-chain/:electionId ─────────────────────────────────
+// Recomputes an election's entire vote chain and reports integrity.
+router.get("/verify-chain/:electionId", requireSuperAdmin, async (req, res) => {
+    const { electionId } = req.params
+    const client = await getClient()
+    try {
+        const integrity = await recomputeChain(client, electionId)
+
+        // Cross-check: does the chain length match the actual vote tally?
+        const tally = await query(
+            `SELECT COALESCE(SUM(vote_count),0) AS total FROM candidates WHERE election_id = $1`,
+            [electionId]
+        )
+        const voteTotal = Number(tally.rows[0].total)
+
+        return ok(res, {
+            intact: integrity.intact,
+            brokenAt: integrity.brokenAt,
+            chainLength: integrity.length,
+            voteTotal,
+            lengthMatches: integrity.length === voteTotal,
+            headHash: integrity.headHash || null,
+        })
+    } catch (err) {
+        console.error("Chain verify error:", err)
+        return fail(res, "Server error", 500)
+    } finally {
+        client.release()
     }
 })
 

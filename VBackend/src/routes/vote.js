@@ -3,6 +3,7 @@ import { io } from "../server.js"
 import { getClient, query } from "../db/pool.js"
 import { requireVoter } from "../middleware/auth.js"
 import { generateReceiptId, sendReceiptEmail, ok, fail } from "../utils/index.js"
+import { appendToChain } from "../utils/voteChain.js"
 
 const router = express.Router()
 
@@ -74,13 +75,22 @@ router.post("/", requireVoter, async (req, res) => {
     // 4. Generate one receipt ID for the whole ballot
     const receiptId = generateReceiptId()
 
-    // 5. Insert one ballot row per selection
+    // 5. Insert one ballot row per selection + append each to the vote chain
+    const chainHashes = []
     for (const sel of selections) {
       await client.query(
         `INSERT INTO ballots (election_id, org_id, voter_id, candidate_id, position, receipt_id)
          VALUES ($1, $2, $3, $4, $5, $6)`,
         [electionId, orgId, voterId, sel.candidateId, sel.position, receiptId]
       )
+      const { chainHash } = await appendToChain(client, {
+        electionId,
+        voteType: "CLOSED",
+        candidateId: sel.candidateId,
+        position: sel.position,
+        receiptId,
+      })
+      chainHashes.push(chainHash)
     }
 
     // 6. Increment vote_count on each selected candidate
@@ -125,6 +135,8 @@ router.post("/", requireVoter, async (req, res) => {
     return ok(res, {
       message: "Vote cast successfully",
       receiptId,
+      verificationHash: chainHashes[0] || null,
+      chainHashes,
     })
 
   } catch (err) {

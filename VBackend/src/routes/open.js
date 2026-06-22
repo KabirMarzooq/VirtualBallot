@@ -6,6 +6,7 @@ import {
     generateReceiptId, generateOTP, hashOTP, verifyOTP,
     sendOTPEmail, isValidEmail, ok, fail,
 } from "../utils/index.js"
+import { appendToChain } from "../utils/voteChain.js"
 
 const router = express.Router()
 
@@ -202,7 +203,8 @@ router.post("/:slug/vote", resolveOrg, async (req, res) => {
         const receiptId = generateReceiptId()
         const candidateIds = selections.map((s) => s.candidateId)
 
-        // ── Insert one open_votes row per selection ──────────────────────────────
+        // ── Insert one open_votes row per selection + append to vote chain ───────
+        const chainHashes = []
         for (const sel of selections) {
             await client.query(
                 `INSERT INTO open_votes
@@ -210,6 +212,14 @@ router.post("/:slug/vote", resolveOrg, async (req, res) => {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
                 [e.id, req.orgId, sel.candidateId, sel.position, ip, voterFingerprint, voterEmail, receiptId]
             )
+            const { chainHash } = await appendToChain(client, {
+                electionId: e.id,
+                voteType: "OPEN",
+                candidateId: sel.candidateId,
+                position: sel.position,
+                receiptId,
+            })
+            chainHashes.push(chainHash)
         }
 
         // Increment candidate counts
@@ -249,7 +259,12 @@ router.post("/:slug/vote", resolveOrg, async (req, res) => {
             timestamp: new Date().toISOString(),
         })
 
-        return ok(res, { message: "Vote cast successfully", receiptId })
+        return ok(res, {
+            message: "Vote cast successfully",
+            receiptId,
+            verificationHash: chainHashes[0] || null,
+            chainHashes,
+        })
     } catch (err) {
         await client.query("ROLLBACK")
         if (err.code === "23505") {

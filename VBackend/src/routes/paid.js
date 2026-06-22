@@ -1,12 +1,13 @@
 import express from "express"
 import crypto from "crypto"
 import { io } from "../server.js"
-import { query } from "../db/pool.js"
+import { getClient, query } from "../db/pool.js"
 import { requireAdmin, resolveOrg } from "../middleware/auth.js"
 import {
     initializeTransaction, verifyTransaction, calculatePaystackFee,
 } from "../utils/paystack.js"
 import { sendReceiptEmail, isValidNonDisposableEmail, generateReceiptId, ok, fail } from "../utils/index.js"
+import { appendToChain } from "../utils/voteChain.js"
 
 const router = express.Router()
 
@@ -165,13 +166,21 @@ router.get("/:slug/verify/:reference", resolveOrg, async (req, res) => {
                 `SELECT votes_purchased, status FROM paid_transactions WHERE reference = $1`,
                 [reference]
             )
+            // Pull the chain hashes created for this payment so the voter can verify
+            const chainResult = await query(
+                `SELECT chain_hash FROM vote_chain WHERE receipt_id = $1 ORDER BY seq ASC`,
+                [reference]
+            )
+            const chainHashes = chainResult.rows.map((r) => r.chain_hash)
             return ok(res, {
                 success: true,
                 votes: txResult.rows[0]?.votes_purchased || 0,
                 reference,
+                verificationHash: chainHashes[0] || null,
+                chainHashes,
             })
         }
-        return ok(res, { success: false, status: data.status })
+
     } catch (err) {
         console.error("Verify error:", err)
         return fail(res, "Could not verify payment", 500)
@@ -196,19 +205,43 @@ async function creditVotesForReference(reference, paystackData) {
     if (tx.rows.length === 0) return  // already processed or not found — idempotent no-op
     const t = tx.rows[0]
 
-    // Credit the votes
-    await query(
-        `UPDATE candidates SET vote_count = vote_count + $2 WHERE id = $1`,
-        [t.candidate_id, t.votes_purchased]
-    )
+    // Credit the votes + append to the vote chain, atomically.
+    const client = await getClient()
+    try {
+        await client.query("BEGIN")
 
-    // Audit log
-    await query(
-        `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
-     VALUES ($1, $2, 'vote', $3, 'paid')`,
-        [t.org_id, t.election_id,
-        `Paid vote confirmed — ${t.votes_purchased} vote(s), ref ${reference}`]
-    )
+        await client.query(
+            `UPDATE candidates SET vote_count = vote_count + $2 WHERE id = $1`,
+            [t.candidate_id, t.votes_purchased]
+        )
+
+        // A paid purchase can buy multiple votes — append one chain entry per vote
+        // so the chain's length matches the true vote tally.
+        for (let i = 0; i < t.votes_purchased; i++) {
+            await appendToChain(client, {
+                electionId: t.election_id,
+                voteType: "PAID",
+                candidateId: t.candidate_id,
+                position: t.position,
+                receiptId: reference,
+            })
+        }
+
+        await client.query(
+            `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+       VALUES ($1, $2, 'vote', $3, 'paid')`,
+            [t.org_id, t.election_id,
+            `Paid vote confirmed — ${t.votes_purchased} vote(s), ref ${reference}`]
+        )
+
+        await client.query("COMMIT")
+    } catch (err) {
+        await client.query("ROLLBACK")
+        console.error("Paid chain append failed:", err)
+        throw err
+    } finally {
+        client.release()
+    }
 
     // Broadcast live tally update
     const updated = await query(
@@ -227,7 +260,14 @@ async function creditVotesForReference(reference, paystackData) {
     try {
         const candResult = await query(`SELECT name FROM candidates WHERE id = $1`, [t.candidate_id])
         const elecResult = await query(`SELECT name FROM elections WHERE id = $1`, [t.election_id])
-        const orgResult = await query(`SELECT name FROM organizations WHERE id = $1`, [t.org_id])
+        const orgResult = await query(`SELECT name, slug FROM organizations WHERE id = $1`, [t.org_id])
+        // Pull the first chain hash for this payment so the voter can verify
+        const hashResult = await query(
+            `SELECT chain_hash FROM vote_chain WHERE receipt_id = $1 ORDER BY seq ASC LIMIT 1`,
+            [reference]
+        )
+        const vHash = hashResult.rows[0]?.chain_hash || null
+        const slug = orgResult.rows[0]?.slug
         await sendReceiptEmail({
             to: t.voter_email,
             name: "Voter",
@@ -235,6 +275,10 @@ async function creditVotesForReference(reference, paystackData) {
             electionName: elecResult.rows[0]?.name || "Election",
             orgName: orgResult.rows[0]?.name || "Organization",
             castAt: new Date(),
+            verificationHash: vHash,
+            verifyUrl: vHash && slug
+                ? `${process.env.FRONTEND_URL}/verify/${slug}?hash=${encodeURIComponent(vHash)}`
+                : null,
         })
     } catch (e) {
         console.error("Paid receipt email failed:", e.message)

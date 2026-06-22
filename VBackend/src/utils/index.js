@@ -124,12 +124,13 @@ export const sendOTPEmail = async ({ to, name, otp, electionName }) => {
  * Email a voter their receipt confirmation.
  * In development without Resend configured, logs to console instead.
  */
-export const sendReceiptEmail = async ({ to, name, receiptId, electionName, orgName, castAt }) => {
+export const sendReceiptEmail = async ({ to, name, receiptId, electionName, orgName, castAt, verificationHash, verifyUrl }) => {
   if (!process.env.RESEND_API_KEY || process.env.NODE_ENV !== "production") {
     console.log(`\n📧 RECEIPT EMAIL (dev mode — not actually sent)`)
     console.log(`   To: ${to} (${name})`)
     console.log(`   Receipt: ${receiptId}`)
     console.log(`   Election: ${electionName}\n`)
+    if (verificationHash) console.log(`   Verify hash: ${verificationHash}`)
     return true
   }
 
@@ -159,6 +160,14 @@ export const sendReceiptEmail = async ({ to, name, receiptId, electionName, orgN
             <p style="font-family:monospace;font-size:24px;font-weight:900;letter-spacing:4px;color:#16a34a;margin:0;">${receiptId}</p>
           </div>
           <p style="color:#64748b;font-size:13px;margin-bottom:4px;"><strong>Cast at:</strong> ${dateStr}</p>
+          ${verificationHash ? `
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin:24px 0;">
+            <p style="font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#16a34a;margin:0 0 8px;font-weight:bold;">Cryptographic Proof</p>
+            <p style="font-family:monospace;font-size:11px;color:#15803d;word-break:break-all;margin:0 0 12px;line-height:1.5;">${verificationHash}</p>
+            ${verifyUrl ? `<a href="${verifyUrl}" style="display:inline-block;background:#16a34a;color:white;text-decoration:none;font-size:12px;font-weight:bold;padding:8px 16px;border-radius:8px;">Verify my vote →</a>` : ""}
+            <p style="color:#94a3b8;font-size:11px;margin:12px 0 0;">This fingerprint proves your vote is in the tamper-evident ledger. Anyone can verify it without seeing your choice.</p>
+          </div>
+          ` : ""}
           <p style="color:#94a3b8;font-size:12px;margin-top:24px;">Keep this receipt safe. You can use it to verify your vote was counted, but it does not reveal who you voted for — your ballot remains secret.</p>
         </div>
       </body>
@@ -215,6 +224,52 @@ export const sendPasswordResetEmail = async ({ to, orgName, resetUrl }) => {
 
 export const generateReceiptId = () =>
   "VB-" + crypto.randomBytes(5).toString("hex").toUpperCase()
+
+export const sendAnchorEmail = async ({ to, orgName, electionName, headHash, chainLength, anchoredAt }) => {
+  if (!process.env.RESEND_API_KEY || process.env.NODE_ENV !== "production") {
+    console.log(`\n🔗 ANCHOR EMAIL (dev mode — not sent)`)
+    console.log(`   To: ${to}`)
+    console.log(`   Election: ${electionName} | length ${chainLength}`)
+    console.log(`   Head hash: ${headHash}\n`)
+    return true
+  }
+
+  const dateStr = new Date(anchoredAt).toLocaleString("en-GB", {
+    day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+  })
+
+  await getResend().emails.send({
+    from: `Virtual Ballot <noreply@virtualballot.online>`,
+    to,
+    subject: `Vote ledger checkpoint — ${electionName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="UTF-8"></head>
+      <body style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:40px 20px;background:#f8fafc;">
+        <div style="background:white;border-radius:16px;padding:36px;border:1px solid #e2e8f0;">
+          <p style="font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#16a34a;font-weight:bold;margin:0 0 4px;">Integrity Checkpoint</p>
+          <h2 style="margin:0 0 16px;color:#0f172a;font-size:20px;">${electionName}</h2>
+          <p style="color:#475569;font-size:14px;line-height:1.6;margin-bottom:20px;">
+            This is an automated integrity checkpoint for ${orgName}'s election.
+            The value below is the cryptographic fingerprint of the entire vote
+            ledger at this moment. <strong>Keep this email.</strong> If anyone ever
+            alters a past vote, the ledger's fingerprint will no longer match this
+            record — making tampering provable.
+          </p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:20px;">
+            <p style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#16a34a;margin:0 0 8px;font-weight:bold;">Ledger fingerprint · ${chainLength} votes</p>
+            <p style="font-family:monospace;font-size:12px;color:#15803d;word-break:break-all;margin:0;line-height:1.6;">${headHash}</p>
+          </div>
+          <p style="color:#94a3b8;font-size:12px;margin:0;">Checkpoint taken: ${dateStr}</p>
+          <p style="color:#94a3b8;font-size:11px;margin-top:16px;line-height:1.5;">Forward this to your accredited observers so the record is held independently. The fingerprint reveals nothing about who voted for whom.</p>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+  return true
+}
 
 // ─── Response helpers ────────────────────────────────────────────────────────
 

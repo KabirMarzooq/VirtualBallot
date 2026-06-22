@@ -103,6 +103,7 @@ export function AppProvider({ children }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [verificationHash, setVerificationHash] = useState("");
 
   // ── Global modal ──────────────────────────────────────────────────────────────
   const [modal, setModal] = useState({
@@ -328,6 +329,7 @@ export function AppProvider({ children }) {
   const resetBallotSession = () => {
     setBallot({});
     setReceiptHash("");
+    setVerificationHash("");
     setEmailSent(false);
     setShowConfirmModal(false);
     setCurrentUser(null);
@@ -372,6 +374,8 @@ export function AppProvider({ children }) {
     setBallot,
     receiptHash,
     setReceiptHash,
+    verificationHash,
+    setVerificationHash,
     showConfirmModal,
     setShowConfirmModal,
     showConfetti,

@@ -228,6 +228,15 @@ export const emailReceipt = (receiptId, token) =>
         body: JSON.stringify({ receiptId }),
     }, token)
 
+export const verifyVoteHash = (slug, hash) =>
+    request(`/chain/${slug}/verify/${encodeURIComponent(hash)}`)
+
+export const fetchChainExport = (slug) =>
+    request(`/chain/${slug}/export`)
+
+export const verifyElectionChain = (token, electionId) =>
+    request(`/superadmin/verify-chain/${electionId}`, {}, token)
+
 // ─── Open Voting (public) ──────────────────────────────────────────────────────
 
 /** Fetch open election config + candidates */

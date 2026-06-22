@@ -23,6 +23,8 @@ import superadminRoutes from "./routes/superadmin.js"
 import openRoutes from "./routes/open.js"
 import paymentRoutes from "./routes/payments.js"
 import paidRoutes from "./routes/paid.js"
+import chainRoutes from "./routes/chain.js"
+import { startChainAnchorJob } from "./jobs/chainAnchor.js"
 
 const app = express()
 const httpServer = createServer(app)   // ← wrap Express in an HTTP server
@@ -92,6 +94,7 @@ app.use("/superadmin", superadminRoutes)
 app.use("/open", openRoutes)
 app.use("/payments", paymentRoutes)
 app.use("/paid", paidRoutes)
+app.use("/chain", chainRoutes)
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/health", (req, res) => {
@@ -120,6 +123,7 @@ httpServer.listen(PORT, () => {
   console.log(`   WebSocket: ws://localhost:${PORT}`)
   console.log(`   Env:       ${process.env.NODE_ENV || "development"}`)
   console.log(`   CORS:      ${process.env.FRONTEND_URL || "http://localhost:5173"}\n`)
+  startChainAnchorJob()
 })
 
 export default app

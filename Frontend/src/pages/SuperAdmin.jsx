@@ -26,6 +26,7 @@ import {
   fetchSuperAdminInvoices,
   deactivateOrg,
   reactivateOrg,
+  verifyElectionChain,
 } from "../api";
 
 const TABS = [
@@ -64,6 +65,8 @@ export default function SuperAdminPage() {
   const [invSearch, setInvSearch] = useState("");
   const [invStatus, setInvStatus] = useState("");
   const [invLoading, setInvLoading] = useState(false);
+  const [chainResult, setChainResult] = useState(null);
+  const [verifyingChain, setVerifyingChain] = useState(null);
 
   // Guard: if there's no session (e.g. user hit back after logout), bounce to login
   useEffect(() => {
@@ -96,6 +99,19 @@ export default function SuperAdminPage() {
     } catch (_) {
     } finally {
       setInvLoading(false);
+    }
+  };
+
+  const handleVerifyChain = async (electionId) => {
+    setVerifyingChain(electionId);
+    setChainResult(null);
+    try {
+      const res = await verifyElectionChain(token, electionId);
+      setChainResult({ electionId, ...res });
+    } catch (err) {
+      setChainResult({ electionId, error: err.message });
+    } finally {
+      setVerifyingChain(null);
     }
   };
 
@@ -648,6 +664,52 @@ export default function SuperAdminPage() {
                               {pct}%
                             </p>
                             <p className="text-xs text-slate-500">turnout</p>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-slate-800">
+                            <button
+                              onClick={() => handleVerifyChain(e.id)}
+                              disabled={verifyingChain === e.id}
+                              className="flex items-center gap-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl cursor-pointer transition-colors disabled:opacity-50"
+                            >
+                              <Shield className="w-3.5 h-3.5" />
+                              {verifyingChain === e.id
+                                ? "Verifying…"
+                                : "Verify chain integrity"}
+                            </button>
+
+                            {chainResult?.electionId === e.id && (
+                              <div
+                                className={`mt-3 rounded-xl p-3 text-xs ${
+                                  chainResult.error
+                                    ? "bg-slate-800 text-slate-400"
+                                    : chainResult.intact &&
+                                      chainResult.lengthMatches
+                                    ? "bg-green-950/40 border border-green-700/40 text-green-300"
+                                    : "bg-red-950/40 border border-red-700/40 text-red-300"
+                                }`}
+                              >
+                                {chainResult.error ? (
+                                  `Error: ${chainResult.error}`
+                                ) : chainResult.intact &&
+                                  chainResult.lengthMatches ? (
+                                  <span className="font-bold">
+                                    ✓ Chain intact — {chainResult.chainLength}{" "}
+                                    votes, all verified, length matches tally.
+                                  </span>
+                                ) : !chainResult.intact ? (
+                                  <span className="font-bold">
+                                    ✗ TAMPERING DETECTED — chain breaks at vote
+                                    #{chainResult.brokenAt}.
+                                  </span>
+                                ) : (
+                                  <span className="font-bold">
+                                    ⚠ Length mismatch — chain has{" "}
+                                    {chainResult.chainLength} entries but tally
+                                    shows {chainResult.voteTotal} votes.
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="h-3 bg-slate-800 rounded-full overflow-hidden mb-2">

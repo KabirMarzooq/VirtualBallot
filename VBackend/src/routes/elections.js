@@ -247,6 +247,17 @@ router.patch("/:slug/config", resolveOrg, requireAdmin, async (req, res) => {
       values
     )
 
+    // If this update ended the election, write the definitive final anchor —
+    // the timestamped head hash that proves the chain wasn't rewritten later.
+    if (status === "ENDED") {
+      try {
+        const { anchorChain } = await import("../utils/voteChain.js")
+        await anchorChain(electionId)
+      } catch (e) {
+        console.error("Final anchor failed:", e.message)
+      }
+    }
+
     return ok(res, { message: "Election config updated" })
   } catch (err) {
     console.error("Update config error:", err)
