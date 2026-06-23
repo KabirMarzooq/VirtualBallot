@@ -1,11 +1,14 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import { AppProvider, useApp } from "./context/AppContext";
 import { SlugProvider } from "./context/SlugContext";
+import { BASE } from "./api";
 
 import GlobalModal from "./components/ui/GlobalModal";
 import NetworkIndicator from "./components/ui/NetworkIndicator";
 import VBLoader from "./components/ui/VBLoader";
+import VoterChat from "./components/chat/VoterChat";
 
 // ── Lazy-load every page for code splitting ───────────────────────────────────
 const LandingPage = lazy(() => import("./pages/Landing"));
@@ -29,6 +32,7 @@ const OpenBallotPage = lazy(() => import("./pages/OpenBallot"));
 const OpenResultsPage = lazy(() => import("./pages/OpenResults"));
 const PaidBallotPage = lazy(() => import("./pages/PaidBallot"));
 const VerifyVotePage = lazy(() => import("./pages/VerifyVote"));
+const StaffDashboardPage = lazy(() => import("./components/chat/StaffDashboard"));
 
 // ── Route guard — redirects unauthenticated users at the router level ─────────
 function ProtectedRoute({ children, role }) {
@@ -64,6 +68,17 @@ function PageFallback() {
 }
 
 function AppRoutes() {
+  // ── One shared socket instance for the whole app ──────────────────────────
+  // Created once via lazy state init; connected lazily when a voter session
+  // exists. The VoterChat widget subscribes/emits on it.
+  const [socket] = useState(() => io(BASE, { autoConnect: false }));
+
+  useEffect(() => {
+    if (sessionStorage.getItem("vb_voter_token") && !socket.connected) {
+      socket.connect();
+    }
+  }, [socket]);
+
   return (
     <>
       <Suspense fallback={<PageFallback />}>
@@ -71,9 +86,25 @@ function AppRoutes() {
           {/* ── Marketing / public ─────────────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/org/register" element={<OrgRegisterPage />} />
-          <Route path="/open/:slug" element={<OpenBallotPage />} />
+          <Route
+            path="/open/:slug"
+            element={
+              <>
+                <OpenBallotPage />
+                <VoterChat socket={socket} />
+              </>
+            }
+          />
           <Route path="/open/:slug/results" element={<OpenResultsPage />} />
-          <Route path="/paid/:slug" element={<PaidBallotPage />} />
+          <Route
+            path="/paid/:slug"
+            element={
+              <>
+                <PaidBallotPage />
+                <VoterChat socket={socket} />
+              </>
+            }
+          />
           <Route path="/verify/:slug" element={<VerifyVotePage />} />
 
           {/* ── Voter flow — scoped to org slug ─────────────────────────────── */}
@@ -106,6 +137,7 @@ function AppRoutes() {
             element={
               <SlugProvider>
                 <BallotPage />
+                <VoterChat socket={socket} />
               </SlugProvider>
             }
           />
@@ -141,6 +173,9 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Staff live-support console (self-authenticating) ────────────── */}
+          <Route path="/staff/chat" element={<StaffDashboardPage />} />
 
           {/* ── Observer ───────────────────────────────────────────────────── */}
           <Route path="/observer/login" element={<ObserverLoginPage />} />

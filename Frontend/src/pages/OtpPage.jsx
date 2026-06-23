@@ -33,6 +33,11 @@ export default function OtpPage() {
         slug
       );
       setAccessToken(data.accessToken);
+      // Persist voter token + context so the live support chat widget can
+      // authenticate and the app socket can connect on the ballot page.
+      sessionStorage.setItem("vb_voter_token", data.accessToken);
+      if (electionId) sessionStorage.setItem("vb_voter_election", electionId);
+      if (orgId) sessionStorage.setItem("vb_voter_org", orgId);
       navigate(`/vote/${slug}/ballot`);
     } catch (err) {
       setError(true);

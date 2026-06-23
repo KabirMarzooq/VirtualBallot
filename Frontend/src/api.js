@@ -8,7 +8,7 @@
  * The org slug comes from the ORG_SLUG constant below.
  */
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
+export const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
 // Fallback slug used when no slug is available from URL or context.
 // For voter pages the real slug always comes from the URL (/vote/:slug).
@@ -408,3 +408,49 @@ export const deactivateOrg = (orgId, reason, token) =>
 /** Reactivate an organization */
 export const reactivateOrg = (orgId, token) =>
     request(`/superadmin/orgs/${orgId}/reactivate`, { method: "PATCH" }, token)
+
+// ─── Live Support Chat ──────────────────────────────────────────────────────────
+
+/** Staff member logs in with email + password. Returns { accessToken, refreshToken, staff } */
+export const staffLogin = (email, password) =>
+    request("/auth/staff/login", { method: "POST", body: JSON.stringify({ email, password }) })
+
+/**
+ * Voter sends a chat message.
+ * body: { content, conversationId?, electionId, orgId }
+ * Returns: { conversationId, matched, isNew }
+ */
+export const sendChatMessage = (body, token) =>
+    request("/chat/message", { method: "POST", body: JSON.stringify(body) }, token)
+
+/** Voter loads their conversation history */
+export const getChatMessages = (conversationId, token) =>
+    request(`/chat/${conversationId}/messages`, {}, token)
+
+/** Staff claims an escalated chat */
+export const claimChat = (id, token) =>
+    request(`/chat/${id}/claim`, { method: "POST" }, token)
+
+/** Staff releases a claimed chat back to the queue */
+export const releaseChat = (id, token) =>
+    request(`/chat/${id}/release`, { method: "POST" }, token)
+
+/** Staff marks a conversation resolved */
+export const resolveChat = (id, token) =>
+    request(`/chat/${id}/resolve`, { method: "POST" }, token)
+
+/** Staff replies to a voter */
+export const replyChat = (id, content, token) =>
+    request(`/chat/${id}/reply`, { method: "POST", body: JSON.stringify({ content }) }, token)
+
+/** Staff live queue for an election (urgent first) */
+export const getChatQueue = (electionId, token) =>
+    request(`/chat/queue/${electionId}`, {}, token)
+
+/** Canned reply shortcuts for an election */
+export const getCannedReplies = (electionId, token) =>
+    request(`/chat/canned/${electionId}`, {}, token)
+
+/** Full transcript of a conversation (for audit / print) */
+export const getChatTranscript = (id, token) =>
+    request(`/chat/${id}/transcript`, {}, token)
