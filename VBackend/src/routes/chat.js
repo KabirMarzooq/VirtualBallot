@@ -200,6 +200,24 @@ router.get("/:conversationId/messages", requireVoter, async (req, res) => {
   }
 })
 
+// ── GET /chat/elections ───────────────────────────────────────────────────────
+// Staff: list every election in their org so the dashboard can offer a picker.
+router.get("/elections", requireStaff, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, status, created_at
+       FROM elections
+       WHERE org_id = $1
+       ORDER BY created_at DESC`,
+      [req.orgId]
+    )
+    return ok(res, { elections: result.rows })
+  } catch (err) {
+    console.error("chat/elections error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
 // ── GET /chat/queue/:electionId ───────────────────────────────────────────────
 // Staff: live queue for one election — urgent chats float to the top.
 router.get("/queue/:electionId", requireStaff, async (req, res) => {

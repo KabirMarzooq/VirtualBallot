@@ -675,4 +675,50 @@ router.post("/staff/refresh", async (req, res) => {
   }
 })
 
+// ─── POST /auth/guest-chat-token ──────────────────────────────────────────────
+// Public — issues a short-lived token that lets an anonymous Open/Paid ballot
+// voter use the live support chat (and ONLY the chat). No voter record exists,
+// so voterId is null. Valid only while the election is ACTIVE.
+// Body: { electionId, orgSlug }
+router.post("/guest-chat-token", async (req, res) => {
+  const { electionId, orgSlug } = req.body
+  if (!electionId) return fail(res, "Election ID required")
+  if (!orgSlug) return fail(res, "Organization slug required")
+
+  try {
+    const result = await query(
+      `SELECT e.id, e.status, o.id AS org_id
+       FROM elections e
+       JOIN organizations o ON o.id = e.org_id
+       WHERE e.id = $1 AND o.slug = $2`,
+      [electionId, orgSlug.trim().toLowerCase()]
+    )
+
+    if (result.rows.length === 0) {
+      return fail(res, "Election not found for this organization", 404)
+    }
+    const election = result.rows[0]
+
+    if (election.status !== "ACTIVE") {
+      return fail(res, "Live support is only available while voting is active", 403)
+    }
+
+    const accessToken = signAccessToken({
+      voterId: null,
+      electionId: election.id,
+      orgId: election.org_id,
+      role: "guest_voter",
+    })
+
+    return ok(res, {
+      accessToken,
+      electionId: election.id,
+      orgId: election.org_id,
+    })
+  } catch (err) {
+    console.error("Guest chat token error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
 export default router

@@ -16,8 +16,18 @@ export const requireVoter = async (req, res, next) => {
     const token = header.split(" ")[1]
     const payload = verifyAccessToken(token)
 
-    // Attach context to request
-    req.voterId = payload.voterId
+    // Accept authenticated voters and short-lived guest chat tokens
+    // (issued for Open/Paid ballots, where there is no voter record).
+    if (
+      payload.role &&
+      payload.role !== "voter" &&
+      payload.role !== "guest_voter"
+    ) {
+      return fail(res, "Voter access required", 403)
+    }
+
+    // Attach context to request. Guests have no voter record → voterId is null.
+    req.voterId = payload.role === "guest_voter" ? null : payload.voterId
     req.electionId = payload.electionId
     req.orgId = payload.orgId
 

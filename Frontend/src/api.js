@@ -416,6 +416,20 @@ export const staffLogin = (email, password) =>
     request("/auth/staff/login", { method: "POST", body: JSON.stringify({ email, password }) })
 
 /**
+ * Anonymous Open/Paid ballot voter requests a short-lived guest chat token.
+ * Returns: { accessToken, electionId, orgId }
+ */
+export const getGuestChatToken = (electionId, orgSlug) =>
+    request("/auth/guest-chat-token", {
+        method: "POST",
+        body: JSON.stringify({ electionId, orgSlug }),
+    })
+
+/** Staff: list every election in their org (for the dashboard picker) */
+export const getStaffElections = (token) =>
+    request("/chat/elections", {}, token)
+
+/**
  * Voter sends a chat message.
  * body: { content, conversationId?, electionId, orgId }
  * Returns: { conversationId, matched, isNew }

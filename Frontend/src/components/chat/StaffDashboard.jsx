@@ -16,6 +16,7 @@ import {
 import {
   BASE,
   staffLogin,
+  getStaffElections,
   getChatQueue,
   claimChat,
   releaseChat,
@@ -24,6 +25,13 @@ import {
   getCannedReplies,
   getChatTranscript,
 } from "../../api";
+
+// Status badge palette for the election picker.
+const STATUS_BADGE = {
+  ACTIVE: "bg-green-500/20 text-green-400",
+  ENDED: "bg-slate-600/30 text-slate-400",
+  NOT_STARTED: "bg-amber-500/20 text-amber-400",
+};
 
 /**
  * StaffDashboard — full live-support console for committee/staff members.
@@ -170,6 +178,7 @@ function Dashboard({ onLogout }) {
   const [knownElections, setKnownElections] = useState(
     initialElection ? [initialElection] : []
   );
+  const [elections, setElections] = useState([]); // full list from GET /chat/elections
 
   const [queue, setQueue] = useState([]);
   const [loadingQueue, setLoadingQueue] = useState(false);
@@ -194,6 +203,11 @@ function Dashboard({ onLogout }) {
   const selected = useMemo(
     () => queue.find((c) => c.id === selectedId) || null,
     [queue, selectedId]
+  );
+
+  const selectedElection = useMemo(
+    () => elections.find((e) => e.id === electionId) || null,
+    [elections, electionId]
   );
 
   // ── Helpers to mutate the queue ─────────────────────────────────────────────
@@ -298,6 +312,40 @@ function Dashboard({ onLogout }) {
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, orgId, electionId]);
+
+  // ── Fetch this org's elections on mount; pre-select the active one ──────────
+  useEffect(() => {
+    let active = true;
+    getStaffElections(token)
+      .then((data) => {
+        if (!active) return;
+        const list = data.elections || [];
+        setElections(list);
+        if (!initialElection && list.length > 0) {
+          const act = list.find((e) => e.status === "ACTIVE");
+          const pick = act?.id || list[0].id; // active first, else most recent
+          setElectionId(pick);
+          setElectionInput(pick);
+          setKnownElections((prev) =>
+            prev.includes(pick) ? prev : [...prev, pick]
+          );
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // Pick an election (from the dropdown or the manual fallback input).
+  const selectElection = useCallback((eid) => {
+    if (!eid) return;
+    setElectionId(eid);
+    setElectionInput(eid);
+    setSelectedId(null);
+    setKnownElections((prev) => (prev.includes(eid) ? prev : [...prev, eid]));
+  }, []);
 
   // ── Load queue when an election is chosen ───────────────────────────────────
   const loadQueue = useCallback(
@@ -432,11 +480,7 @@ function Dashboard({ onLogout }) {
 
   const applyElection = (e) => {
     e.preventDefault();
-    const v = electionInput.trim();
-    if (!v) return;
-    setKnownElections((prev) => (prev.includes(v) ? prev : [...prev, v]));
-    setElectionId(v);
-    setSelectedId(null);
+    selectElection(electionInput.trim());
   };
 
   // Sort: urgent first, then most recent.
@@ -502,6 +546,43 @@ function Dashboard({ onLogout }) {
       <div className="flex-1 flex min-h-0">
         {/* ── Left: queue ──────────────────────────────────────────────────── */}
         <div className="w-[320px] border-r border-slate-800 flex flex-col shrink-0">
+          {/* Election picker (primary) */}
+          <div className="px-3 py-2.5 border-b border-slate-800 shrink-0 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Election
+              </span>
+              {selectedElection && (
+                <span
+                  className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                    STATUS_BADGE[selectedElection.status] ||
+                    "bg-slate-700 text-slate-300"
+                  }`}
+                >
+                  {selectedElection.status?.replace("_", " ")}
+                </span>
+              )}
+            </div>
+            {elections.length > 0 ? (
+              <select
+                value={electionId}
+                onChange={(e) => selectElection(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-xs outline-none focus:border-blue-500"
+              >
+                {!electionId && <option value="">Select an election…</option>}
+                {elections.map((el) => (
+                  <option key={el.id} value={el.id}>
+                    {el.name} — {el.status?.replace("_", " ")}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-[11px] text-slate-600">
+                No elections found — use the Election ID box above.
+              </p>
+            )}
+          </div>
+
           <div className="px-4 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0">
             <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Queue
@@ -512,7 +593,7 @@ function Dashboard({ onLogout }) {
           <div className="flex-1 overflow-y-auto">
             {!electionId && (
               <p className="text-center text-xs text-slate-500 mt-8 px-4">
-                Enter an Election ID above to load the live queue.
+                Select an election above to load the live queue.
               </p>
             )}
             {electionId && loadingQueue && (

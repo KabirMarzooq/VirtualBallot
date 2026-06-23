@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MessageCircle, SendHorizonal, X } from "lucide-react";
 import { useApp } from "../../context/AppContext";
-import { sendChatMessage, getChatMessages } from "../../api";
+import { useSlug } from "../../context/SlugContext";
+import {
+  sendChatMessage,
+  getChatMessages,
+  getGuestChatToken,
+  fetchOpenElection,
+} from "../../api";
 
 /**
  * VoterChat — floating live-support widget for voters.
@@ -44,11 +50,22 @@ function formatTime(iso) {
 
 export default function VoterChat({ socket }) {
   const { electionId: ctxElection, orgId: ctxOrg, branding } = useApp();
+  const slug = useSlug();
 
+  // Authenticated voters carry a token in sessionStorage. Anonymous Open/Paid
+  // ballot voters don't — they get a short-lived "guest" token (memory only).
+  const voterToken = sessionStorage.getItem("vb_voter_token");
+  const isGuest = !voterToken;
+  const [guest, setGuest] = useState(null); // { token, electionId, orgId }
+
+  const token = voterToken || guest?.token || null;
   const electionId =
-    ctxElection || sessionStorage.getItem("vb_voter_election") || null;
-  const orgId = ctxOrg || sessionStorage.getItem("vb_voter_org") || null;
-  const token = sessionStorage.getItem("vb_voter_token");
+    ctxElection ||
+    sessionStorage.getItem("vb_voter_election") ||
+    guest?.electionId ||
+    null;
+  const orgId =
+    ctxOrg || sessionStorage.getItem("vb_voter_org") || guest?.orgId || null;
 
   const [open, setOpen] = useState(false);
   const [connected, setConnected] = useState(!!socket?.connected);
@@ -69,6 +86,37 @@ export default function VoterChat({ socket }) {
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
+  // ── Acquire a guest chat token for anonymous Open/Paid ballots ─────────────
+  // Resolves the election from the slug, then mints a 15-min chat-only token.
+  useEffect(() => {
+    if (voterToken) return; // authenticated voter — no guest token needed
+    if (!slug || guest) return; // need a slug; acquire only once
+    let active = true;
+    (async () => {
+      try {
+        let eid = ctxElection || sessionStorage.getItem("vb_voter_election");
+        if (!eid) {
+          const data = await fetchOpenElection(slug);
+          eid = data?.election?.id;
+        }
+        if (!eid) return;
+        const res = await getGuestChatToken(eid, slug);
+        if (!active) return;
+        setGuest({
+          token: res.accessToken,
+          electionId: res.electionId || eid,
+          orgId: res.orgId,
+        });
+      } catch {
+        // Guest chat unavailable (e.g. election not active) — widget stays idle.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, voterToken]);
 
   // ── Connect the shared socket when a voter is present ──────────────────────
   useEffect(() => {
@@ -248,7 +296,9 @@ export default function VoterChat({ socket }) {
                 />
                 <h3 className="font-bold text-white text-sm">Support Chat</h3>
               </div>
-              <p className="text-xs text-slate-500 truncate">{electionName}</p>
+              <p className="text-xs text-slate-500 truncate">
+                {isGuest ? "Chatting as Guest" : electionName}
+              </p>
             </div>
             <button
               onClick={() => setOpen(false)}

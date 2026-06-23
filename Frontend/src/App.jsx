@@ -89,20 +89,20 @@ function AppRoutes() {
           <Route
             path="/open/:slug"
             element={
-              <>
+              <SlugProvider>
                 <OpenBallotPage />
                 <VoterChat socket={socket} />
-              </>
+              </SlugProvider>
             }
           />
           <Route path="/open/:slug/results" element={<OpenResultsPage />} />
           <Route
             path="/paid/:slug"
             element={
-              <>
+              <SlugProvider>
                 <PaidBallotPage />
                 <VoterChat socket={socket} />
-              </>
+              </SlugProvider>
             }
           />
           <Route path="/verify/:slug" element={<VerifyVotePage />} />
