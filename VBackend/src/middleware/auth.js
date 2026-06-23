@@ -166,3 +166,33 @@ export const requireSuperAdmin = (req, res, next) => {
     return fail(res, "Invalid or expired token", 401)
   }
 }
+
+/**
+ * requireStaff
+ * Verifies the JWT and checks role === 'staff'.
+ * Used on all chat management routes.
+ * Sets: req.staffId, req.orgId, req.staffName
+ */
+export const requireStaff = (req, res, next) => {
+  try {
+    const header = req.headers.authorization
+    if (!header?.startsWith("Bearer ")) {
+      return fail(res, "No token provided", 401)
+    }
+
+    const token = header.split(" ")[1]
+    const payload = verifyAccessToken(token)
+
+    if (payload.role !== "staff" && payload.role !== "admin") {
+      return fail(res, "Staff access required", 403)
+    }
+
+    req.staffId   = payload.staffId || null  // null if admin is acting as staff
+    req.orgId     = payload.orgId
+    req.staffName = payload.name || payload.email || "Admin"
+
+    next()
+  } catch (err) {
+    return fail(res, "Invalid or expired token", 401)
+  }
+}

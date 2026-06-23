@@ -8,6 +8,7 @@ import {
   sendOTPEmail, sendPasswordResetEmail, generateReceiptId, isValidEmail,
   ok, fail,
 } from "../utils/index.js"
+import { requireAdmin } from "../middleware/auth.js"
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -465,6 +466,211 @@ router.post("/refresh", async (req, res) => {
     })
   } catch (err) {
     // Refresh token itself expired or invalid → user must log in again
+    return fail(res, "Session expired — please log in again", 401)
+  }
+})
+
+// ── Staff auth routes ─────────────────────────────────────────────────────────
+//
+// Provides:
+//   POST /auth/staff/create   — admin creates a staff member for their org
+//   POST /auth/staff/login    — staff member logs in, gets JWT with role:'staff'
+//   POST /auth/staff/refresh  — refresh token flow for staff
+//   GET  /auth/staff          — admin lists their org's staff members
+//   DELETE /auth/staff/:id    — admin deactivates a staff member
+
+// ─── POST /auth/staff/create ──────────────────────────────────────────────────
+// Admin only — creates a staff (committee) member for their org.
+// Body: { name, email, password }
+router.post("/staff/create", requireAdmin, async (req, res) => {
+  const { name, email, password } = req.body
+
+  if (!name?.trim())    return fail(res, "Name is required")
+  if (!email?.trim())   return fail(res, "Email is required")
+  if (!isValidEmail(email)) return fail(res, "Please enter a valid email address")
+  if (!password)        return fail(res, "Password is required")
+  if (password.length < 8) return fail(res, "Password must be at least 8 characters")
+
+  try {
+    const existing = await query(
+      `SELECT id FROM staff_members WHERE email = $1`,
+      [email.trim().toLowerCase()]
+    )
+    if (existing.rows.length > 0) {
+      return fail(res, "A staff account with this email already exists", 409)
+    }
+
+    const hash = await bcrypt.hash(password, 10)
+
+    const result = await query(
+      `INSERT INTO staff_members (org_id, name, email, password)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, email, is_active, created_at`,
+      [req.orgId, name.trim(), email.trim().toLowerCase(), hash]
+    )
+    const staff = result.rows[0]
+
+    await query(
+      `INSERT INTO audit_logs (org_id, event_type, message, actor, metadata)
+       VALUES ($1, 'admin', $2, $3, $4)`,
+      [
+        req.orgId,
+        `Staff member created: ${staff.name}`,
+        req.adminEmail,
+        JSON.stringify({ staffId: staff.id, staffEmail: staff.email }),
+      ]
+    )
+
+    return ok(res, { staff }, 201)
+  } catch (err) {
+    console.error("Staff create error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── GET /auth/staff ──────────────────────────────────────────────────────────
+// Admin only — list all staff members for their org
+router.get("/staff", requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, email, is_active, created_at
+       FROM staff_members WHERE org_id = $1
+       ORDER BY created_at DESC`,
+      [req.orgId]
+    )
+    return ok(res, { staff: result.rows })
+  } catch (err) {
+    console.error("Staff list error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── DELETE /auth/staff/:id ───────────────────────────────────────────────────
+// Admin only — deactivate a staff member (soft delete)
+router.delete("/staff/:id", requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `UPDATE staff_members SET is_active = FALSE
+       WHERE id = $1 AND org_id = $2
+       RETURNING id, name, email`,
+      [req.params.id, req.orgId]
+    )
+    if (result.rows.length === 0) {
+      return fail(res, "Staff member not found", 404)
+    }
+
+    await query(
+      `INSERT INTO audit_logs (org_id, event_type, message, actor, metadata)
+       VALUES ($1, 'admin', $2, $3, $4)`,
+      [
+        req.orgId,
+        `Staff member deactivated: ${result.rows[0].name}`,
+        req.adminEmail,
+        JSON.stringify({ staffId: result.rows[0].id }),
+      ]
+    )
+
+    return ok(res, { message: "Staff member deactivated" })
+  } catch (err) {
+    console.error("Staff deactivate error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/staff/login ───────────────────────────────────────────────────
+// Staff member logs in with email + password.
+// Body: { email, password }
+router.post("/staff/login", async (req, res) => {
+  const { email, password } = req.body
+  if (!email || !password) return fail(res, "Email and password required")
+  if (!isValidEmail(email)) return fail(res, "Please enter a valid email address")
+
+  try {
+    const result = await query(
+      `SELECT sm.id, sm.org_id, sm.name, sm.email, sm.password, sm.is_active,
+              o.slug as org_slug, o.name as org_name
+       FROM staff_members sm
+       JOIN organizations o ON o.id = sm.org_id
+       WHERE sm.email = $1`,
+      [email.trim().toLowerCase()]
+    )
+
+    if (result.rows.length === 0) {
+      return fail(res, "No account found with this email address", 404)
+    }
+    const staff = result.rows[0]
+
+    if (!staff.is_active) {
+      return fail(res, "Your staff account has been deactivated. Contact your admin.", 403)
+    }
+
+    const passwordOk = await bcrypt.compare(password, staff.password)
+    if (!passwordOk) return fail(res, "Invalid credentials", 401)
+
+    const accessToken = signAccessToken({
+      staffId: staff.id,
+      orgId: staff.org_id,
+      name: staff.name,
+      role: "staff",
+    })
+    const refreshToken = signRefreshToken({
+      staffId: staff.id,
+      orgId: staff.org_id,
+      role: "staff",
+    })
+
+    return ok(res, {
+      accessToken,
+      refreshToken,
+      staff: {
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        orgId: staff.org_id,
+        orgSlug: staff.org_slug,
+        orgName: staff.org_name,
+      },
+    })
+  } catch (err) {
+    console.error("Staff login error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /auth/staff/refresh ─────────────────────────────────────────────────
+// Exchanges a valid staff refresh token for a new access token.
+// Body: { refreshToken }
+router.post("/staff/refresh", async (req, res) => {
+  const { refreshToken } = req.body
+  if (!refreshToken) return fail(res, "Refresh token required", 401)
+
+  try {
+    const payload = verifyRefreshToken(refreshToken)
+
+    if (payload.role !== "staff") {
+      return fail(res, "Invalid refresh token", 401)
+    }
+
+    const result = await query(
+      `SELECT id, org_id, name, email, is_active FROM staff_members WHERE id = $1`,
+      [payload.staffId]
+    )
+    if (result.rows.length === 0) return fail(res, "Account not found", 404)
+    const staff = result.rows[0]
+
+    if (!staff.is_active) {
+      return fail(res, "Your staff account has been deactivated.", 403)
+    }
+
+    const accessToken = signAccessToken({
+      staffId: staff.id,
+      orgId: staff.org_id,
+      name: staff.name,
+      role: "staff",
+    })
+
+    return ok(res, { accessToken })
+  } catch (err) {
     return fail(res, "Session expired — please log in again", 401)
   }
 })
