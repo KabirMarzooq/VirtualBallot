@@ -296,7 +296,7 @@ All endpoints are prefixed with `/api`.
 
 ## Multi-Tenancy
 
-Each organization is identified by a URL slug (e.g. `nuesa`). All database queries are scoped to the requesting organization's ID, ensuring complete data isolation between tenants. The slug is resolved from the URL on the frontend and passed to the backend on every request.
+Each organization is identified by a URL slug (e.g `nuesa`). All database queries are scoped to the requesting organization's ID, ensuring complete data isolation between tenants. The slug is resolved from the URL on the frontend and passed to the backend on every request.
 
 - Voter URL: `https://virtualballot.online/nuesa`
 - Admin URL: `https://virtualballot.online/nuesa/admin`
