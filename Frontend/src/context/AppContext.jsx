@@ -351,6 +351,16 @@ export function AppProvider({ children }) {
     } catch (_) {}
   };
 
+  // Load roster-approval state whenever the admin console becomes
+  // authenticated — covers fresh login (AdminLogin), session restore, and
+  // silent token refresh. Without this the ElectionTab start-gate and the
+  // VotersTab dashboard stay stuck on the "IDLE" default after a fresh login.
+  useEffect(() => {
+    if (accessToken && orgSlug && currentUser?.role === "ADMIN") {
+      refreshRosterApproval();
+    }
+  }, [accessToken, orgSlug, currentUser]);
+
   const toggleBallotSelection = (pos, id) =>
     setBallot((prev) => ({ ...prev, [pos]: id }));
 
