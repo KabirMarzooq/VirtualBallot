@@ -331,7 +331,7 @@ function Dashboard({ onLogout }) {
           );
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load staff elections:", err));
     return () => {
       active = false;
     };

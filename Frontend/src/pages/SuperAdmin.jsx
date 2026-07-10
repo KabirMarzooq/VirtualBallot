@@ -96,7 +96,8 @@ export default function SuperAdminPage() {
       });
       setInvoices(result.invoices);
       setInvSummary(result.summary);
-    } catch (_) {
+    } catch (err) {
+      console.error("Failed to load invoices:", err);
     } finally {
       setInvLoading(false);
     }
@@ -146,7 +147,8 @@ export default function SuperAdminPage() {
       setLogs(result.logs);
       setLogTotal(result.total);
       setLogOffset(offset);
-    } catch (_) {
+    } catch (err) {
+      console.error("Failed to load audit logs:", err);
     } finally {
       setLogLoading(false);
     }
@@ -159,7 +161,7 @@ export default function SuperAdminPage() {
     const interval = setInterval(() => {
       fetchSuperAdminOverview(token)
         .then(setData)
-        .catch(() => {});
+        .catch((err) => console.error("Failed to poll superadmin overview:", err));
     }, 30_000);
     return () => clearInterval(interval);
   }, []);

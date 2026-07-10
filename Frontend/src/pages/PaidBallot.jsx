@@ -74,7 +74,9 @@ export default function PaidBallotPage() {
         if (d.email) setEmail(d.email);
         if (d.qty) setQty(d.qty);
         if (typeof d.bundleIdx === "number") setBundleIdx(d.bundleIdx);
-      } catch {}
+      } catch (err) {
+        console.error("Failed to restore paid ballot draft:", err);
+      }
     }
   }, []);
 

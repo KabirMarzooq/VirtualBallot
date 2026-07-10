@@ -12,6 +12,7 @@ import {
   Plus,
   Receipt,
   RefreshCw,
+  Headset,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -23,6 +24,7 @@ import BrandingTab from "../components/admin/BrandingTab";
 import AuditLogTab from "../components/admin/AuditLogTab";
 import HistoryTab from "../components/admin/HistoryTab";
 import InvoiceTab from "../components/admin/InvoiceTab";
+import StaffTab from "../components/admin/StaffTab";
 import { fetchAdminOverview, createNewElection } from "../api";
 
 const TABS = [
@@ -33,6 +35,7 @@ const TABS = [
   { id: "branding", label: "Branding", icon: Palette },
   { id: "invoices", label: "Invoices", icon: Receipt },
   { id: "history", label: "History", icon: Archive },
+  { id: "staff", label: "Staff", icon: Headset },
   { id: "audit", label: "Audit Log", icon: ScrollText },
 ];
 
@@ -98,7 +101,9 @@ export default function AdminPage() {
             role: "STUDENT",
           }))
         );
-      } catch (_) {}
+      } catch (err) {
+        console.error("Failed to poll admin overview:", err);
+      }
     }, pollInterval);
     return () => clearInterval(id);
   }, [electionConfig.status, accessToken, orgSlug]);
@@ -374,6 +379,7 @@ export default function AdminPage() {
           {activeTab === "branding" && <BrandingTab />}
           {activeTab === "invoices" && <InvoiceTab />}
           {activeTab === "history" && <HistoryTab />}
+          {activeTab === "staff" && <StaffTab />}
           {activeTab === "audit" && <AuditLogTab />}
         </div>
       </div>

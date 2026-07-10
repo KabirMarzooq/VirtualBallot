@@ -25,7 +25,7 @@ export default function OpenResultsPage() {
         setEndsAt(d.election.endsAt);
         setStatus(d.election.status);
       })
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load open election branding:", err));
 
     const load = () => {
       fetchOpenResults(slug)
@@ -33,7 +33,7 @@ export default function OpenResultsPage() {
           setData(d);
           setLastUpdated(new Date());
         })
-        .catch(() => {})
+        .catch((err) => console.error("Failed to load open results:", err))
         .finally(() => setLoading(false));
     };
     load();

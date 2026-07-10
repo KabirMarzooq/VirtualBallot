@@ -98,7 +98,9 @@ export default function ObserverPage() {
             iso: e.created_at,
           }))
         );
-      } catch (_) {}
+      } catch (err) {
+        console.error("Failed to load observer overview:", err);
+      }
     };
 
     load();

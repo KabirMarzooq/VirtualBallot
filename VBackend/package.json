@@ -6,11 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "start": "node src/db/setup.js && node src/server.js",
     "db:setup": "node src/db/setup.js",
     "migrate:open": "node src/db/migrate-open-voting.js",
     "migrate:paid": "node src/db/migrate-paid-voting.js",
     "migrate:chain": "node src/db/migrate-vote-chain.js",
+    "migrate:roster": "node src/db/migrate-roster-approval.js",
     "db:seed": "node src/db/seed.js"
   },
   "dependencies": {
