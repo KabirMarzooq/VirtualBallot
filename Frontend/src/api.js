@@ -468,3 +468,35 @@ export const getCannedReplies = (electionId, token) =>
 /** Full transcript of a conversation (for audit / print) */
 export const getChatTranscript = (id, token) =>
     request(`/chat/${id}/transcript`, {}, token)
+
+// ─── Roster Approval ──────────────────────────────────────────────────────────
+
+/** Admin: current approval + flag status for the dashboard */
+export const getRosterApprovalStatus = (token, slug) =>
+    request(`/roster-approval/${slug}/status`, {}, token)
+
+/** Admin: resolve a flagged voter entry */
+export const resolveRosterFlag = (flagId, token, slug) =>
+    request(`/roster-approval/${slug}/resolve-flag`, { method: "POST", body: JSON.stringify({ flagId }) }, token)
+
+/** Admin: reset and re-mint all review codes */
+export const regenerateReviewCodes = (token, slug) =>
+    request(`/roster-approval/${slug}/regenerate`, { method: "POST" }, token)
+
+// Public — no token
+
+/** Resolve a review code to its org slug (rep portal has no slug in the URL) */
+export const lookupReviewCode = (reviewCode) =>
+    request(`/roster-approval/lookup`, { method: "POST", body: JSON.stringify({ reviewCode }) })
+
+/** Rep enters their code and receives the voter list to review */
+export const submitRepReview = (reviewCode, slug) =>
+    request(`/roster-approval/${slug}/review`, { method: "POST", body: JSON.stringify({ reviewCode }) })
+
+/** Rep records their approval */
+export const submitRepApproval = (reviewCode, slug) =>
+    request(`/roster-approval/${slug}/approve`, { method: "POST", body: JSON.stringify({ reviewCode }) })
+
+/** Rep flags a specific voter entry as disputed */
+export const submitRepFlag = (reviewCode, matric, reason, slug) =>
+    request(`/roster-approval/${slug}/flag`, { method: "POST", body: JSON.stringify({ reviewCode, matric, reason }) })

@@ -25,6 +25,7 @@ import paymentRoutes from "./routes/payments.js"
 import paidRoutes from "./routes/paid.js"
 import chainRoutes from "./routes/chain.js"
 import chatRoutes from "./routes/chat.js"
+import rosterApprovalRoutes from "./routes/rosterApproval.js"
 import { startChainAnchorJob } from "./jobs/chainAnchor.js"
 import { query } from "./db/pool.js"
 
@@ -187,6 +188,7 @@ app.use("/payments", paymentRoutes)
 app.use("/paid", paidRoutes)
 app.use("/chain", chainRoutes)
 app.use("/chat", authLimiter, chatRoutes)
+app.use("/roster-approval", rosterApprovalRoutes)
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/health", (req, res) => {

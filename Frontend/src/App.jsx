@@ -33,6 +33,7 @@ const OpenResultsPage = lazy(() => import("./pages/OpenResults"));
 const PaidBallotPage = lazy(() => import("./pages/PaidBallot"));
 const VerifyVotePage = lazy(() => import("./pages/VerifyVote"));
 const StaffDashboardPage = lazy(() => import("./components/chat/StaffDashboard"));
+const RepReviewPage = lazy(() => import("./pages/RepReview"));
 
 // ── Route guard — redirects unauthenticated users at the router level ─────────
 function ProtectedRoute({ children, role }) {
@@ -106,6 +107,9 @@ function AppRoutes() {
             }
           />
           <Route path="/verify/:slug" element={<VerifyVotePage />} />
+
+          {/* ── Candidate rep roster review (public, no slug in URL) ─────────── */}
+          <Route path="/roster-review" element={<RepReviewPage />} />
 
           {/* ── Voter flow — scoped to org slug ─────────────────────────────── */}
           <Route

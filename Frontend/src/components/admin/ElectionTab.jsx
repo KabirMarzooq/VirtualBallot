@@ -6,6 +6,7 @@ import {
   Lock,
   Clock,
   CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { updateElectionConfig, fetchAdminOverview } from "../../api";
@@ -51,6 +52,7 @@ export default function ElectionTab() {
     showAlert,
     showConfirm,
     addLog,
+    rosterApproval,
   } = useApp();
 
   const [durD, setDurD] = useState(
@@ -257,10 +259,25 @@ export default function ElectionTab() {
                   </div>
                 ))}
               </div>
+              {rosterApproval.status !== "APPROVED" && (
+                <div className="flex items-start gap-3 p-4 bg-amber-900/30 border border-amber-700/50 rounded-xl mb-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-300">
+                      Voter roster not yet approved
+                    </p>
+                    <p className="text-xs text-amber-500 mt-0.5">
+                      {rosterApproval.status === "IDLE"
+                        ? "Upload a voter roster in the Voters tab first. All candidate reps must approve it before voting can begin."
+                        : `${rosterApproval.approvedCount} of ${rosterApproval.totalCount} candidate reps have approved. Go to the Voters tab to check progress.`}
+                    </p>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={start}
-                disabled={saving}
-                className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
+                disabled={saving || rosterApproval.status !== "APPROVED"}
+                className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {saving ? (
                   <VBLoader size="sm" />

@@ -5,6 +5,7 @@ import {
   fetchAdminOverview,
   updateElectionConfig,
   refreshAccessToken,
+  getRosterApprovalStatus,
 } from "../api";
 import { formatTimeLeft } from "./utils";
 
@@ -96,6 +97,16 @@ export function AppProvider({ children }) {
   const [electionHistory, setElectionHistory] = useState([]);
   const [timeLeft, setTimeLeft] = useState("00h : 00m : 00s");
   const [appLoading, setAppLoading] = useState(true);
+
+  // ── Roster approval (multi-panel candidate-rep sign-off) ──────────────────────
+  const [rosterApproval, setRosterApproval] = useState({
+    status: "IDLE", // "IDLE" | "PENDING" | "APPROVED"
+    approvals: [], // array from backend
+    totalCount: 0,
+    approvedCount: 0,
+    allApproved: false,
+    hasUnresolvedFlags: false,
+  });
 
   // ── Ballot session ────────────────────────────────────────────────────────────
   const [ballot, setBallot] = useState({});
@@ -204,6 +215,7 @@ export function AppProvider({ children }) {
           setCandidates(overview.candidates.map(mapCandidate));
           setUsers(overview.voters.map(mapVoter));
           setActivityLog(overview.auditLog.map(mapLog));
+          refreshRosterApproval();
         })
         .catch(() => {
           // Only clear if the refresh token is ALSO gone/expired.
@@ -323,6 +335,22 @@ export function AppProvider({ children }) {
     setModal({ isOpen: true, type: "confirm", title, message, onConfirm });
   const closeModal = () => setModal((m) => ({ ...m, isOpen: false }));
 
+  // Reload roster-approval state from the backend (admin only).
+  const refreshRosterApproval = async () => {
+    if (!accessToken || !orgSlug) return;
+    try {
+      const data = await getRosterApprovalStatus(accessToken, orgSlug);
+      setRosterApproval({
+        status: data.rosterApprovalStatus,
+        approvals: data.approvals,
+        totalCount: data.totalCount,
+        approvedCount: data.approvedCount,
+        allApproved: data.allApproved,
+        hasUnresolvedFlags: data.hasUnresolvedFlags,
+      });
+    } catch (_) {}
+  };
+
   const toggleBallotSelection = (pos, id) =>
     setBallot((prev) => ({ ...prev, [pos]: id }));
 
@@ -369,6 +397,10 @@ export function AppProvider({ children }) {
     setElectionHistory,
     timeLeft,
     appLoading,
+    // roster approval
+    rosterApproval,
+    setRosterApproval,
+    refreshRosterApproval,
     // ballot
     ballot,
     setBallot,
