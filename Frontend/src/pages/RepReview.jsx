@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Flag,
   CheckCircle,
-  ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
 import VBLoader from "../components/ui/VBLoader";
@@ -29,7 +28,7 @@ export default function RepReviewPage() {
   const [voters, setVoters] = useState([]);
   const [alreadyApproved, setAlreadyApproved] = useState(false);
 
-  // matric → reason for entries this rep has flagged during the session
+  // matric → reason for entries this reviewer has flagged during the session
   const [flags, setFlags] = useState({});
   const [flaggingMatric, setFlaggingMatric] = useState(null);
   const [flagReason, setFlagReason] = useState("");
@@ -100,7 +99,7 @@ export default function RepReviewPage() {
     try {
       const data = await submitRepApproval(code.trim().toUpperCase(), slug);
       setConfirmation({
-        candidateName: data.candidateName,
+        reviewerName: data.reviewerName,
         approvedAt: data.approvedAt,
       });
       setStep(3);
@@ -120,20 +119,20 @@ export default function RepReviewPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl p-8 sm:p-10">
           {/* Branding */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-2xl">
-              <ClipboardList className="w-9 h-9 text-white" />
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+              <ClipboardList className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-black text-white">Candidate Rep Portal</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Review and approve the voter list
+            <h1 className="text-2xl font-black text-white">Roster Review Portal</h1>
+            <p className="text-slate-400 text-sm mt-1">
+              Committee members only
             </p>
           </div>
 
           {/* ── Step 1: code entry ─────────────────────────────────────────── */}
           {step === 1 && (
             <div className="space-y-5">
-              <div className="bg-slate-800 p-4 rounded-2xl border-2 border-transparent focus-within:border-teal-500 transition-all">
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 text-center">
                   Review Code
                 </label>
                 <input
@@ -141,22 +140,25 @@ export default function RepReviewPage() {
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && code && handleReview()}
                   maxLength={6}
-                  className="w-full bg-transparent text-2xl font-mono font-bold text-white outline-none placeholder:text-slate-600 tracking-[0.3em]"
-                  placeholder="XK4M9P"
                   autoFocus
+                  placeholder="XK4M9P"
+                  className={`w-full bg-slate-800 text-white text-center text-2xl font-mono tracking-[0.4em] py-5 rounded-2xl border-2 outline-none transition-all placeholder:text-slate-700 ${
+                    error
+                      ? "border-red-500 text-red-400"
+                      : "border-slate-700 focus:border-blue-500"
+                  }`}
                 />
+                {error && (
+                  <p className="text-red-400 text-xs font-bold text-center mt-2">
+                    {error}
+                  </p>
+                )}
               </div>
-
-              {error && (
-                <p className="text-sm font-bold text-red-400 text-center">
-                  {error}
-                </p>
-              )}
 
               <button
                 onClick={handleReview}
                 disabled={!code.trim() || loading}
-                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 group disabled:opacity-60 cursor-pointer"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-colors cursor-pointer"
               >
                 {loading ? (
                   <VBLoader size="sm" />
@@ -174,19 +176,19 @@ export default function RepReviewPage() {
           {step === 2 && approval && (
             <div className="space-y-4">
               <div className="text-center">
-                <p className="text-xs font-bold text-teal-400 uppercase tracking-[0.2em]">
-                  Reviewing on behalf of
+                <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em]">
+                  Reviewing as
                 </p>
                 <p className="text-lg font-black text-white">
-                  {approval.candidateName}
+                  {approval.reviewerName}
                 </p>
               </div>
 
               {alreadyApproved && (
-                <div className="flex items-center gap-3 p-4 bg-green-900/30 border border-green-700/50 rounded-xl">
-                  <ShieldCheck className="w-5 h-5 text-green-400 flex-shrink-0" />
-                  <p className="text-sm font-bold text-green-300">
-                    You already approved this list on{" "}
+                <div className="flex items-center gap-3 p-4 bg-blue-900/30 border border-blue-700/40 rounded-xl">
+                  <ShieldCheck className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                  <p className="text-sm font-bold text-blue-300">
+                    You approved this voter list on{" "}
                     {approval.approvedAt
                       ? new Date(approval.approvedAt).toLocaleString()
                       : "record"}
@@ -219,7 +221,7 @@ export default function RepReviewPage() {
                         <div
                           key={v.matric}
                           className={`px-4 py-2.5 border-b border-slate-700/30 last:border-0 ${
-                            flaggedReason ? "bg-red-950/20" : ""
+                            flaggedReason ? "bg-slate-900/60" : ""
                           }`}
                         >
                           <div className="grid grid-cols-12 gap-2 items-center">
@@ -316,7 +318,7 @@ export default function RepReviewPage() {
                 <button
                   onClick={handleApprove}
                   disabled={approveDisabled}
-                  className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
                   {loading ? (
                     <VBLoader size="sm" />
@@ -333,14 +335,14 @@ export default function RepReviewPage() {
           {/* ── Step 3: confirmation ───────────────────────────────────────── */}
           {step === 3 && confirmation && (
             <div className="text-center space-y-4 py-4">
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-11 h-11 text-green-400" />
+              <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle className="w-11 h-11 text-blue-400" />
               </div>
               <h2 className="text-2xl font-black text-white">Approval recorded</h2>
               <p className="text-sm text-slate-300">
-                You approved the voter list on behalf of{" "}
+                You approved the voter list as{" "}
                 <span className="font-bold text-white">
-                  {confirmation.candidateName}
+                  {confirmation.reviewerName}
                 </span>{" "}
                 on{" "}
                 {confirmation.approvedAt
@@ -360,9 +362,9 @@ export default function RepReviewPage() {
           <button
             onClick={() => navigate("/")}
             title="Back to Virtual Ballot home"
-            className="text-slate-600 hover:text-slate-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
+            className="text-slate-600 hover:text-slate-400 text-xs font-bold mx-auto transition-colors cursor-pointer"
           >
-            <ShieldAlert className="w-3 h-3" /> Virtual Ballot Home
+            ← Virtual Ballot Home
           </button>
         </p>
       </div>

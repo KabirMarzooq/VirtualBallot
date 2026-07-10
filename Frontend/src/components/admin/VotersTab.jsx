@@ -9,10 +9,10 @@ import {
   Copy,
   Check,
   ClipboardList,
-  AlertTriangle,
-  RefreshCw,
   Lock,
   Flag,
+  UserPlus,
+  RotateCcw,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import {
@@ -27,6 +27,8 @@ import {
   resolveRosterFlag,
   regenerateReviewCodes,
   updateElectionConfig,
+  addRosterReviewer,
+  removeRosterReviewer,
 } from "../../api";
 import VBLoader from "../ui/VBLoader";
 
@@ -39,7 +41,6 @@ export default function VotersTab() {
     showAlert,
     showConfirm,
     addLog,
-    candidates,
     electionConfig,
     setElectionConfig,
     rosterApproval,
@@ -53,6 +54,9 @@ export default function VotersTab() {
   const [copiedObs, setCopiedObs] = useState(false);
   const [codesCopied, setCodesCopied] = useState(false);
   const [approvalBusy, setApprovalBusy] = useState(false);
+  const [reviewerName, setReviewerName] = useState("");
+
+  const rosterActive = electionConfig.votingMode === "CLOSED";
 
   const voterUrl = `${window.location.origin}/vote/${orgSlug}`;
   const observerUrl = `${window.location.origin}/observer/login?slug=${orgSlug}`;
@@ -150,8 +154,9 @@ export default function VotersTab() {
             `${result.inserted} voters added to roster. ${result.skipped} skipped (duplicates).`
           );
         }
-        // Load the freshly-generated review codes and show the approval board
-        refreshRosterApproval();
+        // Closed elections: refresh the review panel (a changed roster may
+        // reset the approval status). Open elections are unaffected.
+        if (rosterActive) refreshRosterApproval();
       } catch (err) {
         showAlert("Upload Failed", err.message);
       } finally {
@@ -171,26 +176,59 @@ export default function VotersTab() {
     }
   };
 
-  // ── Roster approval helpers ─────────────────────────────────────────────────
-  const positionFor = (candidateId) =>
-    candidates.find((c) => c.id === candidateId)?.position || "";
-
-  // Flatten every flag with its rep (candidate) name for the flags table
+  // ── Roster review panel helpers ─────────────────────────────────────────────
+  // Flatten every flag with the reviewer who raised it for the flags table.
   const allFlags = rosterApproval.approvals.flatMap((a) =>
-    (a.flags || []).map((f) => ({ ...f, rep: a.candidateName }))
+    (a.flags || []).map((f) => ({ ...f, reviewer: a.reviewerName }))
   );
   const unresolvedFlags = allFlags.filter((f) => !f.resolved);
 
+  const handleAddReviewer = async () => {
+    const name = reviewerName.trim();
+    if (!name) return;
+    setApprovalBusy(true);
+    try {
+      await addRosterReviewer(name, accessToken, orgSlug);
+      await refreshRosterApproval();
+      addLog(`Committee member '${name}' added to roster review panel`, "registry");
+      setReviewerName("");
+    } catch (err) {
+      showAlert("Could Not Add Reviewer", err.message);
+    } finally {
+      setApprovalBusy(false);
+    }
+  };
+
+  const handleRemoveReviewer = (reviewer) => {
+    showConfirm(
+      "Remove committee member?",
+      `Remove ${reviewer.reviewerName} from the review panel? Their review code will stop working.`,
+      async () => {
+        setApprovalBusy(true);
+        try {
+          await removeRosterReviewer(reviewer.id, accessToken, orgSlug);
+          await refreshRosterApproval();
+          addLog(
+            `Committee member '${reviewer.reviewerName}' removed from roster review panel`,
+            "registry"
+          );
+        } catch (err) {
+          showAlert("Could Not Remove", err.message);
+        } finally {
+          setApprovalBusy(false);
+        }
+      }
+    );
+  };
+
   const copyAllCodes = () => {
     const lines = rosterApproval.approvals
-      .map((a) => {
-        const pos = positionFor(a.candidateId);
-        return `${a.candidateName}${pos ? ` (${pos})` : ""}: ${a.reviewCode}`;
-      })
+      .map((a) => `${a.reviewerName}: ${a.reviewCode}`)
       .join("\n");
-    const text = `Virtual Ballot — Roster Review Codes
-Please use your code to review and approve the voter list at:
-${window.location.origin}/roster-review
+    const text = `Virtual Ballot — Roster Review Panel
+Please use your personal code to review the voter list.
+
+Review Portal: ${window.location.origin}/roster-review
 
 ${lines}`;
     navigator.clipboard.writeText(text).then(() => {
@@ -199,18 +237,18 @@ ${lines}`;
     });
   };
 
-  const handleRegenerate = () => {
+  const handleResetApprovals = () => {
     showConfirm(
-      "Regenerate review codes?",
-      "This resets every rep's approval and issues brand-new codes. Reps who already approved will need to review and approve again. Continue?",
+      "Reset all approvals?",
+      "This sets every committee member back to pending. They keep their codes but must review and approve again. Continue?",
       async () => {
         setApprovalBusy(true);
         try {
           await regenerateReviewCodes(accessToken, orgSlug);
           await refreshRosterApproval();
-          addLog("Roster review codes regenerated — all approvals reset", "registry");
+          addLog("Roster approvals reset — all committee members must re-approve", "registry");
         } catch (err) {
-          showAlert("Regeneration Failed", err.message);
+          showAlert("Reset Failed", err.message);
         } finally {
           setApprovalBusy(false);
         }
@@ -235,7 +273,7 @@ ${lines}`;
     if (!rosterApproval.allApproved || rosterApproval.hasUnresolvedFlags) return;
     showConfirm(
       "Lock the registry?",
-      "All candidate reps have approved the voter list. Locking the registry finalises it so it can no longer be edited before voting. Continue?",
+      "All committee members have approved the voter list. Locking the registry finalises it so it can no longer be edited before voting. Continue?",
       async () => {
         setApprovalBusy(true);
         try {
@@ -245,7 +283,7 @@ ${lines}`;
             orgSlug
           );
           setElectionConfig((prev) => ({ ...prev, registryLocked: true }));
-          addLog("Registry locked — roster approved by all candidate reps", "registry");
+          addLog("Registry locked — roster approved by all committee members", "registry");
           showAlert(
             "Registry Locked",
             "The voter registry is now locked. You can start the election from the Election tab."
@@ -261,161 +299,187 @@ ${lines}`;
 
   return (
     <div className="space-y-5">
-      {/* ── Roster approval dashboard ──────────────────────────────────────── */}
-      {rosterApproval.status !== "IDLE" && (
+      {/* ── Roster review panel (closed elections only) ────────────────────── */}
+      {rosterActive && (
         <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
           <div className="p-5 border-b border-slate-700">
-            <div className="flex items-center gap-2 mb-3">
-              <ClipboardList className="w-5 h-5 text-teal-400" />
-              <h3 className="text-white font-black">Roster Approval Status</h3>
-              {rosterApproval.status === "APPROVED" && (
-                <span className="ml-auto text-xs font-bold px-3 py-1 rounded-full bg-green-900/50 text-green-400">
-                  All reps approved
-                </span>
-              )}
+            <div className="flex items-center gap-2 mb-4">
+              <ClipboardList className="w-5 h-5 text-slate-400" />
+              <h3 className="text-white font-black uppercase tracking-widest text-sm">
+                Roster Review Panel
+              </h3>
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-bold text-slate-300">
-                {rosterApproval.approvedCount} of {rosterApproval.totalCount}{" "}
-                candidate reps have approved
-              </p>
-              <p className="text-sm font-mono font-bold text-white">
-                {rosterApproval.totalCount
-                  ? Math.round(
+
+            {/* Add a committee member */}
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+              Add a committee member
+            </p>
+            <div className="flex gap-3">
+              <input
+                value={reviewerName}
+                onChange={(e) => setReviewerName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddReviewer()}
+                placeholder="Full name (e.g. Kabir Marzooq)"
+                className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+              />
+              <button
+                onClick={handleAddReviewer}
+                disabled={approvalBusy || !reviewerName.trim()}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 rounded-xl flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                <UserPlus className="w-4 h-4" /> Add Reviewer
+              </button>
+            </div>
+
+            {/* Progress */}
+            {rosterApproval.totalCount > 0 && (
+              <div className="mt-5">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-sm font-bold text-slate-300">
+                    {rosterApproval.approvedCount} of {rosterApproval.totalCount}{" "}
+                    reviewers have approved
+                  </p>
+                  <p className="text-sm font-mono font-bold text-white">
+                    {Math.round(
                       (rosterApproval.approvedCount / rosterApproval.totalCount) *
                         100
-                    )
-                  : 0}
-                %
-              </p>
-            </div>
-            <div className="w-full bg-slate-700 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-teal-500 to-green-400 h-3 rounded-full transition-all duration-700"
-                style={{
-                  width: `${
-                    rosterApproval.totalCount
-                      ? (rosterApproval.approvedCount /
+                    )}
+                    %
+                  </p>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-3">
+                  <div
+                    className="bg-blue-500 h-3 rounded-full transition-all duration-700"
+                    style={{
+                      width: `${
+                        (rosterApproval.approvedCount /
                           rosterApproval.totalCount) *
                         100
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Per-candidate approval rows */}
-          <div className="grid grid-cols-12 gap-2 px-5 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
-            <span className="col-span-4">Candidate</span>
-            <span className="col-span-3">Position</span>
-            <span className="col-span-3">Status</span>
-            <span className="col-span-2">Approved</span>
-          </div>
-          <div className="divide-y divide-slate-700/40">
-            {rosterApproval.approvals.map((a) => {
-              const unresolved = (a.flags || []).some((f) => !f.resolved);
-              return (
-                <div
-                  key={a.id}
-                  className="grid grid-cols-12 gap-2 px-5 py-3 items-center"
-                >
-                  <div className="col-span-4 min-w-0">
-                    <p className="text-sm font-bold text-white truncate">
-                      {a.candidateName}
-                    </p>
-                    <p className="text-xs font-mono text-teal-400 tracking-widest">
-                      {a.reviewCode}
-                    </p>
-                  </div>
-                  <span className="col-span-3 text-xs text-slate-400 truncate">
-                    {positionFor(a.candidateId) || "—"}
-                  </span>
-                  <div className="col-span-3">
-                    {a.approved ? (
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-900/50 text-green-400">
-                        Approved
-                      </span>
-                    ) : unresolved ? (
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-900/50 text-red-400">
-                        Has Flags
-                      </span>
-                    ) : (
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-900/50 text-amber-400">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-                  <span className="col-span-2 text-xs text-slate-500">
-                    {a.approvedAt
-                      ? new Date(a.approvedAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "—"}
-                  </span>
+                      }%`,
+                    }}
+                  />
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
 
-          {/* Actions */}
-          <div className="p-5 border-t border-slate-700 flex flex-wrap gap-3">
-            <button
-              onClick={copyAllCodes}
-              className={`flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all cursor-pointer ${
-                codesCopied
-                  ? "bg-green-500/20 text-green-400 border-green-500/30"
-                  : "bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700"
-              }`}
-            >
-              {codesCopied ? (
-                <Check className="w-3.5 h-3.5" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
-              {codesCopied ? "Copied!" : "Copy all review codes"}
-            </button>
-            <button
-              onClick={handleRegenerate}
-              disabled={approvalBusy}
-              className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Regenerate codes
-            </button>
-          </div>
+          {/* Reviewer table */}
+          {rosterApproval.approvals.length === 0 ? (
+            <p className="text-slate-500 text-sm text-center py-8 px-5">
+              No committee members yet. Add reviewers above, then send each
+              person their code and the review portal link.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-12 gap-2 px-5 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
+                <span className="col-span-4">Reviewer</span>
+                <span className="col-span-2">Code</span>
+                <span className="col-span-2">Status</span>
+                <span className="col-span-2">Approved At</span>
+                <span className="col-span-2 text-right">Actions</span>
+              </div>
+              <div className="divide-y divide-slate-700/40">
+                {rosterApproval.approvals.map((a) => (
+                  <div
+                    key={a.id}
+                    className="grid grid-cols-12 gap-2 px-5 py-3 items-center"
+                  >
+                    <span className="col-span-4 text-sm font-bold text-white truncate">
+                      {a.reviewerName}
+                    </span>
+                    <span className="col-span-2 font-mono text-xs text-slate-300 tracking-widest">
+                      {a.reviewCode}
+                    </span>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          a.approved ? "bg-blue-400" : "bg-amber-500"
+                        }`}
+                      />
+                      <span className="text-xs text-slate-400">
+                        {a.approved ? "Approved" : "Pending"}
+                      </span>
+                    </div>
+                    <span className="col-span-2 text-xs text-slate-500">
+                      {a.approvedAt
+                        ? new Date(a.approvedAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "—"}
+                    </span>
+                    <div className="col-span-2 flex justify-end">
+                      {!a.approved && (
+                        <button
+                          onClick={() => handleRemoveReviewer(a)}
+                          disabled={approvalBusy}
+                          className="text-red-400 hover:text-red-300 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="p-5 border-t border-slate-700 flex flex-wrap gap-3">
+                <button
+                  onClick={copyAllCodes}
+                  className={`flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                    codesCopied
+                      ? "bg-slate-600 text-white"
+                      : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+                  }`}
+                >
+                  {codesCopied ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                  {codesCopied ? "Copied!" : "Copy all codes + link"}
+                </button>
+                <button
+                  onClick={handleResetApprovals}
+                  disabled={approvalBusy}
+                  className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl text-amber-400 bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Reset all approvals
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Flagged entries */}
           {unresolvedFlags.length > 0 && (
             <div className="px-5 pb-5">
-              <div className="bg-red-950/30 border border-red-900/50 rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-red-900/40">
+              <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-700">
                   <Flag className="w-4 h-4 text-red-400" />
-                  <p className="text-sm font-bold text-red-300">
+                  <p className="text-sm font-bold text-slate-300">
                     Flagged Entries
                   </p>
-                  <span className="ml-auto text-xs font-mono text-red-400">
+                  <span className="ml-auto text-xs font-mono text-slate-500">
                     {unresolvedFlags.length} to resolve
                   </span>
                 </div>
-                <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-bold text-red-400/70 uppercase tracking-widest border-b border-red-900/30">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
                   <span className="col-span-3">Matric</span>
-                  <span className="col-span-3">Rep</span>
+                  <span className="col-span-3">Reviewer</span>
                   <span className="col-span-4">Reason</span>
                   <span className="col-span-2"></span>
                 </div>
                 {unresolvedFlags.map((f) => (
                   <div
                     key={f.id}
-                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center border-b border-red-900/20 last:border-0"
+                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center border-b border-slate-700/40 last:border-0"
                   >
                     <span className="col-span-3 font-mono text-xs text-slate-300 truncate">
                       {f.matric}
                     </span>
                     <span className="col-span-3 text-xs text-slate-400 truncate">
-                      {f.rep}
+                      {f.reviewer}
                     </span>
                     <span className="col-span-4 text-xs text-amber-300 truncate">
                       {f.reason}
@@ -424,7 +488,7 @@ ${lines}`;
                       <button
                         onClick={() => handleResolveFlag(f.id, f.matric)}
                         disabled={approvalBusy}
-                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 hover:bg-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+                        className="text-blue-400 hover:text-blue-300 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
                       >
                         Resolve
                       </button>
@@ -436,25 +500,27 @@ ${lines}`;
           )}
 
           {/* Lock registry — gated on all approved + no unresolved flags */}
-          <div className="px-5 pb-5">
-            <button
-              onClick={handleLockRegistry}
-              disabled={
-                approvalBusy ||
-                !rosterApproval.allApproved ||
-                rosterApproval.hasUnresolvedFlags ||
-                electionConfig.registryLocked
-              }
-              className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Lock className="w-4 h-4" />
-              {electionConfig.registryLocked
-                ? "Registry Locked"
-                : rosterApproval.allApproved && !rosterApproval.hasUnresolvedFlags
-                ? "Lock Registry — all reps approved"
-                : "Lock Registry — awaiting approvals"}
-            </button>
-          </div>
+          {rosterApproval.totalCount > 0 && (
+            <div className="px-5 pb-5">
+              <button
+                onClick={handleLockRegistry}
+                disabled={
+                  approvalBusy ||
+                  !rosterApproval.allApproved ||
+                  rosterApproval.hasUnresolvedFlags ||
+                  electionConfig.registryLocked
+                }
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Lock className="w-4 h-4" />
+                {electionConfig.registryLocked
+                  ? "Registry Locked"
+                  : rosterApproval.allApproved && !rosterApproval.hasUnresolvedFlags
+                  ? "Lock Registry"
+                  : "Lock Registry — awaiting approvals"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

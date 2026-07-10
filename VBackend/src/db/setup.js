@@ -287,31 +287,29 @@ CREATE TABLE IF NOT EXISTS canned_replies (
 );
 CREATE INDEX IF NOT EXISTS idx_canned_election ON canned_replies(election_id);
 
--- ── Roster approval (multi-panel candidate-rep sign-off) ─────────────────────
+-- ── Roster approval (admin-named committee review panel) ─────────────────────
 CREATE TABLE IF NOT EXISTS roster_approvals (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  election_id     UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
-  org_id          UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  candidate_id    UUID NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
-  candidate_name  TEXT NOT NULL,
-  review_code     TEXT NOT NULL,
-  approved        BOOLEAN NOT NULL DEFAULT FALSE,
-  approved_at     TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(election_id, candidate_id),
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  election_id    UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  org_id         UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  reviewer_name  TEXT NOT NULL,
+  review_code    TEXT NOT NULL,
+  approved       BOOLEAN NOT NULL DEFAULT FALSE,
+  approved_at    TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(election_id, review_code)
 );
 
 CREATE TABLE IF NOT EXISTS roster_flags (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  approval_id     UUID NOT NULL REFERENCES roster_approvals(id) ON DELETE CASCADE,
-  election_id     UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
-  org_id          UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  matric          TEXT NOT NULL,
-  reason          TEXT NOT NULL,
-  resolved        BOOLEAN NOT NULL DEFAULT FALSE,
-  resolved_at     TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  approval_id  UUID NOT NULL REFERENCES roster_approvals(id) ON DELETE CASCADE,
+  election_id  UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  org_id       UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  matric       TEXT NOT NULL,
+  reason       TEXT NOT NULL,
+  resolved     BOOLEAN NOT NULL DEFAULT FALSE,
+  resolved_at  TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE elections

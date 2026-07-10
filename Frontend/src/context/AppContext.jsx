@@ -1,5 +1,7 @@
 import { createContext, useContext, useRef, useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import {
+  BASE,
   fetchElection,
   fetchCandidates,
   fetchAdminOverview,
@@ -347,14 +349,14 @@ export function AppProvider({ children }) {
     setModal({ isOpen: true, type: "confirm", title, message, onConfirm });
   const closeModal = () => setModal((m) => ({ ...m, isOpen: false }));
 
-  // Reload roster-approval state from the backend (admin only).
+  // Reload roster-approval state from the backend (admin, closed elections only).
   const refreshRosterApproval = async () => {
-    if (!accessToken || !orgSlug) return;
+    if (!accessToken || !orgSlug || electionConfig.votingMode !== "CLOSED") return;
     try {
       const data = await getRosterApprovalStatus(accessToken, orgSlug);
       setRosterApproval({
         status: data.rosterApprovalStatus,
-        approvals: data.approvals,
+        approvals: data.approvals, // each has reviewerName
         totalCount: data.totalCount,
         approvedCount: data.approvedCount,
         allApproved: data.allApproved,
@@ -365,15 +367,34 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Load roster-approval state whenever the admin console becomes
-  // authenticated — covers fresh login (AdminLogin), session restore, and
-  // silent token refresh. Without this the ElectionTab start-gate and the
-  // VotersTab dashboard stay stuck on the "IDLE" default after a fresh login.
+  // Load roster-approval state whenever the admin console becomes authenticated
+  // for a closed election — covers fresh login, session restore, silent token
+  // refresh, and votingMode becoming known after the overview loads.
   useEffect(() => {
     if (accessToken && orgSlug && currentUser?.role === "ADMIN") {
       refreshRosterApproval();
     }
-  }, [accessToken, orgSlug, currentUser]);
+  }, [accessToken, orgSlug, currentUser, electionConfig.votingMode]);
+
+  // Live updates: while an admin is in a closed election, join its socket room
+  // and re-fetch the panel whenever a reviewer approves/flags remotely.
+  useEffect(() => {
+    if (
+      !electionId ||
+      currentUser?.role !== "ADMIN" ||
+      electionConfig.votingMode !== "CLOSED"
+    )
+      return;
+    const socket = io(BASE);
+    socket.emit("join:election", electionId);
+    const onUpdate = () => refreshRosterApproval();
+    socket.on("roster:updated", onUpdate);
+    return () => {
+      socket.emit("leave:election", electionId);
+      socket.off("roster:updated", onUpdate);
+      socket.disconnect();
+    };
+  }, [electionId, currentUser, electionConfig.votingMode]);
 
   const toggleBallotSelection = (pos, id) =>
     setBallot((prev) => ({ ...prev, [pos]: id }));

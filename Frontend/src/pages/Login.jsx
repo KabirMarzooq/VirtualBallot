@@ -1,4 +1,4 @@
-import { BarChart3, Fingerprint, ArrowRight, Lock, ShieldAlert, ClipboardList } from "lucide-react";
+import { BarChart3, Fingerprint, ArrowRight, Lock, ShieldAlert } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -173,16 +173,6 @@ export default function LoginPage() {
             className="text-slate-600 hover:text-slate-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
           >
             <ShieldAlert className="w-3 h-3" /> Virtual Ballot Home
-          </button>
-        </p>
-
-        <p className="text-center mt-2">
-          <button
-            onClick={() => navigate("/roster-review")}
-            title="Candidate reps: review and approve the voter list"
-            className="text-slate-600 hover:text-slate-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
-          >
-            <ClipboardList className="w-3 h-3" /> Candidate rep? Enter your review code
           </button>
         </p>
       </div>

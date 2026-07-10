@@ -3,7 +3,7 @@ import { query } from "../db/pool.js"
 import { requireAdmin } from "../middleware/auth.js"
 import { resolveOrg } from "../middleware/auth.js"
 import { ok, fail, isValidEmail } from "../utils/index.js"
-import { generateApprovalsForElection } from "../utils/rosterApproval.js"
+import { recomputeApprovalStatus } from "../utils/rosterApproval.js"
 
 const router = express.Router()
 
@@ -20,11 +20,12 @@ router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
   try {
     // Get current election
     const electionResult = await query(
-      `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT id, voting_mode FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [req.orgId]
     )
     if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
     const electionId = electionResult.rows[0].id
+    const votingMode = electionResult.rows[0].voting_mode
 
     // If replace mode: delete all existing voters who haven't voted yet
     if (replaceExisting) {
@@ -66,33 +67,21 @@ router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
       [req.orgId, electionId, `Roster uploaded — ${inserted} voters added, ${skipped} skipped`, req.adminEmail]
     )
 
-    // Every roster upload (re)generates one review code per candidate and puts
-    // the election into the PENDING approval state. No-op if no candidates yet.
-    let approvals = []
-    try {
-      const generated = await generateApprovalsForElection(electionId, req.orgId)
-      approvals = generated.approvals
-      if (generated.candidateCount > 0) {
-        await query(
-          `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
-           VALUES ($1, $2, 'registry', $3, $4)`,
-          [
-            req.orgId,
-            electionId,
-            `Voter roster uploaded — approval required from ${generated.candidateCount} candidate reps`,
-            req.adminEmail,
-          ]
-        )
+    // Roster approval only applies to closed elections. A new roster changes
+    // what reviewers signed off on, so any committee members who have NOT yet
+    // approved keep the election in PENDING; approvals already given stand.
+    if (votingMode === "CLOSED") {
+      try {
+        await recomputeApprovalStatus(electionId)
+      } catch (statusErr) {
+        console.error("Roster approval status recompute error:", statusErr)
       }
-    } catch (genErr) {
-      console.error("Roster approval generation error:", genErr)
     }
 
     return ok(res, {
       message: `Roster uploaded: ${inserted} added, ${skipped} skipped`,
       inserted,
       skipped,
-      approvals,
     })
   } catch (err) {
     console.error("Roster upload error:", err)

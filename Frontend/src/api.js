@@ -479,6 +479,19 @@ export const getChatTranscript = (id, token) =>
 export const getRosterApprovalStatus = (token, slug) =>
     request(`/roster-approval/${slug}/status`, {}, token)
 
+/** Admin: add a named committee member and mint their review code */
+export const addRosterReviewer = (reviewerName, token, slug) =>
+    request(`/roster-approval/${slug}/add-reviewer`, {
+        method: "POST",
+        body: JSON.stringify({ reviewerName }),
+    }, token)
+
+/** Admin: remove a committee member who has not yet approved */
+export const removeRosterReviewer = (reviewerId, token, slug) =>
+    request(`/roster-approval/${slug}/reviewer/${reviewerId}`, {
+        method: "DELETE",
+    }, token)
+
 /** Admin: resolve a flagged voter entry */
 export const resolveRosterFlag = (flagId, token, slug) =>
     request(`/roster-approval/${slug}/resolve-flag`, { method: "POST", body: JSON.stringify({ flagId }) }, token)
