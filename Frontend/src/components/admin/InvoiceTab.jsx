@@ -171,7 +171,7 @@ export default function InvoiceTab() {
           setInvoices(d.invoices);
           setSummary(d.summary);
         })
-        .catch(() => {})
+        .catch((err) => console.error("Failed to load invoices:", err))
         .finally(() => setLoading(false));
     };
     load();

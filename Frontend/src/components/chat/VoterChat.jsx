@@ -187,7 +187,7 @@ export default function VoterChat({ socket }) {
     if (!token) return;
     getChatMessages(conversationId, token)
       .then((data) => setMessages((prev) => mergeMessages(prev, data.messages || [])))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load chat messages:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
@@ -237,7 +237,7 @@ export default function VoterChat({ socket }) {
         // Refresh to pull in any auto-reply that fired before we re-rendered.
         getChatMessages(conversationId, token)
           .then((d) => setMessages((prev) => mergeMessages(prev, d.messages || [])))
-          .catch(() => {});
+          .catch((err) => console.error("Failed to refresh chat messages:", err));
       }
     } catch {
       setMessages((prev) =>

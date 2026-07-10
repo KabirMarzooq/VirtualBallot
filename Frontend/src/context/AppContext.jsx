@@ -348,7 +348,9 @@ export function AppProvider({ children }) {
         allApproved: data.allApproved,
         hasUnresolvedFlags: data.hasUnresolvedFlags,
       });
-    } catch (_) {}
+    } catch (err) {
+      console.error("Failed to refresh roster approval status:", err);
+    }
   };
 
   // Load roster-approval state whenever the admin console becomes

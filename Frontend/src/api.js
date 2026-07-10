@@ -411,6 +411,21 @@ export const reactivateOrg = (orgId, token) =>
 
 // ─── Live Support Chat ──────────────────────────────────────────────────────────
 
+/** Admin: create a staff (committee) member. Returns { staff } */
+export const createStaff = (name, email, password, token) =>
+    request("/auth/staff/create", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+    }, token)
+
+/** Admin: list every staff member for their org. Returns { staff: [...] } */
+export const getStaffList = (token) =>
+    request("/auth/staff", {}, token)
+
+/** Admin: deactivate (soft-delete) a staff member. Returns { message } */
+export const deleteStaffMember = (id, token) =>
+    request(`/auth/staff/${id}`, { method: "DELETE" }, token)
+
 /** Staff member logs in with email + password. Returns { accessToken, refreshToken, staff } */
 export const staffLogin = (email, password) =>
     request("/auth/staff/login", { method: "POST", body: JSON.stringify({ email, password }) })
