@@ -71,17 +71,6 @@ async function request(path, options = {}, token = null) {
             sessionStorage.removeItem("vb_observer_slug")
             sessionStorage.removeItem("vb_observer_tab")
             window.dispatchEvent(new CustomEvent("vb:session-expired"))
-            // Keep context's accessToken in sync when api.js silently refreshes it
-            useEffect(() => {
-                const handleRefreshed = (e) => {
-                    if (e.detail?.accessToken) {
-                        setAccessToken(e.detail.accessToken);
-                        sessionStorage.setItem("vb_admin_token", e.detail.accessToken);
-                    }
-                };
-                window.addEventListener("vb:token-refreshed", handleRefreshed);
-                return () => window.removeEventListener("vb:token-refreshed", handleRefreshed);
-            }, []);
         }
         throw new Error(data.message || "Something went wrong")
     }

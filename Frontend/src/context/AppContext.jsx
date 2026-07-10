@@ -151,6 +151,18 @@ export function AppProvider({ children }) {
     return () => window.removeEventListener("vb:session-expired", handleExpiry);
   }, []);
 
+  // Keep context's accessToken in sync when api.js silently refreshes it
+  useEffect(() => {
+    const handleRefreshed = (e) => {
+      if (e.detail?.accessToken) {
+        setAccessToken(e.detail.accessToken);
+        sessionStorage.setItem("vb_admin_token", e.detail.accessToken);
+      }
+    };
+    window.addEventListener("vb:token-refreshed", handleRefreshed);
+    return () => window.removeEventListener("vb:token-refreshed", handleRefreshed);
+  }, []);
+
   // ── On mount: try to restore admin session or load voter election data ────────
   useEffect(() => {
     const token = sessionStorage.getItem("vb_admin_token");
