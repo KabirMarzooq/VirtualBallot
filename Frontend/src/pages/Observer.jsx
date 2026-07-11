@@ -3,6 +3,7 @@ import { Telescope, LogOut } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { OBSERVER_TABS } from "../components/observer/ObserverTabs";
+import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import { getTurnout } from "../utils";
 import { fetchObserverOverview, ORG_SLUG } from "../api";
 
@@ -208,6 +209,8 @@ export default function ObserverPage() {
 
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
+        <MobileNoticeBanner message="The observer dashboard is built for larger displays — for the best experience, switch to a laptop or desktop." />
+
         {/* KPI strip */}
         <div
           className={`grid gap-3 mb-6 ${

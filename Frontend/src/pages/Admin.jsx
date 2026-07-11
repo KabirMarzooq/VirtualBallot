@@ -25,6 +25,7 @@ import AuditLogTab from "../components/admin/AuditLogTab";
 import HistoryTab from "../components/admin/HistoryTab";
 import InvoiceTab from "../components/admin/InvoiceTab";
 import StaffTab from "../components/admin/StaffTab";
+import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import { fetchAdminOverview, createNewElection } from "../api";
 
 const TABS = [
@@ -327,6 +328,8 @@ export default function AdminPage() {
 
       {/* ── Content ───────────────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+        <MobileNoticeBanner message="The admin console is built for larger displays — for the best experience, switch to a laptop or desktop." />
+
         {/* Tab bar */}
         <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 overflow-x-auto scrollbar-hide">
           {TABS.filter((t) => {

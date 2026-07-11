@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import VBLoader from "../components/ui/VBLoader";
+import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import {
   lookupReviewCode,
   submitRepReview,
@@ -116,6 +117,8 @@ export default function RepReviewPage() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
+        <MobileNoticeBanner message="The roster review portal is built for larger displays — for the best experience, switch to a laptop or desktop." />
+
         <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl p-8 sm:p-10">
           {/* Branding */}
           <div className="text-center mb-8">
