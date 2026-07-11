@@ -28,8 +28,13 @@ import chatRoutes from "./routes/chat.js"
 import rosterApprovalRoutes from "./routes/rosterApproval.js"
 import { startChainAnchorJob } from "./jobs/chainAnchor.js"
 import { query } from "./db/pool.js"
+import { ensureRosterSchema } from "./db/ensureRosterSchema.js"
 
 const app = express()
+// Behind a hosting proxy/load balancer (Railway, Render, Fly, etc.) requests
+// carry X-Forwarded-For. Trust the first hop so express-rate-limit can read the
+// real client IP instead of throwing ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+app.set("trust proxy", 1)
 const httpServer = createServer(app)   // ← wrap Express in an HTTP server
 const PORT = process.env.PORT || 5000
 
@@ -210,6 +215,10 @@ app.use((err, req, res, next) => {
 })
 
 // ── Start ─────────────────────────────────────────────────────────────────────
+// Bring the roster-approval schema up to date before serving traffic, so a
+// deploy never needs a manual migration step against the production DB.
+await ensureRosterSchema()
+
 // IMPORTANT: listen on httpServer, not app — this is what enables WebSockets
 httpServer.listen(PORT, () => {
   console.log(`\n🗳️  Virtual Ballot API running on port ${PORT}`)
