@@ -25,6 +25,7 @@ import {
   getCannedReplies,
   getChatTranscript,
 } from "../../api";
+import MobileNoticeBanner from "../ui/MobileNoticeBanner";
 
 // Status badge palette for the election picker.
 const STATUS_BADGE = {
@@ -541,6 +542,10 @@ function Dashboard({ onLogout }) {
             <LogOut className="w-4 h-4" />
           </button>
         </div>
+      </div>
+
+      <div className="px-5 pt-3 shrink-0">
+        <MobileNoticeBanner message="The support console is built for larger displays — for the best experience, switch to a laptop or desktop." />
       </div>
 
       <div className="flex-1 flex min-h-0">
