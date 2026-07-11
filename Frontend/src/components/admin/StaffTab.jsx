@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Headset, Plus, Trash2, Mail, AlertTriangle } from "lucide-react";
+import {
+  Headset,
+  Plus,
+  Trash2,
+  Mail,
+  AlertTriangle,
+  Copy,
+  Check,
+} from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { createStaff, getStaffList, deleteStaffMember } from "../../api";
 import VBLoader from "../ui/VBLoader";
@@ -16,6 +24,16 @@ export default function StaffTab() {
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const staffUrl = `${window.location.origin}/staff/chat`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(staffUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     getStaffList(accessToken)
@@ -90,6 +108,32 @@ export default function StaffTab() {
 
   return (
     <div className="space-y-6">
+      {/* Staff console URL — send this to staff alongside their credentials */}
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Staff Support Console
+          </p>
+          <p className="text-sm font-mono text-blue-400 truncate">{staffUrl}</p>
+        </div>
+        <button
+          onClick={handleCopy}
+          title={copied ? "Copied!" : "Copy staff console link to clipboard"}
+          className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
+            copied
+              ? "bg-green-500/20 text-green-400 border-green-500/30"
+              : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+          }`}
+        >
+          {copied ? (
+            <Check className="w-3.5 h-3.5" />
+          ) : (
+            <Copy className="w-3.5 h-3.5" />
+          )}
+          {copied ? "Copied!" : "Copy link"}
+        </button>
+      </div>
+
       {/* Add form */}
       <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">
