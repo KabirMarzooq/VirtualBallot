@@ -533,9 +533,16 @@ router.post("/staff/create", requireAdmin, async (req, res) => {
 router.get("/staff", requireAdmin, async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, name, email, is_active, created_at
-       FROM staff_members WHERE org_id = $1
-       ORDER BY created_at DESC`,
+      `SELECT sm.id, sm.name, sm.email, sm.is_active, sm.created_at,
+              COALESCE(
+                ARRAY_AGG(se.election_id) FILTER (WHERE se.election_id IS NOT NULL),
+                '{}'
+              ) AS election_ids
+       FROM staff_members sm
+       LEFT JOIN staff_elections se ON se.staff_id = sm.id
+       WHERE sm.org_id = $1
+       GROUP BY sm.id
+       ORDER BY sm.created_at DESC`,
       [req.orgId]
     )
     return ok(res, { staff: result.rows })
@@ -545,18 +552,48 @@ router.get("/staff", requireAdmin, async (req, res) => {
   }
 })
 
-// ─── DELETE /auth/staff/:id ───────────────────────────────────────────────────
-// Admin only — deactivate a staff member (soft delete)
-router.delete("/staff/:id", requireAdmin, async (req, res) => {
+// ─── GET /auth/staff/assignable-elections ─────────────────────────────────────
+// Admin only — every election in the org, for the staff-assignment picker.
+router.get("/staff/assignable-elections", requireAdmin, async (req, res) => {
   try {
     const result = await query(
-      `UPDATE staff_members SET is_active = FALSE
-       WHERE id = $1 AND org_id = $2
-       RETURNING id, name, email`,
-      [req.params.id, req.orgId]
+      `SELECT id, name, status, created_at
+       FROM elections WHERE org_id = $1
+       ORDER BY created_at DESC`,
+      [req.orgId]
     )
-    if (result.rows.length === 0) {
-      return fail(res, "Staff member not found", 404)
+    return ok(res, { elections: result.rows })
+  } catch (err) {
+    console.error("Assignable elections error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── PATCH /auth/staff/:id/active ─────────────────────────────────────────────
+// Admin only — deactivate or reactivate a staff member. Body: { active: bool }
+router.patch("/staff/:id/active", requireAdmin, async (req, res) => {
+  const { active } = req.body
+  if (typeof active !== "boolean") return fail(res, "active (boolean) required")
+
+  try {
+    const result = await query(
+      `UPDATE staff_members SET is_active = $1
+       WHERE id = $2 AND org_id = $3
+       RETURNING id, name, email, is_active, created_at`,
+      [active, req.params.id, req.orgId]
+    )
+    if (result.rows.length === 0) return fail(res, "Staff member not found", 404)
+    const staff = result.rows[0]
+
+    // If deactivating, release any chats they currently have claimed so those
+    // conversations return to the queue for another staff member.
+    if (!active) {
+      await query(
+        `UPDATE chat_conversations
+           SET assigned_staff_id = NULL, status = 'escalated'
+         WHERE assigned_staff_id = $1 AND status = 'claimed'`,
+        [staff.id]
+      )
     }
 
     await query(
@@ -564,15 +601,119 @@ router.delete("/staff/:id", requireAdmin, async (req, res) => {
        VALUES ($1, 'admin', $2, $3, $4)`,
       [
         req.orgId,
-        `Staff member deactivated: ${result.rows[0].name}`,
+        `Staff member ${active ? "reactivated" : "deactivated"}: ${staff.name}`,
         req.adminEmail,
-        JSON.stringify({ staffId: result.rows[0].id }),
+        JSON.stringify({ staffId: staff.id }),
       ]
     )
 
-    return ok(res, { message: "Staff member deactivated" })
+    return ok(res, { staff })
   } catch (err) {
-    console.error("Staff deactivate error:", err)
+    console.error("Staff active toggle error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── PUT /auth/staff/:id/elections ────────────────────────────────────────────
+// Admin only — set which elections a staff member is assigned to.
+// Body: { electionIds: [uuid, ...] } (empty array clears all assignments)
+router.put("/staff/:id/elections", requireAdmin, async (req, res) => {
+  const { electionIds } = req.body
+  if (!Array.isArray(electionIds)) return fail(res, "electionIds array required")
+
+  try {
+    // Confirm the staff member belongs to this org.
+    const staffCheck = await query(
+      `SELECT id, name FROM staff_members WHERE id = $1 AND org_id = $2`,
+      [req.params.id, req.orgId]
+    )
+    if (staffCheck.rows.length === 0) return fail(res, "Staff member not found", 404)
+
+    // Only accept election IDs that actually belong to this org.
+    let validIds = []
+    if (electionIds.length > 0) {
+      const owned = await query(
+        `SELECT id FROM elections WHERE org_id = $1 AND id = ANY($2::uuid[])`,
+        [req.orgId, electionIds]
+      )
+      validIds = owned.rows.map((r) => r.id)
+    }
+
+    await query(`DELETE FROM staff_elections WHERE staff_id = $1`, [req.params.id])
+    for (const eid of validIds) {
+      await query(
+        `INSERT INTO staff_elections (staff_id, election_id)
+         VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [req.params.id, eid]
+      )
+    }
+
+    await query(
+      `INSERT INTO audit_logs (org_id, event_type, message, actor, metadata)
+       VALUES ($1, 'admin', $2, $3, $4)`,
+      [
+        req.orgId,
+        `Staff assignments updated: ${staffCheck.rows[0].name} (${validIds.length} elections)`,
+        req.adminEmail,
+        JSON.stringify({ staffId: req.params.id, electionIds: validIds }),
+      ]
+    )
+
+    return ok(res, { electionIds: validIds })
+  } catch (err) {
+    console.error("Staff assignments error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── DELETE /auth/staff/:id ───────────────────────────────────────────────────
+// Admin only — permanently delete a staff member. Their claimed chats are
+// released back to the queue first; chat history keeps its (now-nulled) FK.
+router.delete("/staff/:id", requireAdmin, async (req, res) => {
+  try {
+    const found = await query(
+      `SELECT id, name FROM staff_members WHERE id = $1 AND org_id = $2`,
+      [req.params.id, req.orgId]
+    )
+    if (found.rows.length === 0) return fail(res, "Staff member not found", 404)
+    const staff = found.rows[0]
+
+    // Release any chats this staff member currently has claimed.
+    await query(
+      `UPDATE chat_conversations
+         SET assigned_staff_id = NULL, status = 'escalated'
+       WHERE assigned_staff_id = $1 AND status = 'claimed'`,
+      [staff.id]
+    )
+    // Clear the FK on any other conversations (e.g. resolved ones) so the
+    // delete doesn't violate the assigned_staff_id reference.
+    await query(
+      `UPDATE chat_conversations SET assigned_staff_id = NULL
+       WHERE assigned_staff_id = $1`,
+      [staff.id]
+    )
+    // Detach any canned replies this staff member authored.
+    await query(
+      `UPDATE canned_replies SET created_by = NULL WHERE created_by = $1`,
+      [staff.id]
+    )
+
+    await query(`DELETE FROM staff_members WHERE id = $1`, [staff.id])
+
+    await query(
+      `INSERT INTO audit_logs (org_id, event_type, message, actor, metadata)
+       VALUES ($1, 'admin', $2, $3, $4)`,
+      [
+        req.orgId,
+        `Staff member deleted: ${staff.name}`,
+        req.adminEmail,
+        JSON.stringify({ staffId: staff.id }),
+      ]
+    )
+
+    return ok(res, { message: "Staff member deleted" })
+  } catch (err) {
+    console.error("Staff delete error:", err)
     return fail(res, "Server error", 500)
   }
 })

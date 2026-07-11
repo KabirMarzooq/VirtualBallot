@@ -7,15 +7,24 @@ import {
   AlertTriangle,
   Copy,
   Check,
+  Power,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
-import { createStaff, getStaffList, deleteStaffMember } from "../../api";
+import {
+  createStaff,
+  getStaffList,
+  getAssignableElections,
+  setStaffActive,
+  setStaffElections,
+  deleteStaffMember,
+} from "../../api";
 import VBLoader from "../ui/VBLoader";
 
 export default function StaffTab() {
   const { accessToken, showAlert, showConfirm, addLog } = useApp();
 
   const [staff, setStaff] = useState([]);
+  const [elections, setElections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -23,7 +32,7 @@ export default function StaffTab() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const staffUrl = `${window.location.origin}/staff/chat`;
@@ -36,10 +45,13 @@ export default function StaffTab() {
   };
 
   useEffect(() => {
-    getStaffList(accessToken)
-      .then((data) => setStaff(data.staff))
+    Promise.all([getStaffList(accessToken), getAssignableElections(accessToken)])
+      .then(([staffData, elData]) => {
+        setStaff(staffData.staff);
+        setElections(elData.elections || []);
+      })
       .catch((err) => {
-        console.error("Failed to load staff list:", err);
+        console.error("Failed to load staff:", err);
         setLoadError(err.message);
       })
       .finally(() => setLoading(false));
@@ -47,24 +59,13 @@ export default function StaffTab() {
 
   const create = async () => {
     if (!name.trim() || !email.trim() || !password)
-      return showAlert(
-        "Missing Info",
-        "Name, email, and password are required."
-      );
+      return showAlert("Missing Info", "Name, email, and password are required.");
     if (password.length < 8)
-      return showAlert(
-        "Weak Password",
-        "Password must be at least 8 characters."
-      );
+      return showAlert("Weak Password", "Password must be at least 8 characters.");
     setCreating(true);
     try {
-      const data = await createStaff(
-        name.trim(),
-        email.trim(),
-        password,
-        accessToken
-      );
-      setStaff((prev) => [data.staff, ...prev]);
+      const data = await createStaff(name.trim(), email.trim(), password, accessToken);
+      setStaff((prev) => [{ ...data.staff, election_ids: [] }, ...prev]);
       addLog(`Staff member "${data.staff.name}" created`, "admin");
       setName("");
       setEmail("");
@@ -76,27 +77,63 @@ export default function StaffTab() {
     }
   };
 
+  const toggleActive = async (member) => {
+    setBusyId(member.id);
+    try {
+      const data = await setStaffActive(member.id, !member.is_active, accessToken);
+      setStaff((prev) =>
+        prev.map((s) =>
+          s.id === member.id ? { ...s, is_active: data.staff.is_active } : s
+        )
+      );
+      addLog(
+        `Staff member "${member.name}" ${data.staff.is_active ? "reactivated" : "deactivated"}`,
+        "admin"
+      );
+    } catch (err) {
+      showAlert("Action Failed", err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const remove = (member) => {
     showConfirm(
-      "Deactivate staff member?",
-      `${member.name} will no longer be able to log in to the live-support console. Continue?`,
+      "Delete staff member?",
+      `${member.name} will be permanently removed and can no longer log in. Any chats they had claimed return to the queue. This cannot be undone. Continue?`,
       async () => {
-        setDeletingId(member.id);
+        setBusyId(member.id);
         try {
           await deleteStaffMember(member.id, accessToken);
-          setStaff((prev) =>
-            prev.map((s) =>
-              s.id === member.id ? { ...s, is_active: false } : s
-            )
-          );
-          addLog(`Staff member "${member.name}" deactivated`, "admin");
+          setStaff((prev) => prev.filter((s) => s.id !== member.id));
+          addLog(`Staff member "${member.name}" deleted`, "admin");
         } catch (err) {
-          showAlert("Cannot Deactivate", err.message);
+          showAlert("Cannot Delete", err.message);
         } finally {
-          setDeletingId(null);
+          setBusyId(null);
         }
       }
     );
+  };
+
+  const toggleElection = async (member, electionId) => {
+    const current = member.election_ids || [];
+    const next = current.includes(electionId)
+      ? current.filter((id) => id !== electionId)
+      : [...current, electionId];
+    // Optimistic update
+    setStaff((prev) =>
+      prev.map((s) => (s.id === member.id ? { ...s, election_ids: next } : s))
+    );
+    try {
+      await setStaffElections(member.id, next, accessToken);
+    } catch (err) {
+      // Revert on failure
+      setStaff((prev) =>
+        prev.map((s) => (s.id === member.id ? { ...s, election_ids: current } : s))
+      );
+      showAlert("Could Not Update Assignments", err.message);
+    }
   };
 
   if (loading)
@@ -125,11 +162,7 @@ export default function StaffTab() {
               : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
           }`}
         >
-          {copied ? (
-            <Check className="w-3.5 h-3.5" />
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           {copied ? "Copied!" : "Copy link"}
         </button>
       </div>
@@ -209,42 +242,101 @@ export default function StaffTab() {
             <Headset className="w-12 h-12 text-slate-600 mx-auto mb-3" />
             <h3 className="text-white font-black mb-2">No staff accounts yet</h3>
             <p className="text-slate-400 text-sm max-w-xs mx-auto">
-              Create staff accounts above so committee members can answer
-              voter questions in the live-support chat.
+              Create staff accounts above so committee members can answer voter
+              questions in the live-support chat.
             </p>
           </div>
         ) : (
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 divide-y divide-slate-700/50">
-            {staff.map((s) => (
-              <div key={s.id} className="flex items-center gap-4 p-4 group">
-                <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">
-                  <Headset className="w-5 h-5 text-slate-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-white truncate">{s.name}</p>
-                  <p className="text-xs text-slate-400 flex items-center gap-1 truncate">
-                    <Mail className="w-3 h-3 shrink-0" /> {s.email}
-                  </p>
-                </div>
-                {s.is_active ? (
-                  <button
-                    onClick={() => remove(s)}
-                    disabled={deletingId === s.id}
-                    className="text-slate-600 hover:text-red-400 p-2 opacity-0 group-hover:opacity-100 transition-all shrink-0 cursor-pointer disabled:opacity-100"
-                  >
-                    {deletingId === s.id ? (
-                      <VBLoader size="sm" />
+          <div className="space-y-3">
+            {staff.map((s) => {
+              const assigned = s.election_ids || [];
+              const busy = busyId === s.id;
+              return (
+                <div
+                  key={s.id}
+                  className={`bg-slate-800 rounded-2xl border border-slate-700 p-4 ${
+                    s.is_active ? "" : "opacity-70"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">
+                      <Headset className="w-5 h-5 text-slate-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-white truncate">{s.name}</p>
+                        {!s.is_active && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-400 uppercase shrink-0">
+                            Deactivated
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 flex items-center gap-1 truncate">
+                        <Mail className="w-3 h-3 shrink-0" /> {s.email}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => toggleActive(s)}
+                        disabled={busy}
+                        title={s.is_active ? "Deactivate" : "Reactivate"}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                          s.is_active
+                            ? "text-slate-400 hover:text-amber-400 hover:bg-slate-700"
+                            : "text-blue-400 hover:text-blue-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        {busy ? <VBLoader size="sm" /> : <Power className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => remove(s)}
+                        disabled={busy}
+                        title="Delete permanently"
+                        className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Election assignment */}
+                  <div className="mt-4 pt-3 border-t border-slate-700/60">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                      Assigned elections — tap to toggle
+                    </p>
+                    {elections.length === 0 ? (
+                      <p className="text-xs text-slate-600">No elections yet.</p>
                     ) : (
-                      <Trash2 className="w-4 h-4" />
+                      <div className="flex flex-wrap gap-2">
+                        {elections.map((e) => {
+                          const on = assigned.includes(e.id);
+                          return (
+                            <button
+                              key={e.id}
+                              onClick={() => toggleElection(s, e.id)}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                on
+                                  ? "bg-blue-600/20 text-blue-300 border-blue-600/40"
+                                  : "bg-slate-900 text-slate-500 border-slate-700 hover:border-slate-600"
+                              }`}
+                            >
+                              {on ? "✓ " : ""}
+                              {e.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </button>
-                ) : (
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-400 uppercase shrink-0">
-                    Deactivated
-                  </span>
-                )}
-              </div>
-            ))}
+                    {assigned.length === 0 && elections.length > 0 && (
+                      <p className="text-[11px] text-amber-500/80 mt-2">
+                        Not assigned to any election — this staff member currently
+                        sees no chats.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

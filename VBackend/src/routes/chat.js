@@ -201,15 +201,27 @@ router.get("/:conversationId/messages", requireVoter, async (req, res) => {
 })
 
 // ── GET /chat/elections ───────────────────────────────────────────────────────
-// Staff: list every election in their org so the dashboard can offer a picker.
+// Staff: list the elections they are assigned to (dashboard picker).
+// An admin acting as staff (no staffId on the token) sees all org elections.
 router.get("/elections", requireStaff, async (req, res) => {
   try {
+    if (!req.staffId) {
+      const all = await query(
+        `SELECT id, name, status, created_at
+         FROM elections WHERE org_id = $1
+         ORDER BY created_at DESC`,
+        [req.orgId]
+      )
+      return ok(res, { elections: all.rows })
+    }
+
     const result = await query(
-      `SELECT id, name, status, created_at
-       FROM elections
-       WHERE org_id = $1
-       ORDER BY created_at DESC`,
-      [req.orgId]
+      `SELECT e.id, e.name, e.status, e.created_at
+       FROM elections e
+       JOIN staff_elections se ON se.election_id = e.id
+       WHERE e.org_id = $1 AND se.staff_id = $2
+       ORDER BY e.created_at DESC`,
+      [req.orgId, req.staffId]
     )
     return ok(res, { elections: result.rows })
   } catch (err) {
@@ -229,6 +241,18 @@ router.get("/queue/:electionId", requireStaff, async (req, res) => {
     )
     if (electionCheck.rows.length === 0) {
       return fail(res, "Election not found", 404)
+    }
+
+    // Assigned staff may only view elections they cover. Admins acting as
+    // staff (no staffId) are unrestricted.
+    if (req.staffId) {
+      const assigned = await query(
+        `SELECT 1 FROM staff_elections WHERE staff_id = $1 AND election_id = $2`,
+        [req.staffId, req.params.electionId]
+      )
+      if (assigned.rows.length === 0) {
+        return fail(res, "You are not assigned to this election", 403)
+      }
     }
 
     const result = await query(

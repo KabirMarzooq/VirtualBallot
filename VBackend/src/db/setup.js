@@ -287,6 +287,16 @@ CREATE TABLE IF NOT EXISTS canned_replies (
 );
 CREATE INDEX IF NOT EXISTS idx_canned_election ON canned_replies(election_id);
 
+-- ── Staff ↔ election assignment (which staff cover which elections) ──────────
+CREATE TABLE IF NOT EXISTS staff_elections (
+  staff_id     UUID NOT NULL REFERENCES staff_members(id) ON DELETE CASCADE,
+  election_id  UUID NOT NULL REFERENCES elections(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (staff_id, election_id)
+);
+CREATE INDEX IF NOT EXISTS idx_staff_elections_staff    ON staff_elections(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_elections_election ON staff_elections(election_id);
+
 -- ── Roster approval (admin-named committee review panel) ─────────────────────
 CREATE TABLE IF NOT EXISTS roster_approvals (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),

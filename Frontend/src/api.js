@@ -407,11 +407,29 @@ export const createStaff = (name, email, password, token) =>
         body: JSON.stringify({ name, email, password }),
     }, token)
 
-/** Admin: list every staff member for their org. Returns { staff: [...] } */
+/** Admin: list every staff member for their org (incl. election_ids). Returns { staff: [...] } */
 export const getStaffList = (token) =>
     request("/auth/staff", {}, token)
 
-/** Admin: deactivate (soft-delete) a staff member. Returns { message } */
+/** Admin: every election in the org, for the assignment picker. Returns { elections: [...] } */
+export const getAssignableElections = (token) =>
+    request("/auth/staff/assignable-elections", {}, token)
+
+/** Admin: activate or deactivate a staff member. Returns { staff } */
+export const setStaffActive = (id, active, token) =>
+    request(`/auth/staff/${id}/active`, {
+        method: "PATCH",
+        body: JSON.stringify({ active }),
+    }, token)
+
+/** Admin: set which elections a staff member is assigned to. Returns { electionIds } */
+export const setStaffElections = (id, electionIds, token) =>
+    request(`/auth/staff/${id}/elections`, {
+        method: "PUT",
+        body: JSON.stringify({ electionIds }),
+    }, token)
+
+/** Admin: permanently delete a staff member. Returns { message } */
 export const deleteStaffMember = (id, token) =>
     request(`/auth/staff/${id}`, { method: "DELETE" }, token)
 

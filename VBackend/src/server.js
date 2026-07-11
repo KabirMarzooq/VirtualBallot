@@ -29,6 +29,7 @@ import rosterApprovalRoutes from "./routes/rosterApproval.js"
 import { startChainAnchorJob } from "./jobs/chainAnchor.js"
 import { query } from "./db/pool.js"
 import { ensureRosterSchema } from "./db/ensureRosterSchema.js"
+import { ensureStaffSchema } from "./db/ensureStaffSchema.js"
 
 const app = express()
 // Behind a hosting proxy/load balancer (Railway, Render, Fly, etc.) requests
@@ -218,6 +219,7 @@ app.use((err, req, res, next) => {
 // Bring the roster-approval schema up to date before serving traffic, so a
 // deploy never needs a manual migration step against the production DB.
 await ensureRosterSchema()
+await ensureStaffSchema()
 
 // IMPORTANT: listen on httpServer, not app — this is what enables WebSockets
 httpServer.listen(PORT, () => {
