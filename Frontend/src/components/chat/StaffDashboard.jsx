@@ -12,6 +12,9 @@ import {
   LogOut,
   Loader2,
   AlertTriangle,
+  Headset,
+  Inbox,
+  MessageSquare,
 } from "lucide-react";
 import {
   BASE,
@@ -67,6 +70,16 @@ function formatTime(iso) {
   }
 }
 
+function initials(name) {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+}
+
 // Normalize a queue row (from REST or from a socket escalation) to one shape.
 function normalizeConvo(raw) {
   return {
@@ -114,14 +127,19 @@ function StaffLogin({ onLoggedIn }) {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl"
+        className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl"
       >
-        <h1 className="text-2xl font-black text-white mb-1">Staff Support</h1>
-        <p className="text-slate-500 text-sm mb-6">
-          Log in to handle live voter chats.
-        </p>
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-900/40">
+            <Headset className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-black text-white">Support Console</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Sign in to answer live voter chats
+          </p>
+        </div>
 
-        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Email
         </label>
         <input
@@ -129,23 +147,23 @@ function StaffLogin({ onLoggedIn }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoFocus
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 mb-4 placeholder:text-slate-600"
+          className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 mb-4 placeholder:text-slate-600 transition-colors"
           placeholder="you@org.com"
         />
 
-        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Password
         </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 mb-2 placeholder:text-slate-600"
+          className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 transition-colors"
           placeholder="••••••••"
         />
 
         {error && (
-          <p className="text-red-400 text-sm bg-red-950/30 border border-red-800/40 rounded-xl py-2 px-3 my-3">
+          <p className="text-red-400 text-sm bg-red-950/30 border border-red-800/40 rounded-xl py-2 px-3 mt-4">
             {error}
           </p>
         )}
@@ -153,7 +171,7 @@ function StaffLogin({ onLoggedIn }) {
         <button
           type="submit"
           disabled={!email.trim() || !password || loading}
-          className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-2xl transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log in"}
         </button>
@@ -339,7 +357,7 @@ function Dashboard({ onLogout }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // Pick an election (from the dropdown or the manual fallback input).
+  // Pick an election (from the dropdown).
   const selectElection = useCallback((eid) => {
     if (!eid) return;
     setElectionId(eid);
@@ -479,11 +497,6 @@ function Dashboard({ onLogout }) {
     }
   };
 
-  const applyElection = (e) => {
-    e.preventDefault();
-    selectElection(electionInput.trim());
-  };
-
   // Sort: urgent first, then most recent.
   const sortedQueue = useMemo(
     () =>
@@ -494,72 +507,44 @@ function Dashboard({ onLogout }) {
     [queue]
   );
 
+  const waitingCount = queue.filter((c) => c.status === "escalated").length;
+
   return (
     <div className="h-screen bg-slate-950 flex flex-col text-white overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800 shrink-0">
-        <div className="flex items-center gap-3">
-          <h1 className="font-black text-lg">Support Console</h1>
-          <span className="text-xs text-slate-500">{staffName}</span>
+      <header className="flex items-center justify-between px-5 py-3 border-b border-slate-800 shrink-0 bg-slate-900/40">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+            <Headset className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="font-black text-base leading-tight">Support Console</h1>
+            <p className="text-[11px] text-slate-500 truncate">{staffName}</p>
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
-          <form onSubmit={applyElection} className="flex items-center gap-2">
-            {knownElections.length > 1 && (
-              <select
-                value={electionId}
-                onChange={(e) => {
-                  setElectionId(e.target.value);
-                  setElectionInput(e.target.value);
-                  setSelectedId(null);
-                }}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-blue-500"
-              >
-                {knownElections.map((eid) => (
-                  <option key={eid} value={eid}>
-                    {eid.slice(0, 8)}…
-                  </option>
-                ))}
-              </select>
-            )}
-            <input
-              value={electionInput}
-              onChange={(e) => setElectionInput(e.target.value)}
-              placeholder="Election ID"
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-blue-500 w-40 placeholder:text-slate-600"
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-500 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer"
-            >
-              Load
-            </button>
-          </form>
-          <button
-            onClick={onLogout}
-            title="Log out"
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="px-5 pt-3 shrink-0">
-        <MobileNoticeBanner message="The support console is built for larger displays — for the best experience, switch to a laptop or desktop." />
-      </div>
-
-      <div className="flex-1 flex min-h-0">
-        {/* ── Left: queue ──────────────────────────────────────────────────── */}
-        <div className="w-[320px] border-r border-slate-800 flex flex-col shrink-0">
-          {/* Election picker (primary) */}
-          <div className="px-3 py-2.5 border-b border-slate-800 shrink-0 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                Election
-              </span>
+          {/* Election picker */}
+          {elections.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <select
+                  value={electionId}
+                  onChange={(e) => selectElection(e.target.value)}
+                  className="appearance-none bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-xs font-bold outline-none focus:border-blue-500 cursor-pointer max-w-[220px] truncate"
+                >
+                  {!electionId && <option value="">Select an election…</option>}
+                  {elections.map((el) => (
+                    <option key={el.id} value={el.id}>
+                      {el.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
               {selectedElection && (
                 <span
-                  className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                  className={`text-[9px] font-black uppercase px-2 py-1 rounded ${
                     STATUS_BADGE[selectedElection.status] ||
                     "bg-slate-700 text-slate-300"
                   }`}
@@ -568,48 +553,68 @@ function Dashboard({ onLogout }) {
                 </span>
               )}
             </div>
-            {elections.length > 0 ? (
-              <select
-                value={electionId}
-                onChange={(e) => selectElection(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-xs outline-none focus:border-blue-500"
-              >
-                {!electionId && <option value="">Select an election…</option>}
-                {elections.map((el) => (
-                  <option key={el.id} value={el.id}>
-                    {el.name} — {el.status?.replace("_", " ")}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-[11px] text-slate-600">
-                No elections found — use the Election ID box above.
-              </p>
-            )}
-          </div>
+          ) : (
+            <span className="text-xs text-slate-500">No elections assigned</span>
+          )}
 
-          <div className="px-4 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              Queue
-            </span>
-            <span className="text-xs text-slate-500">{queue.length}</span>
+          <button
+            onClick={onLogout}
+            title="Log out"
+            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      <div className="px-5 pt-3 shrink-0">
+        <MobileNoticeBanner message="The support console is built for larger displays — for the best experience, switch to a laptop or desktop." />
+      </div>
+
+      <div className="flex-1 flex min-h-0">
+        {/* ── Left: queue ──────────────────────────────────────────────────── */}
+        <aside className="w-[340px] border-r border-slate-800 flex flex-col shrink-0 bg-slate-900/20">
+          <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-slate-500" />
+              <span className="text-xs font-black uppercase tracking-widest text-slate-300">
+                Live Queue
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {waitingCount > 0 && (
+                <span className="text-[10px] font-black bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+                  {waitingCount} waiting
+                </span>
+              )}
+              <span className="text-[10px] font-bold bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
+                {queue.length}
+              </span>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {!electionId && (
-              <p className="text-center text-xs text-slate-500 mt-8 px-4">
-                Select an election above to load the live queue.
-              </p>
+              <div className="text-center px-6 mt-12">
+                <Inbox className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+                <p className="text-xs text-slate-500">
+                  Choose an election above to load its live queue.
+                </p>
+              </div>
             )}
             {electionId && loadingQueue && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-12">
                 <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
               </div>
             )}
             {electionId && !loadingQueue && queue.length === 0 && (
-              <p className="text-center text-xs text-slate-500 mt-8 px-4">
-                No active conversations. New chats appear here in real time.
-              </p>
+              <div className="text-center px-6 mt-12">
+                <Inbox className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+                <p className="text-xs text-slate-500">
+                  All clear — no active conversations. New chats appear here in
+                  real time.
+                </p>
+              </div>
             )}
 
             {sortedQueue.map((c) => {
@@ -620,63 +625,76 @@ function Dashboard({ onLogout }) {
                 <button
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
-                  className={`w-full text-left px-4 py-3 border-b border-slate-800/70 transition-all cursor-pointer ${
-                    isSel ? "bg-slate-800" : "hover:bg-slate-900"
-                  } ${c.is_urgent ? "border-l-4 border-l-red-500" : ""} ${
-                    isFresh ? "animate-[vbFade_0.6s_ease-out]" : ""
-                  }`}
+                  className={`w-full text-left px-4 py-3 border-b border-slate-800/70 transition-all cursor-pointer relative ${
+                    isSel ? "bg-slate-800" : "hover:bg-slate-800/40"
+                  } ${isFresh ? "animate-[vbFade_0.6s_ease-out]" : ""}`}
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-bold text-sm truncate">
-                      {c.voter_name}
-                      {c.voter_matric && (
-                        <span className="text-slate-500 font-normal ml-1">
-                          · {c.voter_matric}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[10px] text-slate-500 shrink-0">
-                      {timeAgo(c.last_message_at)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 truncate mb-1.5">
-                    {voterTyping === c.id ? (
-                      <span className="text-blue-400 italic">typing…</span>
-                    ) : (
-                      c.last_message || "—"
-                    )}
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    {c.is_urgent && (
-                      <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
-                        Urgent
-                      </span>
-                    )}
-                    <span
-                      className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
-                        c.status === "claimed"
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-amber-500/20 text-amber-400"
+                  {c.is_urgent && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                  )}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                        c.is_urgent
+                          ? "bg-red-500/20 text-red-300"
+                          : "bg-slate-700 text-slate-300"
                       }`}
                     >
-                      {c.status}
-                    </span>
-                    {claimed && (
-                      <span className="text-[10px] text-slate-500 truncate">
-                        {c.assigned_to || "claimed"}
-                      </span>
-                    )}
-                    {!claimed && (
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleClaim(c.id);
-                        }}
-                        className="ml-auto text-[10px] font-bold bg-blue-600 hover:bg-blue-500 px-2 py-0.5 rounded cursor-pointer"
-                      >
-                        Claim
-                      </span>
-                    )}
+                      {initials(c.voter_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-sm truncate">
+                          {c.voter_name}
+                        </span>
+                        <span className="text-[10px] text-slate-500 shrink-0">
+                          {timeAgo(c.last_message_at)}
+                        </span>
+                      </div>
+                      {c.voter_matric && (
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {c.voter_matric}
+                        </span>
+                      )}
+                      <p className="text-xs text-slate-400 truncate mt-0.5">
+                        {voterTyping === c.id ? (
+                          <span className="text-blue-400 italic">typing…</span>
+                        ) : (
+                          c.last_message || "—"
+                        )}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        {c.is_urgent && (
+                          <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
+                            Urgent
+                          </span>
+                        )}
+                        <span
+                          className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                            c.status === "claimed"
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-amber-500/20 text-amber-400"
+                          }`}
+                        >
+                          {c.status === "claimed" ? "Claimed" : "Waiting"}
+                        </span>
+                        {claimed ? (
+                          <span className="text-[10px] text-slate-500 truncate">
+                            {c.assigned_to || "claimed"}
+                          </span>
+                        ) : (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleClaim(c.id);
+                            }}
+                            className="ml-auto text-[10px] font-bold bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                          >
+                            Claim
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
@@ -684,8 +702,9 @@ function Dashboard({ onLogout }) {
           </div>
 
           {/* Online staff */}
-          <div className="border-t border-slate-800 px-4 py-3 shrink-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+          <div className="border-t border-slate-800 px-4 py-3 shrink-0 bg-slate-900/40">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
               Online ({online.length})
             </p>
             <div className="space-y-1 max-h-24 overflow-y-auto">
@@ -694,7 +713,7 @@ function Dashboard({ onLogout }) {
               )}
               {online.map((s) => (
                 <div key={s.staffId} className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
                   <span className="text-xs text-slate-300 truncate">
                     {s.staffName}
                   </span>
@@ -702,32 +721,44 @@ function Dashboard({ onLogout }) {
               ))}
             </div>
           </div>
-        </div>
+        </aside>
 
         {/* ── Right: conversation ──────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <section className="flex-1 flex flex-col min-w-0">
           {!selected ? (
-            <div className="flex-1 flex items-center justify-center text-slate-600 text-sm">
-              Select a conversation from the queue.
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-600 gap-3">
+              <MessageSquare className="w-12 h-12 text-slate-800" />
+              <p className="text-sm">Select a conversation from the queue.</p>
             </div>
           ) : (
             <>
               {/* Conversation header */}
-              <div className="px-5 py-3 border-b border-slate-800 shrink-0">
+              <div className="px-5 py-3 border-b border-slate-800 shrink-0 bg-slate-900/30">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h2 className="font-bold truncate">
-                        {selected.voter_name}
-                      </h2>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${
+                        selected.is_urgent
+                          ? "bg-red-500/20 text-red-300"
+                          : "bg-slate-700 text-slate-300"
+                      }`}
+                    >
+                      {initials(selected.voter_name)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-bold truncate">
+                          {selected.voter_name}
+                        </h2>
+                        {selected.is_urgent && (
+                          <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-red-500/20 text-red-400 px-2 py-0.5 rounded">
+                            <AlertTriangle className="w-3 h-3" /> Urgent
+                          </span>
+                        )}
+                      </div>
                       {selected.voter_matric && (
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-500 font-mono">
                           {selected.voter_matric}
-                        </span>
-                      )}
-                      {selected.is_urgent && (
-                        <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-red-500/20 text-red-400 px-2 py-0.5 rounded">
-                          <AlertTriangle className="w-3 h-3" /> Urgent
                         </span>
                       )}
                     </div>
@@ -735,7 +766,7 @@ function Dashboard({ onLogout }) {
                   <button
                     onClick={openTranscript}
                     title="View full transcript"
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg cursor-pointer shrink-0 transition-colors"
                   >
                     <FileText className="w-3.5 h-3.5" /> Transcript
                   </button>
@@ -743,7 +774,7 @@ function Dashboard({ onLogout }) {
 
                 {/* Suggested answers */}
                 {suggestionsMap[selected.id]?.length > 0 && (
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <button
                       onClick={() => setShowSuggestions((v) => !v)}
                       className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400 cursor-pointer"
@@ -763,7 +794,7 @@ function Dashboard({ onLogout }) {
                             key={i}
                             onClick={() => setReply(s.answer)}
                             title="Click to paste into your reply"
-                            className="block w-full text-left text-xs bg-slate-800/70 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 cursor-pointer"
+                            className="block w-full text-left text-xs bg-slate-800/70 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 cursor-pointer transition-colors"
                           >
                             <span className="text-slate-300 font-bold">
                               {s.question}
@@ -786,12 +817,12 @@ function Dashboard({ onLogout }) {
               >
                 {thread.map((m, i) => {
                   const isStaff = m.sender_type === "staff";
-                  const label =
-                    m.sender_type === "staff"
-                      ? m.staff_name || "Support Team"
-                      : m.sender_type === "auto"
-                      ? "Auto Reply"
-                      : null;
+                  const isAuto = m.sender_type === "auto";
+                  const label = isStaff
+                    ? m.staff_name || "Support Team"
+                    : isAuto
+                    ? "Auto Reply"
+                    : null;
                   return (
                     <div
                       key={i}
@@ -808,6 +839,8 @@ function Dashboard({ onLogout }) {
                         className={`max-w-[70%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed break-words ${
                           isStaff
                             ? "bg-blue-600 text-white rounded-br-sm"
+                            : isAuto
+                            ? "bg-slate-800 text-slate-300 border border-slate-700 rounded-bl-sm"
                             : "bg-slate-700 text-slate-100 rounded-bl-sm"
                         }`}
                       >
@@ -825,7 +858,7 @@ function Dashboard({ onLogout }) {
               </div>
 
               {/* Input bar */}
-              <div className="border-t border-slate-800 p-3 shrink-0 relative">
+              <div className="border-t border-slate-800 p-3 shrink-0 relative bg-slate-900/30">
                 {showCanned && (
                   <div className="absolute bottom-full left-3 mb-2 w-72 max-h-60 overflow-y-auto bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2 z-10">
                     {canned.length === 0 ? (
@@ -858,7 +891,7 @@ function Dashboard({ onLogout }) {
                   <button
                     onClick={openCanned}
                     title="Canned replies"
-                    className="w-10 h-10 shrink-0 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 flex items-center justify-center cursor-pointer"
+                    className="w-10 h-10 shrink-0 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 flex items-center justify-center cursor-pointer transition-colors"
                   >
                     <Zap className="w-5 h-5" />
                   </button>
@@ -875,29 +908,33 @@ function Dashboard({ onLogout }) {
                         handleSend();
                       }
                     }}
-                    placeholder="Type your reply…"
-                    className="flex-1 resize-none max-h-24 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+                    placeholder="Type your reply…  (Enter to send, Shift+Enter for a new line)"
+                    className="flex-1 resize-none max-h-24 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                   />
                   <button
                     onClick={handleSend}
                     disabled={!reply.trim() || sending}
                     title="Send reply"
-                    className="w-10 h-10 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center cursor-pointer disabled:opacity-40"
+                    className="w-10 h-10 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center cursor-pointer disabled:opacity-40 transition-colors"
                   >
-                    <SendHorizonal className="w-5 h-5" />
+                    {sending ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <SendHorizonal className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={handleRelease}
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
                   >
                     <Hand className="w-3.5 h-3.5" /> Release
                   </button>
                   <button
                     onClick={handleResolve}
-                    className="flex items-center gap-1.5 text-xs font-bold text-green-400 hover:text-green-300 bg-green-600/15 hover:bg-green-600/25 px-3 py-1.5 rounded-lg cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold text-green-400 hover:text-green-300 bg-green-600/15 hover:bg-green-600/25 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
                   </button>
@@ -905,7 +942,7 @@ function Dashboard({ onLogout }) {
               </div>
             </>
           )}
-        </div>
+        </section>
       </div>
 
       {/* Transcript modal */}
