@@ -53,6 +53,7 @@ export default function VotersTab() {
   const [copied, setCopied] = useState(false);
   const [copiedObs, setCopiedObs] = useState(false);
   const [codesCopied, setCodesCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
   const [approvalBusy, setApprovalBusy] = useState(false);
   const [reviewerName, setReviewerName] = useState("");
 
@@ -237,6 +238,18 @@ ${lines}`;
     });
   };
 
+  // Copy one reviewer's personal invite (portal link + their code) to send individually.
+  const copyReviewer = (a) => {
+    const text = `Hi ${a.reviewerName}, please review and approve the voter list for the election.
+
+Review Portal: ${window.location.origin}/roster-review
+Your code: ${a.reviewCode}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(a.id);
+      setTimeout(() => setCopiedId((cur) => (cur === a.id ? null : cur)), 2500);
+    });
+  };
+
   const handleResetApprovals = () => {
     showConfirm(
       "Reset all approvals?",
@@ -408,7 +421,26 @@ ${lines}`;
                           })
                         : "—"}
                     </span>
-                    <div className="col-span-2 flex justify-end">
+                    <div className="col-span-2 flex justify-end items-center gap-3">
+                      <button
+                        onClick={() => copyReviewer(a)}
+                        title="Copy this reviewer's link + code"
+                        className={`text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
+                          copiedId === a.id
+                            ? "text-green-400"
+                            : "text-slate-400 hover:text-blue-300"
+                        }`}
+                      >
+                        {copiedId === a.id ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" /> Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" /> Copy
+                          </>
+                        )}
+                      </button>
                       {!a.approved && (
                         <button
                           onClick={() => handleRemoveReviewer(a)}
