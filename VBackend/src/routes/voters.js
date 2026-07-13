@@ -4,20 +4,91 @@ import { requireAdmin } from "../middleware/auth.js"
 import { resolveOrg } from "../middleware/auth.js"
 import { ok, fail, isValidEmail } from "../utils/index.js"
 import { recomputeApprovalStatus } from "../utils/rosterApproval.js"
+import {
+  buildSignatureRows,
+  verifyCSVSignature,
+  stripSignatureRows,
+} from "../utils/templateSignature.js"
 
 const router = express.Router()
 
-// ─── POST /voters/:slug/roster ────────────────────────────────────────────────
-// Admin: bulk-upload voters from a parsed CSV array
-// Body: { voters: [ { matric, name, email? }, ... ] }
-router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
-  const { voters, replaceExisting = false } = req.body
+// ─── GET /voters/:slug/template ───────────────────────────────────────────────
+// Admin: download the official, cryptographically-signed roster template.
+// Only files produced here can later be uploaded — the signature ties the
+// template to this org + election.
+router.get("/:slug/template", resolveOrg, requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT o.name AS org_name, o.id AS org_id,
+              e.id AS election_id, e.name AS election_name
+       FROM organizations o
+       JOIN elections e ON e.org_id = o.id
+       WHERE o.id = $1
+       ORDER BY e.created_at DESC LIMIT 1`,
+      [req.orgId]
+    )
+    if (result.rows.length === 0) return fail(res, "No election found", 404)
+    const { org_name, org_id, election_id, election_name } = result.rows[0]
 
-  if (!voters || !Array.isArray(voters) || voters.length === 0) {
-    return fail(res, "Voters array required")
+    const { sigRow, watermarkRow } = buildSignatureRows(
+      org_id,
+      election_id,
+      org_name,
+      election_name
+    )
+
+    const csv =
+      `${sigRow}\n` +
+      `${watermarkRow}\n` +
+      `matric,name,email\n` +
+      `U/YEAR/XXXX,Full Name Here,optionalemail@example.com\n`
+
+    await query(
+      `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+       VALUES ($1, $2, 'registry', 'Official roster template downloaded', $3)`,
+      [org_id, election_id, req.adminEmail]
+    )
+
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="roster-template-${req.params.slug}.csv"`
+    )
+    return res.send(csv)
+  } catch (err) {
+    console.error("Template download error:", err)
+    return fail(res, "Server error", 500)
+  }
+})
+
+// ─── POST /voters/:slug/roster ────────────────────────────────────────────────
+// Admin: bulk-upload voters from a signed official template.
+// Body: { csvRaw: string, replaceExisting: boolean }
+router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
+  const { csvRaw, replaceExisting = false } = req.body
+
+  if (!csvRaw || typeof csvRaw !== "string") {
+    return fail(res, "CSV content required", 400)
   }
 
   try {
+    // 1. Verify the file carries a valid Virtual Ballot signature.
+    const verification = verifyCSVSignature(csvRaw)
+    if (!verification.valid) {
+      const elRes = await query(
+        `SELECT id FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [req.orgId]
+      )
+      if (elRes.rows.length > 0) {
+        await query(
+          `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+           VALUES ($1, $2, 'warning', $3, $4)`,
+          [req.orgId, elRes.rows[0].id, `Rejected CSV upload — ${verification.reason}`, req.adminEmail]
+        )
+      }
+      return fail(res, verification.reason, 400)
+    }
+
     // Get current election
     const electionResult = await query(
       `SELECT id, voting_mode FROM elections WHERE org_id = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -26,6 +97,44 @@ router.post("/:slug/roster", resolveOrg, requireAdmin, async (req, res) => {
     if (electionResult.rows.length === 0) return fail(res, "No election found", 404)
     const electionId = electionResult.rows[0].id
     const votingMode = electionResult.rows[0].voting_mode
+
+    // 2. The signature must belong to THIS org and current election.
+    if (verification.orgId !== req.orgId || verification.electionId !== electionId) {
+      await query(
+        `INSERT INTO audit_logs (org_id, election_id, event_type, message, actor)
+         VALUES ($1, $2, 'warning', $3, $4)`,
+        [req.orgId, electionId, "Rejected CSV upload — template belongs to a different election or organisation", req.adminEmail]
+      )
+      return fail(
+        res,
+        "This template was generated for a different election or organisation. Please download a fresh template.",
+        400
+      )
+    }
+
+    // 3. Strip the marker rows and parse the remaining voter rows.
+    const cleanCSV = stripSignatureRows(csvRaw)
+    const lines = cleanCSV.split("\n").map((l) => l.trim()).filter(Boolean)
+    const dataLines = lines.slice(1) // skip the matric,name,email header row
+    const voters = dataLines
+      .map((line) => {
+        const [matric, name, email] = line.split(",").map((s) => s?.trim())
+        if (!matric || !name) return null
+        // Ignore the example placeholder row that ships in the template.
+        if (matric.toUpperCase() === "U/YEAR/XXXX" || name === "Full Name Here") {
+          return null
+        }
+        return { matric, name, email: email || null }
+      })
+      .filter(Boolean)
+
+    if (voters.length === 0) {
+      return fail(
+        res,
+        "No valid voter rows found in the CSV. Make sure you are using the official template with data filled in.",
+        400
+      )
+    }
 
     // If replace mode: delete all existing voters who haven't voted yet
     if (replaceExisting) {

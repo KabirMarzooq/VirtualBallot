@@ -302,11 +302,26 @@ export const createNewElection = (token, slug = ORG_SLUG, votingMode = "CLOSED",
         body: JSON.stringify({ votingMode, fraudTier }),
     }, token)
 
-/** Upload roster with replace option */
-export const uploadRoster = (voters, token, slug = ORG_SLUG, replaceExisting = false) =>
+/**
+ * Download the official signed roster template as raw CSV text.
+ * Uses a direct fetch (not the JSON request wrapper) because the response is CSV.
+ */
+export async function downloadRosterTemplate(token, slug = ORG_SLUG) {
+    const res = await fetch(`${BASE}/voters/${slug}/template`, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Failed to download template")
+    }
+    return await res.text()
+}
+
+/** Upload roster — sends the raw (signed) CSV; backend verifies before parsing */
+export const uploadRoster = (csvRaw, token, slug = ORG_SLUG, replaceExisting = false) =>
     request(`/voters/${slug}/roster`, {
         method: "POST",
-        body: JSON.stringify({ voters, replaceExisting }),
+        body: JSON.stringify({ csvRaw, replaceExisting }),
     }, token)
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
