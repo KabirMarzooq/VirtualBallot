@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 3: OTP Verification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-100:#DBEAFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8; --blue-50:#EFF6FF;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05); --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1480px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.screen{width:400px;max-width:100%}
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:32px 28px;text-align:center}
+
+/* Step progress (Identity ✓ → Verify → Vote → Done) */
+.steps{display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.bubble{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border:2px solid var(--gray-300);color:var(--gray-400);background:var(--white)}
+.done .bubble{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+.current .bubble{border-color:var(--blue-600);color:var(--blue-600)}
+.slabel{font-size:10px;font-weight:600;margin:0 8px 0 6px;color:var(--gray-400)}
+.done .slabel,.current .slabel{color:var(--gray-800)}
+.sline{width:20px;height:2px;background:var(--gray-200);margin-right:8px}
+.done .sline{background:var(--blue-600)}
+.step{display:flex;align-items:center}
+
+.mailico{width:56px;height:56px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--blue-600)}
+.h-title{font-size:22px;line-height:28px;font-weight:600;color:var(--gray-900);margin-top:16px}
+.h-sub{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:4px}
+.h-sub b{color:var(--gray-800);font-weight:600}
+
+.otp{display:flex;gap:8px;justify-content:center;margin-top:24px}
+.otp input{width:48px;height:52px;text-align:center;font-family:var(--font-mono);font-size:22px;font-weight:600;border:1.5px solid var(--gray-300);border-radius:var(--radius-lg);background:var(--white);color:var(--gray-900);outline:none;transition:var(--transition-fast)}
+.otp .is-focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+.otp.is-error input{border-color:var(--danger);color:var(--danger);background:var(--danger-light);animation:shake .35s ease}
+.otp.is-success input{border-color:var(--success);color:var(--success);background:var(--success-light)}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.err{font-size:11px;font-weight:500;color:var(--danger);margin-top:10px}
+.ok{font-size:11px;font-weight:500;color:var(--success);margin-top:10px}
+
+.btn{width:100%;margin-top:24px;font-size:14px;font-weight:600;min-height:48px;border-radius:var(--radius);border:none;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+
+.resend{font-size:13px;color:var(--gray-400);margin-top:20px}
+.resend a{color:var(--blue-600);font-weight:600;text-decoration:none;cursor:pointer}
+.resend .wait{color:var(--gray-400);font-weight:600}
+.backlink{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:4px;padding:0 16px;font-size:13px;font-weight:600;color:var(--gray-400);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast)}
+.backlink:hover{color:var(--gray-600);background:var(--gray-100)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 3 — OTP Verification</h1>
+  <p class="sub">6-box input (real OTP is 6 digits) · auto-advance · shake on error · green flash on success · 400px card</p>
+
+  <div class="grid">
+
+    <!-- STATE 1: Filling -->
+    <div class="variant"><span class="cap">1 · Filling</span>
+      <div class="screen"><div class="card">
+        <div class="steps">
+          <div class="step done"><div class="bubble">✓</div><div class="slabel">Identity</div><div class="sline"></div></div>
+          <div class="step current"><div class="bubble">2</div><div class="slabel">Verify</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">3</div><div class="slabel">Vote</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">4</div><div class="slabel">Done</div></div>
+        </div>
+        <div class="mailico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+        <div class="h-title">Check your email</div>
+        <div class="h-sub">We sent a 6-digit code to <b>ad***@edu.ng</b></div>
+        <div class="otp">
+          <input value="4" readonly /><input value="8" readonly /><input value="2" readonly />
+          <input class="is-focus" readonly /><input readonly /><input readonly />
+        </div>
+        <button class="btn btn-primary" disabled>Verify & continue</button>
+        <div class="resend">Didn't receive it? <a>Go back to resend</a></div>
+      </div></div>
+    </div>
+
+    <!-- STATE 2: Error -->
+    <div class="variant"><span class="cap">2 · Wrong code (shake + clear)</span>
+      <div class="screen"><div class="card">
+        <div class="steps">
+          <div class="step done"><div class="bubble">✓</div><div class="slabel">Identity</div><div class="sline"></div></div>
+          <div class="step current"><div class="bubble">2</div><div class="slabel">Verify</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">3</div><div class="slabel">Vote</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">4</div><div class="slabel">Done</div></div>
+        </div>
+        <div class="mailico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+        <div class="h-title">Check your email</div>
+        <div class="h-sub">We sent a 6-digit code to <b>ad***@edu.ng</b></div>
+        <div class="otp is-error">
+          <input value="1" readonly /><input value="2" readonly /><input value="3" readonly />
+          <input value="4" readonly /><input value="5" readonly /><input value="6" readonly />
+        </div>
+        <div class="err">Incorrect or expired code. Please try again.</div>
+        <button class="btn btn-primary">Verify & continue</button>
+        <div class="resend">Didn't receive it? <a>Go back to resend</a></div>
+      </div></div>
+    </div>
+
+    <!-- STATE 3: Success -->
+    <div class="variant"><span class="cap">3 · Verified (green flash → ballot)</span>
+      <div class="screen"><div class="card">
+        <div class="steps">
+          <div class="step done"><div class="bubble">✓</div><div class="slabel">Identity</div><div class="sline"></div></div>
+          <div class="step done"><div class="bubble">✓</div><div class="slabel">Verify</div><div class="sline"></div></div>
+          <div class="step current"><div class="bubble">3</div><div class="slabel">Vote</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">4</div><div class="slabel">Done</div></div>
+        </div>
+        <div class="mailico" style="background:var(--success-light);border-color:#BBF7D0;color:var(--success)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="h-title">Code verified</div>
+        <div class="h-sub">Taking you to your ballot…</div>
+        <div class="otp is-success">
+          <input value="4" readonly /><input value="8" readonly /><input value="2" readonly />
+          <input value="9" readonly /><input value="1" readonly /><input value="7" readonly />
+        </div>
+        <div class="ok">✓ Verified</div>
+        <button class="btn btn-primary" disabled>Opening ballot…</button>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
