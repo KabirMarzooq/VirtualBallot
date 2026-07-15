@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 4: Ballot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --danger-light:#FEF2F2; --danger:#DC2626; --warning-light:#FFFBEB; --warning:#D97706;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05); --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --transition:all .18s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding-bottom:140px}
+
+/* Sticky header */
+.tophead{position:sticky;top:0;background:var(--white);border-bottom:1px solid var(--gray-200);z-index:10}
+.tophead .in{max-width:720px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-600)}
+.ttl{font-size:18px;line-height:24px;font-weight:600;color:var(--gray-900)}
+.timer{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;border:1px solid}
+.timer.calm{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.timer.warn{background:var(--warning-light);border-color:#FDE68A;color:var(--warning)}
+.timer.urgent{background:var(--danger-light);border-color:#FECACA;color:var(--danger)}
+.timer .dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.4s ease infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+.page{max-width:720px;margin:0 auto;padding:32px 20px 0}
+.lede{font-size:13px;color:var(--gray-600);margin-top:4px}
+
+/* Position section */
+.poshead{display:flex;align-items:baseline;gap:12px;margin:36px 0 16px}
+.posnum{font-size:22px;font-weight:700;color:var(--gray-300);font-family:var(--font-mono)}
+.postitle{font-size:16px;font-weight:600;color:var(--gray-900);text-transform:uppercase;letter-spacing:.06em}
+.poshint{font-size:12px;color:var(--gray-400);margin-left:auto}
+
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+
+.cand{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:20px;position:relative;cursor:pointer;transition:var(--transition)}
+.cand:hover{border-color:var(--gray-300);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.cand.sel{border:2px solid var(--blue-600);background:var(--blue-50);padding:19px}
+.chead{display:flex;align-items:center;gap:12px}
+.avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:16px;background:linear-gradient(135deg,#6366F1,#3B82F6);flex-shrink:0}
+.cname{font-size:16px;font-weight:600;color:var(--gray-900)}
+.cpos{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);font-weight:600}
+.cdiv{height:1px;background:var(--gray-100);margin:14px 0 10px}
+.sel .cdiv{background:var(--blue-100)}
+.cman{font-size:13px;color:var(--gray-600);line-height:20px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cman.open{display:block;-webkit-line-clamp:unset}
+.cfoot{display:flex;align-items:center;gap:4px;margin-top:12px}
+.ghost{font-size:13px;font-weight:600;color:var(--gray-600);background:transparent;border:none;border-radius:var(--radius);padding:8px 12px;min-height:40px;cursor:pointer;transition:var(--transition)}
+.ghost:hover{background:var(--gray-100);color:var(--gray-800)}
+.sel .ghost:hover{background:var(--blue-100)}
+.check{position:absolute;top:12px;right:12px;width:26px;height:26px;background:var(--blue-600);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;animation:pop .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Sticky submit bar */
+.subbar{position:fixed;left:0;right:0;bottom:0;background:var(--white);border-top:1px solid var(--gray-200);box-shadow:0 -4px 12px rgb(0 0 0/.04);z-index:10}
+.subbar .in{max-width:720px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px}
+.subleft{flex:1;min-width:0}
+.subcount{font-size:13px;font-weight:600;color:var(--gray-800)}
+.subtrack{height:4px;background:var(--gray-200);border-radius:999px;margin-top:8px;overflow:hidden}
+.subfill{height:100%;background:var(--blue-600);border-radius:999px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.subbtn{font-size:14px;font-weight:600;min-height:48px;padding:12px 24px;border-radius:var(--radius);border:none;display:flex;align-items:center;gap:8px;cursor:pointer;transition:var(--transition);white-space:nowrap}
+.subbtn.ready{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.subbtn.ready:hover{background:var(--blue-700)}
+.subbtn.ready:hover .arr{transform:translateX(3px)}
+.arr{transition:var(--transition)}
+.subbtn:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+.subhint{font-size:11px;color:var(--gray-400);margin-top:2px}
+
+.note{max-width:720px;margin:24px auto 0;padding:0 20px;font-size:11px;color:var(--gray-400)}
+</style>
+</head>
+<body>
+
+<!-- Sticky header -->
+<div class="tophead"><div class="in">
+  <div>
+    <div class="eyebrow">NUESA · University of Lagos</div>
+    <div class="ttl">Executive Election 2026</div>
+  </div>
+  <div class="timer calm"><span class="dot"></span>02:41:08</div>
+</div></div>
+
+<div class="page">
+  <p class="lede">Select one candidate per position. Read manifestos or compare side by side before you decide.</p>
+
+  <!-- Position 1 -->
+  <div class="poshead"><span class="posnum">01</span><span class="postitle">President</span><span class="poshint">Select 1 candidate</span></div>
+  <div class="cards">
+    <!-- selected -->
+    <div class="cand sel">
+      <div class="check">✓</div>
+      <div class="chead"><div class="avatar">SA</div>
+        <div><div class="cname">Sarah Adebayo</div><div class="cpos">President</div></div></div>
+      <div class="cdiv"></div>
+      <p class="cman">I will digitise the faculty library, secure 24-hour study spaces for every department, and publish the budget every term.</p>
+      <div class="cfoot"><button class="ghost">Read manifesto ↓</button><button class="ghost" style="margin-left:auto">Compare →</button></div>
+    </div>
+    <!-- unselected -->
+    <div class="cand">
+      <div class="chead"><div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">MO</div>
+        <div><div class="cname">Michael Okon</div><div class="cpos">President</div></div></div>
+      <div class="cdiv"></div>
+      <p class="cman">Transparent budgeting, monthly town halls, and a student welfare emergency fund for those who need it most.</p>
+      <div class="cfoot"><button class="ghost">Read manifesto ↓</button><button class="ghost" style="margin-left:auto">Compare →</button></div>
+    </div>
+  </div>
+
+  <!-- Position 2, one card with expanded manifesto -->
+  <div class="poshead"><span class="posnum">02</span><span class="postitle">Secretary</span><span class="poshint">Select 1 candidate</span></div>
+  <div class="cards">
+    <div class="cand">
+      <div class="chead"><div class="avatar" style="background:linear-gradient(135deg,#10B981,#0D9488)">IN</div>
+        <div><div class="cname">Ifeoma Nwachukwu</div><div class="cpos">Secretary</div></div></div>
+      <div class="cdiv"></div>
+      <p class="cman open">Minutes of every meeting published within 48 hours. A public records portal for all association documents. Faster response to student petitions, with a tracked queue everyone can see.</p>
+      <div class="cfoot"><button class="ghost">Hide manifesto ↑</button></div>
+    </div>
+    <div class="cand">
+      <div class="chead"><div class="avatar" style="background:linear-gradient(135deg,#8B5CF6,#6366F1)">TB</div>
+        <div><div class="cname">Tunde Bakare</div><div class="cpos">Secretary</div></div></div>
+      <div class="cdiv"></div>
+      <p class="cman">A digital-first secretariat: online forms for everything, no more queuing at the office for a signature.</p>
+      <div class="cfoot"><button class="ghost">Read manifesto ↓</button><button class="ghost" style="margin-left:auto">Compare →</button></div>
+    </div>
+  </div>
+
+  <p class="note">Timer pill shifts: blue (calm) → amber under 30 min → red pulsing under 5 min. Sticky bar below shows both states.</p>
+</div>
+
+<!-- Sticky submit bar — READY state (1 of 2 shown; disabled state below it in flow) -->
+<div class="subbar"><div class="in">
+  <div class="subleft">
+    <div class="subcount">2 of 2 positions selected</div>
+    <div class="subtrack"><div class="subfill" style="width:100%"></div></div>
+  </div>
+  <button class="subbtn ready">Review & submit <svg class="arr" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+</div></div>
+
+<!-- Disabled-state reference (rendered inline for the spec sheet) -->
+<div class="page" style="margin-top:24px">
+  <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;box-shadow:var(--shadow-sm)">
+    <div class="in" style="max-width:none;display:flex;align-items:center;gap:20px;padding:12px 20px">
+      <div class="subleft">
+        <div class="subcount">1 of 2 positions selected</div>
+        <div class="subtrack"><div class="subfill" style="width:50%"></div></div>
+      </div>
+      <div style="text-align:right">
+        <button class="subbtn" disabled>Review & submit</button>
+        <div class="subhint">Select Secretary to continue</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

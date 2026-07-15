@@ -217,7 +217,7 @@ export default function ConfirmModal() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 py-3 bg-slate-900 text-white font-bold hover:bg-black transition-colors font-sans text-sm tracking-wide flex items-center justify-center gap-2 disabled:opacity-60"
+            className="flex-1 py-3 bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors font-sans text-sm tracking-wide flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {loading ? <VBLoader size="sm" /> : "Cast My Vote →"}
           </button>
