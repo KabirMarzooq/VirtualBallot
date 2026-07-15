@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import VBLoader from "../components/ui/VBLoader";
@@ -17,175 +17,235 @@ export default function RegisterPage() {
   const [voterInfo, setVoterInfo] = useState(null);
   const [matric, setMatric]       = useState("");
   const [email, setEmail]         = useState("");
+  const [matricError, setMatricError] = useState("");
+  const [emailError, setEmailError]   = useState("");
 
+  // ── Registry locked ──────────────────────────────────────────────────────
   if (electionConfig.registryLocked) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl text-center">
-          <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/30">
-            <Lock className="w-10 h-10 text-amber-400" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
+        <div className="w-full max-w-[420px] bg-white border border-slate-200 rounded-2xl shadow-md p-8 text-center">
+          <div className="w-16 h-16 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto text-amber-600">
+            <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">Registration Closed</h2>
-          <p className="text-slate-400 mb-8">
-            The electoral commission has locked the voter registry.
+          <h2 className="text-xl font-semibold text-slate-900 mt-4">Registration closed</h2>
+          <p className="text-[13px] leading-5 text-slate-600 mt-1">
+            The electoral commission has locked the voter registry. If you believe
+            this is a mistake, contact the commission.
           </p>
           <button
             onClick={() => navigate(`/vote/${slug}`)}
             title="Back to voter login"
-            className="text-blue-400 font-bold hover:text-blue-300 cursor-pointer transition-colors"
+            className="w-full mt-7 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm transition-all cursor-pointer"
           >
-            Back to Login
+            ← Back to login
           </button>
         </div>
       </div>
     );
   }
 
+  // ── Actions ──────────────────────────────────────────────────────────────
   const handleCheckEligibility = async () => {
     const m = matric.trim().toUpperCase();
     if (!m) return;
+    setMatricError("");
     setLoading(true);
     try {
       const data = await checkEligibility(m, slug);
       setVoterInfo(data.voter);
       setStep(2);
     } catch (err) {
-      showAlert("Not Eligible", err.message);
+      setMatricError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRegister = async () => {
-    if (!email.trim()) return showAlert("Email Required", "Please enter your email address.");
-    if (!isValidEmail(email)) { showAlert("Please enter a valid email address."); return; }
+    setEmailError("");
+    if (!email.trim()) { setEmailError("Please enter your email address."); return; }
+    if (!isValidEmail(email)) { setEmailError("Please enter a valid email address."); return; }
     setLoading(true);
     try {
       await registerVoter(voterInfo.id, email.trim(), slug);
       showAlert("Account Activated!", "Your account is ready. You can now log in to vote.");
       navigate(`/vote/${slug}`);
     } catch (err) {
-      showAlert("Registration Failed", err.message);
+      setEmailError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const firstName = voterInfo?.name?.split(" ")[0];
+
+  // ── Shared bits ──────────────────────────────────────────────────────────
+  const stepper = (
+    <div className="flex items-center justify-center mt-6">
+      <div className="flex items-center">
+        <div
+          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 ${
+            step === 2
+              ? "bg-blue-600 border-blue-600 text-white"
+              : "bg-white border-blue-600 text-blue-600"
+          }`}
+        >
+          {step === 2 ? "✓" : "1"}
+        </div>
+        <span className="text-[11px] font-semibold text-slate-800 ml-2 mr-3">Verify</span>
+        <span className={`w-9 h-0.5 mr-3 ${step === 2 ? "bg-blue-600" : "bg-slate-200"}`} />
+      </div>
+      <div className="flex items-center">
+        <div
+          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 ${
+            step === 2
+              ? "bg-white border-blue-600 text-blue-600"
+              : "bg-white border-slate-300 text-slate-400"
+          }`}
+        >
+          2
+        </div>
+        <span className={`text-[11px] font-semibold ml-2 ${step === 2 ? "text-slate-800" : "text-slate-400"}`}>
+          Complete setup
+        </span>
+      </div>
+    </div>
+  );
+
+  const lockedField = (label, value) => (
+    <div className="mt-5">
+      <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">{label}</label>
+      <div className="relative">
+        <input
+          value={value}
+          readOnly
+          className="w-full min-h-[48px] text-sm bg-slate-100 text-slate-600 border border-slate-300 rounded-lg pl-4 pr-10 py-3 outline-none cursor-not-allowed"
+        />
+        <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/20">
-            <span className="text-xl font-black text-white">VB</span>
-          </div>
-          <h1 className="text-3xl font-black text-white">Activate Account</h1>
-          <p className="text-slate-500 font-medium mt-1">Claim your Virtual Ballot ID</p>
-        </div>
-
-        {/* Step indicator */}
-        <div className="flex items-center gap-3 mb-6 px-2">
-          {["Verify Eligibility", "Complete Setup"].map((label, i) => (
-            <div key={label} className="flex items-center flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all ${
-                    i + 1 <= step
-                      ? "bg-blue-600 border-blue-600 text-white"
-                      : "bg-slate-800 border-slate-700 text-slate-500"
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <span className={`text-[10px] mt-1 font-bold text-center ${i + 1 <= step ? "text-blue-400" : "text-slate-600"}`}>
-                  {label}
-                </span>
-              </div>
-              {i === 0 && (
-                <div className={`h-0.5 w-8 mb-4 transition-colors ${step === 2 ? "bg-blue-500" : "bg-slate-700"}`} />
-              )}
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
+      <div className="w-full max-w-[420px]">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-8 sm:px-7">
+          {/* Header */}
+          <div className="text-center">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto">
+              <span className="text-lg font-bold text-white tracking-tight">VB</span>
             </div>
-          ))}
-        </div>
+            <h1 className="text-xl font-semibold text-slate-900 mt-4">
+              {step === 2 && firstName ? `Almost there, ${firstName}` : "Activate your account"}
+            </h1>
+            <p className="text-[13px] leading-5 text-slate-600 mt-1">
+              {step === 2
+                ? "Confirm your details and add your email."
+                : "You must be on the voter roster to participate."}
+            </p>
+          </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl">
+          {stepper}
+
+          {/* Step 1 — verify eligibility */}
           {step === 1 && (
-            <div className="space-y-4">
-              <div className="bg-slate-800 p-4 rounded-2xl border-2 border-transparent focus-within:border-blue-500 transition-all">
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1 block mb-1">
-                  Matric Number
+            <>
+              <div className="mt-5">
+                <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+                  Matric number
                 </label>
                 <input
                   value={matric}
-                  onChange={(e) => setMatric(e.target.value)}
+                  onChange={(e) => { setMatric(e.target.value); setMatricError(""); }}
                   onKeyDown={(e) => e.key === "Enter" && handleCheckEligibility()}
-                  className="w-full bg-transparent outline-none font-semibold text-white text-lg placeholder:text-slate-600"
-                  placeholder="e.g. U/25/001"
+                  className={`w-full min-h-[48px] text-sm text-slate-800 bg-white border rounded-lg px-4 py-3 outline-none placeholder:text-slate-400 transition-all ${
+                    matricError
+                      ? "border-red-500 ring-[3px] ring-red-50"
+                      : "border-slate-300 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100"
+                  }`}
+                  placeholder="U/25/0412"
                   autoFocus
                 />
+                {matricError && (
+                  <p className="text-[11px] leading-4 font-medium text-red-600 mt-1.5">{matricError}</p>
+                )}
               </div>
               <button
                 onClick={handleCheckEligibility}
                 disabled={!matric || loading}
                 title="Check if this matric is eligible to vote"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-60 transition-colors cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer group"
               >
-                {loading ? <VBLoader size="sm" /> : "Verify Eligibility"}
+                {loading ? (
+                  <VBLoader size="sm" />
+                ) : (
+                  <>
+                    Check eligibility
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
               </button>
-            </div>
+              <button
+                onClick={() => navigate(`/vote/${slug}`)}
+                title="Return to voter login"
+                className="w-full mt-2 min-h-[44px] text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-[13px] font-semibold rounded-lg transition-all cursor-pointer"
+              >
+                ← Back to login
+              </button>
+            </>
           )}
 
+          {/* Step 2 — complete setup */}
           {step === 2 && voterInfo && (
-            <div className="space-y-4">
-              {[["Matric Number", matric.trim().toUpperCase()], ["Full Name", voterInfo.name]].map(([label, val]) => (
-                <div key={label} className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 opacity-70">
-                  <label className="text-xs font-bold text-slate-500 uppercase ml-1 block mb-1">{label}</label>
-                  <input
-                    value={val}
-                    readOnly
-                    className="w-full bg-transparent outline-none font-semibold text-slate-300 cursor-not-allowed"
-                  />
-                </div>
-              ))}
-              <div className="bg-slate-800 p-4 rounded-2xl border-2 border-transparent focus-within:border-blue-500 transition-all">
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1 block mb-1">
-                  Email Address
+            <>
+              {lockedField("Matric number", matric.trim().toUpperCase())}
+              {lockedField("Full name", voterInfo.name)}
+              <div className="mt-5">
+                <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+                  Email address
                 </label>
                 <input
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
                   onKeyDown={(e) => e.key === "Enter" && handleRegister()}
                   type="email"
-                  className="w-full bg-transparent outline-none font-semibold text-white placeholder:text-slate-600"
+                  className={`w-full min-h-[48px] text-sm text-slate-800 bg-white border rounded-lg px-4 py-3 outline-none placeholder:text-slate-400 transition-all ${
+                    emailError
+                      ? "border-red-500 ring-[3px] ring-red-50"
+                      : "border-slate-300 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100"
+                  }`}
                   placeholder="student@university.edu.ng"
                   autoFocus
                 />
+                {emailError && (
+                  <p className="text-[11px] leading-4 font-medium text-red-600 mt-1.5">{emailError}</p>
+                )}
               </div>
               <button
                 onClick={handleRegister}
                 disabled={!email || loading}
                 title="Complete account activation"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-60 transition-all cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer group"
               >
-                {loading ? <VBLoader size="sm" /> : "Complete Setup →"}
+                {loading ? (
+                  <VBLoader size="sm" />
+                ) : (
+                  <>
+                    Create account
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
               </button>
               <button
-                onClick={() => setStep(1)}
+                onClick={() => { setStep(1); setEmailError(""); }}
                 title="Go back to change matric number"
-                className="w-full text-slate-500 text-sm font-bold hover:text-slate-300 transition-colors cursor-pointer"
+                className="w-full mt-2 min-h-[44px] text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-[13px] font-semibold rounded-lg transition-all cursor-pointer"
               >
                 ← Change matric number
               </button>
-            </div>
+            </>
           )}
-
-          <button
-            onClick={() => navigate(`/vote/${slug}`)}
-            title="Return to voter login"
-            className="w-full mt-6 text-slate-500 hover:text-slate-300 font-bold text-sm transition-colors text-center block cursor-pointer"
-          >
-            Back to Login
-          </button>
         </div>
       </div>
     </div>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 2: Account Activation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFFFFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --warning-light:#FFFBEB; --warning:#D97706; --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif;
+  --radius-sm:6px; --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1480px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.screen{width:420px;max-width:100%}
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:32px 28px}
+
+.logo{width:48px;height:48px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto}
+.logo span{color:#fff;font-weight:700;font-size:18px}
+.h-title{font-size:22px;line-height:28px;font-weight:600;color:var(--gray-900);text-align:center;margin-top:16px}
+.h-sub{font-size:13px;line-height:20px;color:var(--gray-600);text-align:center;margin-top:4px}
+
+/* Stepper */
+.steps{display:flex;align-items:center;justify-content:center;margin-top:24px}
+.step{display:flex;align-items:center}
+.bubble{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--gray-300);color:var(--gray-400);background:var(--white)}
+.step.done .bubble{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+.step.current .bubble{border-color:var(--blue-600);color:var(--blue-600)}
+.slabel{font-size:11px;font-weight:600;margin:0 12px 0 8px;color:var(--gray-400)}
+.step.done .slabel,.step.current .slabel{color:var(--gray-800)}
+.sline{width:36px;height:2px;background:var(--gray-200);margin-right:12px}
+.step.done .sline{background:var(--blue-600)}
+
+/* Form */
+.field{margin-top:20px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--gray-600);margin-bottom:8px}
+.input{width:100%;font-family:var(--font-sans);font-size:14px;min-height:48px;padding:12px 16px;border:1px solid var(--gray-300);border-radius:var(--radius);background:var(--white);color:var(--gray-800);outline:none;transition:var(--transition-fast)}
+.input::placeholder{color:var(--gray-400)}
+.input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+.input.is-error{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-light)}
+.err{font-size:11px;font-weight:500;color:var(--danger);margin-top:6px}
+.locked{position:relative}
+.locked .input{background:var(--gray-100);color:var(--gray-600);padding-right:40px;cursor:not-allowed}
+.locked svg{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--gray-400)}
+
+.btn{width:100%;margin-top:20px;font-size:14px;font-weight:600;min-height:48px;padding:12px 20px;border-radius:var(--radius);border:none;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+.spinner{width:16px;height:16px;border:2px solid rgb(255 255 255/.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.backlink{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:8px;font-size:13px;font-weight:600;color:var(--gray-400);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast)}
+.backlink:hover{color:var(--gray-600);background:var(--gray-100)}
+
+/* Registry locked */
+.lockwrap{width:64px;height:64px;background:var(--warning-light);border:1px solid #FDE68A;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--warning)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 2 — Account Activation</h1>
+  <p class="sub">4 states · same 420px card shell as login · inline errors (no modal for eligibility failures)</p>
+
+  <div class="grid">
+
+    <!-- STATE 1: Step 1 -->
+    <div class="variant"><span class="cap">1 · Step 1 — verify eligibility</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="h-title">Activate your account</div>
+        <div class="h-sub">You must be on the voter roster to participate.</div>
+        <div class="steps">
+          <div class="step current"><div class="bubble">1</div><div class="slabel">Verify</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">2</div><div class="slabel">Complete setup</div></div>
+        </div>
+        <div class="field"><label>Matric number</label>
+          <input class="input" placeholder="U/25/0412" /></div>
+        <button class="btn btn-primary">Check eligibility →</button>
+        <div class="backlink">← Back to login</div>
+      </div></div>
+    </div>
+
+    <!-- STATE 2: Step 1, inline error -->
+    <div class="variant"><span class="cap">2 · Step 1 — not on roster (inline error)</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="h-title">Activate your account</div>
+        <div class="h-sub">You must be on the voter roster to participate.</div>
+        <div class="steps">
+          <div class="step current"><div class="bubble">1</div><div class="slabel">Verify</div><div class="sline"></div></div>
+          <div class="step"><div class="bubble">2</div><div class="slabel">Complete setup</div></div>
+        </div>
+        <div class="field"><label>Matric number</label>
+          <input class="input is-error" value="U/99/0000" />
+          <div class="err">Matric number not found in voter roster. Contact the electoral commission.</div></div>
+        <button class="btn btn-primary">Check eligibility →</button>
+        <div class="backlink">← Back to login</div>
+      </div></div>
+    </div>
+
+    <!-- STATE 3: Step 2 -->
+    <div class="variant"><span class="cap">3 · Step 2 — complete setup</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="h-title">Almost there, Amina</div>
+        <div class="h-sub">Confirm your details and add your email.</div>
+        <div class="steps">
+          <div class="step done"><div class="bubble">✓</div><div class="slabel">Verify</div><div class="sline"></div></div>
+          <div class="step current"><div class="bubble">2</div><div class="slabel">Complete setup</div></div>
+        </div>
+        <div class="field"><label>Matric number</label>
+          <div class="locked"><input class="input" value="U/25/0412" readonly />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div></div>
+        <div class="field"><label>Full name</label>
+          <div class="locked"><input class="input" value="Amina Yusuf" readonly />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div></div>
+        <div class="field"><label>Email address</label>
+          <input class="input" type="email" placeholder="student@university.edu.ng" /></div>
+        <button class="btn btn-primary">Create account →</button>
+        <div class="backlink">← Change matric number</div>
+      </div></div>
+    </div>
+
+    <!-- STATE 4: Registry locked -->
+    <div class="variant"><span class="cap">4 · Registry locked</span>
+      <div class="screen"><div class="card" style="text-align:center">
+        <div class="lockwrap">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </div>
+        <div class="h-title">Registration closed</div>
+        <div class="h-sub">The electoral commission has locked the voter registry. If you believe this is a mistake, contact the commission.</div>
+        <button class="btn btn-primary" style="margin-top:28px">← Back to login</button>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
