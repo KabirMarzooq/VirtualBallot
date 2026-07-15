@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Virtual Ballot — Component Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — the single source of truth for the entire rebuild
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --blue-50:  #EFF6FF;
+  --blue-100: #DBEAFE;
+  --blue-200: #BFDBFE;
+  --blue-500: #3B82F6;
+  --blue-600: #2563EB;
+  --blue-700: #1D4ED8;
+
+  /* Surfaces */
+  --white:    #FFFFFF;
+  --gray-50:  #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-600: #475569;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+
+  /* Semantic */
+  --success-light: #F0FDF4;
+  --success:       #16A34A;
+  --warning-light: #FFFBEB;
+  --warning:       #D97706;
+  --danger-light:  #FEF2F2;
+  --danger:        #DC2626;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Radii */
+  --radius-sm:  6px;
+  --radius:     8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 20px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow:     0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+  /* Transitions */
+  --transition-fast: all 0.12s ease;
+  --transition:      all 0.18s ease;
+  --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Typography scale ── */
+.text-xs   { font-size: 11px; line-height: 16px; }
+.text-sm   { font-size: 13px; line-height: 20px; }
+.text-base { font-size: 14px; line-height: 20px; }
+.text-md   { font-size: 16px; line-height: 24px; }
+.text-lg   { font-size: 18px; line-height: 28px; }
+.text-xl   { font-size: 22px; line-height: 28px; }
+.text-2xl  { font-size: 28px; line-height: 36px; }
+.text-3xl  { font-size: 36px; line-height: 44px; }
+.font-regular  { font-weight: 400; }
+.font-medium   { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.mono { font-family: var(--font-mono); }
+
+/* ── Sheet chrome (layout of this catalogue page itself) ── */
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--font-sans); background: var(--gray-50); color: var(--gray-800); padding: 48px 24px 120px; }
+.sheet { max-width: 1080px; margin: 0 auto; }
+.sheet-title { font-size: 28px; line-height: 36px; font-weight: 600; color: var(--gray-900); }
+.sheet-sub { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+section { margin-top: 56px; }
+.sec-label { font-size: 11px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue-600); display:flex; align-items:center; gap:12px; }
+.sec-label::after { content:""; flex:1; height:1px; background: var(--gray-200); }
+.row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-top: 20px; }
+.spec { display:flex; flex-direction:column; gap:8px; }
+.spec > .cap { font-size: 11px; color: var(--gray-400); font-weight: 500; }
+.dark-strip { background: var(--gray-900); border-radius: var(--radius-lg); padding: 20px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   BUTTONS
+   ════════════════════════════════════════════════════════════════════════ */
+.btn { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600;
+  padding: 12px 20px; border-radius: var(--radius); border: 1px solid transparent;
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: var(--transition-fast); min-height:44px;}
+.btn-primary { background: var(--blue-600); color: var(--white); box-shadow: var(--shadow-sm); }
+.btn-primary:hover, .btn-primary.is-hover { background: var(--blue-700); }
+.btn-primary:disabled, .btn-primary.is-disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; box-shadow: none; }
+.btn-secondary { background: var(--white); color: var(--gray-800); border-color: var(--gray-300); box-shadow: var(--shadow-sm); }
+.btn-secondary:hover, .btn-secondary.is-hover { background: var(--gray-50); border-color: var(--gray-400); }
+.btn-secondary:disabled, .btn-secondary.is-disabled { color: var(--gray-300); border-color: var(--gray-200); cursor:not-allowed; box-shadow:none; }
+.btn-ghost { background: transparent; color: var(--gray-600); }
+.btn-ghost:hover, .btn-ghost.is-hover { background: var(--gray-100); color: var(--gray-800); }
+.btn-danger { background: var(--danger); color: var(--white); }
+.btn-danger:hover, .btn-danger.is-hover { background: #B91C1C; }
+.btn-icon { width: 44px; height: 44px; padding: 0; justify-content: center; background: var(--white); border-color: var(--gray-300); color: var(--gray-600); }
+.btn-icon:hover, .btn-icon.is-hover { background: var(--gray-50); color: var(--gray-800); }
+.spinner { width: 16px; height: 16px; border: 2px solid rgb(255 255 255 / .35); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════════════════════════════════════════
+   FORM ELEMENTS
+   ════════════════════════════════════════════════════════════════════════ */
+.field { display:flex; flex-direction:column; gap:8px; width: 260px; }
+.field label { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+.input { font-family: var(--font-sans); font-size: 14px; padding: 12px 16px; min-height:44px;
+  border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white);
+  color: var(--gray-800); transition: var(--transition-fast); outline: none; width: 100%; }
+.input::placeholder { color: var(--gray-400); }
+.input:focus, .input.is-focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px var(--blue-100); }
+.input.is-error { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-light); }
+.input:disabled, .input.is-disabled { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; }
+.err-msg { font-size: 11px; color: var(--danger); font-weight: 500; }
+textarea.input { min-height: 88px; resize: vertical; }
+
+.dropzone { width: 320px; border: 2px dashed var(--gray-300); border-radius: var(--radius-lg);
+  background: var(--white); padding: 28px 20px; text-align: center; transition: var(--transition); cursor:pointer; }
+.dropzone .dz-icon { font-size: 22px; }
+.dropzone p { font-size: 13px; color: var(--gray-600); margin-top: 8px; }
+.dropzone span { color: var(--blue-600); font-weight: 600; }
+.dropzone.is-over { border-color: var(--blue-500); background: var(--blue-50); }
+.dropzone.is-done { border-color: var(--success); background: var(--success-light); }
+.dropzone.is-done p { color: var(--success); font-weight: 600; }
+
+.otp { display: flex; gap: 12px; }
+.otp input { width: 52px; height: 52px; text-align: center; font-family: var(--font-mono);
+  font-size: 22px; font-weight: 600; border: 1.5px solid var(--gray-300); border-radius: var(--radius-lg);
+  background: var(--white); color: var(--gray-900); outline:none; transition: var(--transition-fast); }
+.otp input:focus, .otp .is-focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px var(--blue-100); }
+.otp.is-error input { border-color: var(--danger); color: var(--danger); animation: shake .35s ease; }
+.otp.is-success input { border-color: var(--success); color: var(--success); background: var(--success-light); }
+@keyframes shake { 20%,60% { transform: translateX(-4px);} 40%,80% { transform: translateX(4px);} }
+
+/* ════════════════════════════════════════════════════════════════════════
+   CARDS
+   ════════════════════════════════════════════════════════════════════════ */
+.card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); padding: 20px; }
+
+.candidate { width: 260px; border-radius: var(--radius-xl); border: 1px solid var(--gray-200);
+  background: var(--white); box-shadow: var(--shadow-sm); padding: 20px; position: relative;
+  transition: var(--transition); cursor: pointer; }
+.candidate:hover, .candidate.is-hover { border-color: var(--gray-300); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.candidate.is-selected { border: 2px solid var(--blue-600); background: var(--blue-50); padding: 19px; }
+.candidate.is-disabled { opacity: .55; cursor: not-allowed; }
+.cand-head { display:flex; align-items:center; gap: 12px; }
+.avatar { width: 52px; height: 52px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight: 600; font-size: 16px; background: linear-gradient(135deg,#6366F1,#3B82F6); flex-shrink:0; }
+.avatar.sm { width:36px; height:36px; font-size:13px; }
+.avatar.lg { width:72px; height:72px; font-size:22px; }
+.cand-name { font-size: 16px; font-weight: 600; color: var(--gray-900); }
+.cand-pos { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-400); font-weight:600; }
+.cand-divider { height: 1px; background: var(--gray-100); margin: 14px 0 10px; }
+.cand-manifesto { font-size: 13px; color: var(--gray-600); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.cand-foot { display:flex; justify-content:flex-end; margin-top: 12px; }
+.checkmark { position:absolute; top: 12px; right: 12px; width: 26px; height: 26px; background: var(--blue-600);
+  border-radius: 50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size: 13px;
+  animation: pop .25s cubic-bezier(.34,1.56,.64,1); }
+@keyframes pop { from { transform: scale(.4); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+.stat { min-width: 180px; }
+.stat .num { font-size: 28px; line-height: 36px; font-weight: 600; color: var(--gray-900); }
+.stat .num.hero { color: var(--blue-600); }
+.stat .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-400); font-weight: 600; margin-top: 2px; }
+
+.winner { width: 320px; border: 2px solid var(--blue-600); border-radius: var(--radius-xl); box-shadow: var(--shadow-md);
+  background: var(--white); padding: 24px; position: relative; }
+.elected { display:inline-block; background: var(--blue-600); color:#fff; font-size: 11px; font-weight:600;
+  text-transform: uppercase; letter-spacing:.08em; padding: 4px 12px; border-radius: 999px; }
+.winner .pct { font-size: 36px; line-height: 44px; font-weight: 600; color: var(--blue-600); }
+.trophy { position:absolute; width: 26px; height: 26px; background:#F59E0B; border-radius:50%; border:2px solid #fff;
+  display:flex; align-items:center; justify-content:center; font-size:13px; right:-4px; bottom:-4px; }
+
+.alert { display:flex; gap: 12px; padding: 12px 16px; border-radius: var(--radius-lg); font-size: 13px; width: 380px; border: 1px solid; align-items:flex-start;}
+.alert .t { font-weight: 600; }
+.alert-info    { background: var(--blue-50);     border-color: var(--blue-200);  color: var(--blue-700); }
+.alert-success { background: var(--success-light); border-color: #BBF7D0;       color: var(--success); }
+.alert-warning { background: var(--warning-light); border-color: #FDE68A;       color: var(--warning); }
+.alert-danger  { background: var(--danger-light);  border-color: #FECACA;       color: var(--danger); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   BADGES + PILLS
+   ════════════════════════════════════════════════════════════════════════ */
+.pill { display:inline-flex; align-items:center; gap:8px; font-size: 11px; font-weight: 600;
+  padding: 4px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing:.04em; }
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill .dot.pulse { animation: pulse 1.4s ease infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.pill-live     { background: var(--success-light); color: var(--success); }
+.pill-pending  { background: var(--warning-light); color: var(--warning); }
+.pill-ended    { background: var(--gray-100);      color: var(--gray-600); }
+.pill-approved { background: var(--blue-50);       color: var(--blue-600); }
+.pill-danger   { background: var(--danger-light);  color: var(--danger); }
+.tag { display:inline-block; font-size: 11px; font-weight:500; color: var(--gray-600);
+  background: var(--gray-100); padding: 4px 12px; border-radius: 999px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   NAVIGATION
+   ════════════════════════════════════════════════════════════════════════ */
+.navitem { display:flex; align-items:center; gap: 12px; width: 200px; padding: 12px 16px;
+  border-radius: var(--radius); font-size: 14px; font-weight: 500; color: var(--gray-400);
+  cursor: pointer; transition: var(--transition-fast); border-left: 3px solid transparent; }
+.navitem:hover, .navitem.is-hover { color: var(--gray-200); background: rgb(255 255 255 / .04); }
+.navitem.is-active { color: #fff; background: rgb(37 99 235 / .18); border-left-color: var(--blue-500); }
+
+.tabs { display:flex; gap: 4px; background: var(--gray-100); padding: 4px; border-radius: var(--radius-lg); width:max-content; }
+.tab { font-size: 13px; font-weight: 600; color: var(--gray-600); padding: 12px 16px; border-radius: var(--radius); cursor:pointer; transition: var(--transition-fast); min-height:44px; display:flex; align-items:center;}
+.tab.is-active { background: var(--white); color: var(--blue-600); box-shadow: var(--shadow-sm); }
+
+.steps { display:flex; align-items:center; gap: 0; }
+.step { display:flex; align-items:center; }
+.step .bubble { width: 28px; height: 28px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+  font-size: 12px; font-weight: 600; border: 2px solid var(--gray-300); color: var(--gray-400); background: var(--white); }
+.step.done .bubble { background: var(--blue-600); border-color: var(--blue-600); color: #fff; }
+.step.current .bubble { border-color: var(--blue-600); color: var(--blue-600); }
+.step .lbl { font-size: 11px; font-weight: 600; margin: 0 10px 0 8px; color: var(--gray-400); }
+.step.done .lbl, .step.current .lbl { color: var(--gray-800); }
+.step .line { width: 36px; height: 2px; background: var(--gray-200); margin-right: 10px; }
+.step.done .line { background: var(--blue-600); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   DATA DISPLAY
+   ════════════════════════════════════════════════════════════════════════ */
+.progress { width: 320px; }
+.progress .p-head { display:flex; justify-content:space-between; font-size: 13px; margin-bottom: 8px; }
+.progress .p-head b { font-weight: 600; color: var(--gray-800); }
+.progress .track { height: 8px; background: var(--gray-200); border-radius: 999px; overflow: hidden; }
+.progress .fill { height: 100%; background: var(--blue-600); border-radius: 999px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+.hbar { width: 380px; display:flex; align-items:center; gap: 12px; }
+.hbar .who { display:flex; align-items:center; gap:12px; width: 150px; font-size: 13px; font-weight:600; color: var(--gray-800);}
+.hbar .track { flex:1; height: 10px; background: var(--gray-100); border-radius: 999px; overflow:hidden; }
+.hbar .fill { height:100%; background: var(--blue-600); border-radius: 999px; }
+.hbar .val { font-size: 13px; font-weight:600; color: var(--gray-600); width: 44px; text-align:right; }
+
+.trow { display:grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 12px; align-items:center;
+  width: 560px; padding: 12px 16px; background: var(--white); border-bottom: 1px solid var(--gray-100);
+  font-size: 13px; color: var(--gray-800); transition: var(--transition-fast); }
+.trow.head { font-size: 11px; text-transform: uppercase; letter-spacing:.05em; color: var(--gray-400); font-weight: 600; background: var(--gray-50); border-radius: 8px 8px 0 0;}
+.trow:hover:not(.head), .trow.is-hover { background: var(--gray-50); }
+
+.feed-item { display:flex; gap: 12px; width: 380px; padding: 12px 0; }
+.feed-item .fdot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink:0; }
+.feed-item p { font-size: 13px; color: var(--gray-800); }
+.feed-item time { font-size: 11px; color: var(--gray-400); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MODALS
+   ════════════════════════════════════════════════════════════════════════ */
+.modal-demo { background: var(--gray-100); border-radius: var(--radius-lg); padding: 32px; display:flex; justify-content:center; }
+.modal { background: var(--white); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 380px; overflow:hidden; }
+.modal .m-body { padding: 24px; }
+.modal .m-title { font-size: 16px; font-weight: 600; color: var(--gray-900); }
+.modal .m-text { font-size: 13px; color: var(--gray-600); margin-top: 6px; }
+.modal .m-foot { display:flex; justify-content:flex-end; gap: 12px; padding: 16px 24px; background: var(--gray-50); border-top: 1px solid var(--gray-100); }
+
+.ballot-paper { background: var(--white); width: 420px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow:hidden; position: relative; }
+.bp-secure { background: var(--gray-900); color: var(--gray-400); font-family: var(--font-mono); font-size: 10px;
+  display:flex; justify-content:space-between; padding: 8px 16px; letter-spacing:.08em; }
+.bp-secure b { color:#fff; }
+.bp-water { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.bp-water span { font-size: 84px; font-weight: 700; color: var(--gray-100); transform: rotate(-24deg); letter-spacing: .1em; }
+.bp-body { position:relative; padding: 24px; }
+.bp-title { text-align:center; font-size: 15px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color: var(--gray-900); }
+.bp-meta { text-align:center; font-family: var(--font-mono); font-size: 10px; color: var(--gray-400); margin-top: 4px; }
+.bp-rule { border-top: 3px double var(--gray-300); margin: 16px 0; }
+.bp-sel { display:flex; align-items:center; gap: 12px; padding: 12px 0; }
+.bp-check { width: 26px; height: 26px; border: 2px solid var(--gray-800); border-radius: 4px; display:flex; align-items:center; justify-content:center; font-weight:700; color: var(--gray-900); }
+.bp-pos { font-size: 10px; text-transform: uppercase; letter-spacing:.08em; color: var(--gray-400); font-weight:600; }
+.bp-name { font-size: 16px; font-weight: 600; color: var(--gray-900); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   FEEDBACK
+   ════════════════════════════════════════════════════════════════════════ */
+.toast { display:flex; align-items:center; gap: 12px; width: 340px; background: var(--white);
+  border: 1px solid var(--gray-200); border-left-width: 4px; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md); padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--gray-800); }
+.toast.t-success { border-left-color: var(--success); }
+.toast.t-warning { border-left-color: var(--warning); }
+.toast.t-error   { border-left-color: var(--danger); }
+
+.empty { width: 360px; text-align:center; padding: 40px 24px; border: 1px dashed var(--gray-300); border-radius: var(--radius-xl); background: var(--white); }
+.empty .e-ico { width: 48px; height: 48px; margin: 0 auto; background: var(--gray-100); border-radius: var(--radius-lg); display:flex; align-items:center; justify-content:center; font-size: 20px; }
+.empty h4 { font-size: 15px; font-weight: 600; color: var(--gray-900); margin-top: 14px; }
+.empty p { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+
+.skel { border-radius: var(--radius); background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1 class="sheet-title">Virtual Ballot — Component Library</h1>
+  <p class="sheet-sub">Phase 0 · every reusable component in every state · tokens only, no hardcoded values</p>
+
+  <!-- BUTTONS ════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Buttons</div>
+    <div class="row">
+      <div class="spec"><span class="cap">Primary / default</span><button class="btn btn-primary">Start voting →</button></div>
+      <div class="spec"><span class="cap">Primary / hover</span><button class="btn btn-primary is-hover">Start voting →</button></div>
+      <div class="spec"><span class="cap">Primary / loading</span><button class="btn btn-primary"><span class="spinner"></span>Submitting…</button></div>
+      <div class="spec"><span class="cap">Primary / disabled</span><button class="btn btn-primary is-disabled" disabled>Start voting →</button></div>
+    </div>
+    <div class="row">
+      <div class="spec"><span class="cap">Secondary / default</span><button class="btn btn-secondary">Download template</button></div>
+      <div class="spec"><span class="cap">Secondary / hover</span><button class="btn btn-secondary is-hover">Download template</button></div>
+      <div class="spec"><span class="cap">Secondary / disabled</span><button class="btn btn-secondary is-disabled" disabled>Download template</button></div>
+      <div class="spec"><span class="cap">Ghost</span><button class="btn btn-ghost">Compare →</button></div>
+      <div class="spec"><span class="cap">Ghost / hover</span><button class="btn btn-ghost is-hover">Compare →</button></div>
+      <div class="spec"><span class="cap">Danger</span><button class="btn btn-danger">End election</button></div>
+      <div class="spec"><span class="cap">Icon (44px)</span><button class="btn btn-icon">⧉</button></div>
+    </div>
+  </section>
+
+  <!-- FORMS ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Form elements</div>
+    <div class="row">
+      <div class="field"><label>Matric number</label><input class="input" placeholder="U/25/0412" /></div>
+      <div class="field"><label>Matric number</label><input class="input is-focus" value="U/25/0412" /></div>
+      <div class="field"><label>Matric number</label><input class="input is-error" value="U/99/0000" /><span class="err-msg">Matric number not found on the roster.</span></div>
+      <div class="field"><label>Matric number</label><input class="input is-disabled" value="U/25/0412" disabled /></div>
+    </div>
+    <div class="row">
+      <div class="field" style="width:340px"><label>Manifesto</label><textarea class="input" placeholder="What will you do if elected?"></textarea></div>
+      <div class="spec"><span class="cap">Upload zone / default</span>
+        <div class="dropzone"><div class="dz-icon">⬆️</div><p><span>Click to upload</span> or drag the signed template here</p></div></div>
+      <div class="spec"><span class="cap">Upload / drag-over</span>
+        <div class="dropzone is-over"><div class="dz-icon">📄</div><p><span>Drop to upload</span></p></div></div>
+      <div class="spec"><span class="cap">Upload / success</span>
+        <div class="dropzone is-done"><div class="dz-icon">✅</div><p>roster-template-nuesa.csv verified</p></div></div>
+    </div>
+    <div class="row">
+      <div class="spec"><span class="cap">OTP / filling</span>
+        <div class="otp"><input value="4" readonly /><input value="8" readonly /><input class="is-focus" readonly /><input readonly /></div></div>
+      <div class="spec"><span class="cap">OTP / error (shakes)</span>
+        <div class="otp is-error"><input value="1" readonly /><input value="2" readonly /><input value="3" readonly /><input value="4" readonly /></div></div>
+      <div class="spec"><span class="cap">OTP / success</span>
+        <div class="otp is-success"><input value="4" readonly /><input value="8" readonly /><input value="2" readonly /><input value="9" readonly /></div></div>
+    </div>
+  </section>
+
+  <!-- CARDS ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Cards</div>
+    <div class="row">
+      <div class="spec"><span class="cap">Candidate / unselected</span>
+        <div class="candidate">
+          <div class="cand-head"><div class="avatar">SA</div><div><div class="cand-name">Sarah Adebayo</div><div class="cand-pos">President</div></div></div>
+          <div class="cand-divider"></div>
+          <p class="cand-manifesto">I will digitise the faculty library and secure 24-hour study spaces for every department…</p>
+          <div class="cand-foot"><button class="btn btn-ghost" style="min-height:44px;padding:6px 12px;font-size:13px">Compare →</button></div>
+        </div></div>
+      <div class="spec"><span class="cap">Candidate / hover</span>
+        <div class="candidate is-hover">
+          <div class="cand-head"><div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">MO</div><div><div class="cand-name">Michael Okon</div><div class="cand-pos">President</div></div></div>
+          <div class="cand-divider"></div>
+          <p class="cand-manifesto">Transparent budgeting, monthly town halls, and a student welfare emergency fund…</p>
+          <div class="cand-foot"><button class="btn btn-ghost" style="min-height:44px;padding:6px 12px;font-size:13px">Compare →</button></div>
+        </div></div>
+      <div class="spec"><span class="cap">Candidate / selected</span>
+        <div class="candidate is-selected">
+          <div class="checkmark">✓</div>
+          <div class="cand-head"><div class="avatar">SA</div><div><div class="cand-name">Sarah Adebayo</div><div class="cand-pos">President</div></div></div>
+          <div class="cand-divider"></div>
+          <p class="cand-manifesto">I will digitise the faculty library and secure 24-hour study spaces for every department…</p>
+          <div class="cand-foot"><button class="btn btn-ghost" style="min-height:44px;padding:6px 12px;font-size:13px">Change selection</button></div>
+        </div></div>
+    </div>
+    <div class="row">
+      <div class="spec"><span class="cap">Stat card</span>
+        <div class="card stat"><div class="num">1,248</div><div class="lbl">Registered voters</div></div></div>
+      <div class="spec"><span class="cap">Stat card / hero</span>
+        <div class="card stat"><div class="num hero">64.2%</div><div class="lbl">Turnout</div></div></div>
+      <div class="spec"><span class="cap">Winner card</span>
+        <div class="winner">
+          <span class="elected">Elected</span>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
+            <div style="position:relative"><div class="avatar lg">SA</div><div class="trophy">🏆</div></div>
+            <div><div class="cand-name" style="font-size:18px">Sarah Adebayo</div><div class="cand-pos">President</div></div>
+          </div>
+          <div class="pct" style="margin-top:12px">58.4%</div>
+          <div style="font-size:13px;color:var(--gray-400)">402 of 688 votes</div>
+          <div class="progress" style="width:100%;margin-top:12px"><div class="track"><div class="fill" style="width:58.4%"></div></div></div>
+        </div></div>
+    </div>
+    <div class="row">
+      <div class="spec"><span class="cap">Alerts</span>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="alert alert-info"><span>ℹ️</span><div><span class="t">Heads up.</span> Only official signed templates can be uploaded.</div></div>
+          <div class="alert alert-success"><span>✅</span><div><span class="t">Roster uploaded.</span> 412 voters added, 3 duplicates skipped.</div></div>
+          <div class="alert alert-warning"><span>⚠️</span><div><span class="t">Roster not approved.</span> 2 of 4 reviewers have approved.</div></div>
+          <div class="alert alert-danger"><span>⛔</span><div><span class="t">Upload rejected.</span> Template signature is invalid.</div></div>
+        </div></div>
+    </div>
+  </section>
+
+  <!-- BADGES ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Badges & pills</div>
+    <div class="row" style="align-items:center">
+      <span class="pill pill-live"><span class="dot pulse"></span>Live</span>
+      <span class="pill pill-pending">Pending</span>
+      <span class="pill pill-ended">Ended</span>
+      <span class="pill pill-approved">Approved</span>
+      <span class="pill pill-danger">Flagged</span>
+      <span class="pill pill-approved">Voter</span>
+      <span class="pill pill-ended">Admin</span>
+      <span class="pill" style="background:#F0FDFA;color:#0D9488">Observer</span>
+      <span class="tag">registry</span>
+      <span class="tag">2 min ago</span>
+    </div>
+  </section>
+
+  <!-- NAVIGATION ════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Navigation</div>
+    <div class="row">
+      <div class="spec"><span class="cap">Sidebar items (on #1E293B)</span>
+        <div class="dark-strip" style="display:flex;flex-direction:column;gap:4px">
+          <div class="navitem">▦&nbsp; Overview</div>
+          <div class="navitem is-hover">🗳&nbsp; Election</div>
+          <div class="navitem is-active">👥&nbsp; Voters</div>
+        </div></div>
+      <div class="spec"><span class="cap">Tabs</span>
+        <div class="tabs"><div class="tab is-active">Live Tally</div><div class="tab">Vote Ledger</div><div class="tab">Audit Stream</div></div></div>
+      <div class="spec"><span class="cap">Step progress</span>
+        <div class="steps">
+          <div class="step done"><div class="bubble">✓</div><div class="lbl">Identity</div><div class="line"></div></div>
+          <div class="step current"><div class="bubble">2</div><div class="lbl">Verify</div><div class="line"></div></div>
+          <div class="step"><div class="bubble">3</div><div class="lbl">Vote</div><div class="line"></div></div>
+          <div class="step"><div class="bubble">4</div><div class="lbl">Done</div></div>
+        </div></div>
+    </div>
+  </section>
+
+  <!-- DATA ══════════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Data display</div>
+    <div class="row">
+      <div class="spec"><span class="cap">Progress bar</span>
+        <div class="progress"><div class="p-head"><b>3 of 4 reviewers approved</b><span style="color:var(--gray-400)">75%</span></div>
+        <div class="track"><div class="fill" style="width:75%"></div></div></div></div>
+      <div class="spec"><span class="cap">Results bar row</span>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="hbar"><div class="who"><div class="avatar sm">SA</div>S. Adebayo ⭐</div><div class="track"><div class="fill" style="width:58%"></div></div><div class="val">58%</div></div>
+          <div class="hbar"><div class="who"><div class="avatar sm" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">MO</div>M. Okon</div><div class="track"><div class="fill" style="width:42%;background:var(--gray-300)"></div></div><div class="val">42%</div></div>
+        </div></div>
+    </div>
+    <div class="row">
+      <div class="spec"><span class="cap">Table rows</span>
+        <div style="border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden">
+          <div class="trow head"><span>Name</span><span>Matric</span><span>Status</span><span></span></div>
+          <div class="trow"><span>Amina Yusuf</span><span class="mono" style="font-size:12px">U/25/001</span><span><span class="pill pill-live">Voted</span></span><span style="color:var(--gray-400)">14:02</span></div>
+          <div class="trow is-hover"><span>Emeka Obi</span><span class="mono" style="font-size:12px">U/25/002</span><span><span class="pill pill-pending">Pending</span></span><span style="color:var(--gray-400)">—</span></div>
+        </div></div>
+      <div class="spec"><span class="cap">Activity feed</span>
+        <div class="card" style="width:380px">
+          <div class="feed-item"><div class="fdot" style="background:var(--success)"></div><div><p>Ballot cast — receipt VB-9F2C41</p><time>Just now</time></div></div>
+          <div class="feed-item"><div class="fdot" style="background:var(--blue-500)"></div><div><p>Admin locked the voter registry</p><time>4 min ago</time></div></div>
+          <div class="feed-item"><div class="fdot" style="background:var(--warning)"></div><div><p>Rejected CSV upload — unsigned file</p><time>11 min ago</time></div></div>
+        </div></div>
+    </div>
+  </section>
+
+  <!-- MODALS ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Modals & overlays</div>
+    <div class="row">
+      <div class="spec"><span class="cap">Confirm dialog</span>
+        <div class="modal-demo"><div class="modal">
+          <div class="m-body"><div class="m-title">End election early?</div>
+            <div class="m-text">Voting will close immediately for all 1,248 voters. This cannot be undone.</div></div>
+          <div class="m-foot"><button class="btn btn-secondary">Cancel</button><button class="btn btn-danger">End election</button></div>
+        </div></div></div>
+      <div class="spec"><span class="cap">Ballot paper</span>
+        <div class="ballot-paper">
+          <div class="bp-secure"><span><b>VB</b> · VIRTUAL BALLOT</span><span>OFFICIAL · CONFIDENTIAL</span></div>
+          <div class="bp-water"><span>BALLOT</span></div>
+          <div class="bp-body">
+            <div class="bp-title">NUESA Executive Election</div>
+            <div class="bp-meta">SER 04-8812 · 2026-07-11 14:22 UTC</div>
+            <div class="bp-rule"></div>
+            <div class="bp-sel"><div class="bp-check">✓</div><div><div class="bp-pos">President</div><div class="bp-name">Sarah Adebayo</div></div></div>
+            <div class="bp-sel"><div class="bp-check">✓</div><div><div class="bp-pos">Secretary</div><div class="bp-name">Ifeoma Nwachukwu</div></div></div>
+            <div class="bp-rule"></div>
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+              <button class="btn btn-secondary">← Review again</button><button class="btn btn-primary">Cast my vote →</button>
+            </div>
+          </div>
+        </div></div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK ══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-label">Feedback</div>
+    <div class="row">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="toast t-success">✅&nbsp; Your vote has been cast.</div>
+        <div class="toast t-warning">⚠️&nbsp; 2 reviewers still pending approval.</div>
+        <div class="toast t-error">⛔&nbsp; Template signature is invalid.</div>
+      </div>
+      <div class="spec"><span class="cap">Empty state</span>
+        <div class="empty"><div class="e-ico">👥</div><h4>No voters yet</h4><p>Download the official template, fill it in, and upload it to build your roster.</p>
+          <button class="btn btn-primary" style="margin-top:16px">Download template</button></div></div>
+      <div class="spec"><span class="cap">Skeletons</span>
+        <div style="display:flex;flex-direction:column;gap:12px;width:280px">
+          <div class="skel" style="height:44px"></div>
+          <div class="skel" style="height:12px;width:70%"></div>
+          <div class="skel" style="height:12px;width:50%"></div>
+        </div></div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
