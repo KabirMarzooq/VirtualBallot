@@ -40,141 +40,148 @@ export default function LoginPage() {
 
   if (appLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <VBLoader size="lg" label="Loading election..." />
       </div>
     );
   }
 
+  const ended = electionConfig.status === "ENDED";
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl p-8 sm:p-10">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
+      <div className="w-full max-w-[420px]">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-8 sm:px-7">
           {/* Branding */}
-          <div className="text-center mb-10">
+          <div className="text-center">
             {branding.logoUrl ? (
               <img
                 src={branding.logoUrl}
                 alt={branding.institutionName || "Logo"}
-                className="w-24 h-24 rounded-3xl object-cover mx-auto mb-6 shadow-2xl border-4 border-slate-800"
+                className="w-12 h-12 rounded-xl object-cover mx-auto shadow-sm"
                 onError={(e) => { e.target.style.display = "none"; }}
               />
             ) : (
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                <span className="text-4xl font-black text-white">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto">
+                <span className="text-lg font-bold text-white tracking-tight">
                   {branding.institutionName ? branding.institutionName.slice(0, 2).toUpperCase() : "VB"}
                 </span>
               </div>
             )}
             {branding.institutionName && (
-              <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-1">
+              <p className="text-[11px] leading-4 font-semibold text-blue-600 uppercase tracking-[0.1em] mt-4">
                 {branding.institutionName}
               </p>
             )}
-            <h1 className="text-3xl font-black text-white">
+            <h1 className="text-[28px] leading-9 font-semibold text-slate-900 mt-1">
               {branding.electionName || "Virtual Ballot"}
             </h1>
-            <p className="text-slate-500 text-lg mt-1">Your voice matters.</p>
+            <p className="text-[13px] leading-5 text-slate-400 mt-1">Your vote matters.</p>
           </div>
 
-          <CountdownWidget electionConfig={electionConfig} />
+          <div className="mt-6">
+            <CountdownWidget electionConfig={electionConfig} />
+          </div>
 
-          {electionConfig.status === "ENDED" && (
-            <div className="mb-6 bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center">
-              <p className="text-sm font-bold text-slate-400">
-                Voting has closed. Results are being tallied.
+          {/* Ended notice */}
+          {ended && (
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-4 text-center">
+              <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
+                Voting has closed
+              </p>
+              <p className="text-base text-slate-400 font-medium mt-1">
+                {electionConfig.isPublished
+                  ? "Official results are out"
+                  : "Results are being tallied"}
               </p>
             </div>
           )}
 
           {/* Results button */}
-          {(electionConfig.status === "ACTIVE" || electionConfig.status === "ENDED") && (
-            <div className="mb-6">
-              <button
-                onClick={() => electionConfig.isPublished && navigate(`/vote/${slug}/results`)}
-                disabled={!electionConfig.isPublished}
-                title={!electionConfig.isPublished ? "Results will appear here once the admin broadcasts them" : "View live election results"}
-                className={`w-full font-bold py-4 rounded-2xl border flex items-center justify-center gap-2 transition-colors ${
-                  electionConfig.isPublished
-                    ? "bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30 cursor-pointer"
-                    : "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed"
-                }`}
-              >
-                <BarChart3 className="w-5 h-5" />
-                {electionConfig.isPublished ? "View Live Results" : "Results not yet broadcast"}
-              </button>
-              <div className="flex items-center gap-4 my-6">
-                <div className="h-px bg-slate-800 flex-1" />
-                <span className="text-xs font-bold text-slate-600 uppercase">Or</span>
-                <div className="h-px bg-slate-800 flex-1" />
-              </div>
-            </div>
+          {(electionConfig.status === "ACTIVE" || ended) && electionConfig.isPublished && (
+            <button
+              onClick={() => navigate(`/vote/${slug}/results`)}
+              title="View official election results"
+              className="w-full mt-6 min-h-[48px] bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <BarChart3 className="w-4 h-4" />
+              {ended ? "View official results" : "View live results"}
+            </button>
           )}
 
-          {/* Login form */}
-          <div className="space-y-5">
-            <div className="bg-slate-800 p-4 rounded-2xl border-2 border-transparent focus-within:border-blue-500 transition-all">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">
-                Matric Number
-              </label>
-              <div className="flex items-center gap-3">
-                <Fingerprint className="text-slate-500 w-5 h-5 shrink-0" />
-                <input
-                  value={loginInput}
-                  onChange={(e) => setLoginInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && loginInput && handleLogin()}
-                  className="w-full bg-transparent text-lg font-bold text-white outline-none placeholder:text-slate-600"
-                  placeholder="U/25/..."
-                  autoFocus
-                />
+          {/* Login form — hidden once voting has ended */}
+          {!ended && (
+            <>
+              <div className="mt-6">
+                <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+                  Matric number
+                </label>
+                <div className="relative">
+                  <Fingerprint className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    value={loginInput}
+                    onChange={(e) => setLoginInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && loginInput && handleLogin()}
+                    className="w-full min-h-[48px] text-sm text-slate-800 bg-white border border-slate-300 rounded-lg pl-10 pr-4 py-3 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
+                    placeholder="U/25/0412"
+                    autoFocus
+                  />
+                </div>
               </div>
-            </div>
-            <button
-              onClick={handleLogin}
-              disabled={!loginInput || loading}
-              title="Verify matric number and proceed to vote"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 group disabled:opacity-60 disabled:scale-100 cursor-pointer"
-            >
-              {loading ? (
-                <VBLoader size="sm" />
-              ) : (
-                <>
-                  {electionConfig.status === "NOT_STARTED" ? "Check Status" : "Start Voting"}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </div>
 
-          <div className="mt-8 text-center">
-            {electionConfig.registryLocked ? (
               <button
-                disabled
-                className="px-6 py-2 rounded-full bg-slate-800 text-slate-500 font-bold text-sm flex items-center gap-2 mx-auto cursor-not-allowed"
+                onClick={handleLogin}
+                disabled={!loginInput || loading}
+                title="Verify matric number and proceed to vote"
+                className="w-full mt-4 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer group"
               >
-                <Lock className="w-4 h-4" /> Registration Closed
+                {loading ? (
+                  <VBLoader size="sm" />
+                ) : (
+                  <>
+                    {electionConfig.status === "NOT_STARTED" ? "Check status" : "Start voting"}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
               </button>
-            ) : (
-              <button
-                onClick={() => navigate(`/vote/${slug}/register`)}
-                title="Activate your voter account"
-                className="px-6 py-2 rounded-full bg-blue-600/20 text-blue-400 font-bold text-sm hover:bg-blue-600/30 transition-colors cursor-pointer border border-blue-600/20"
-              >
-                Activate Account
-              </button>
-            )}
-          </div>
+
+              {/* Divider + activation */}
+              <div className="flex items-center gap-3 mt-7">
+                <span className="flex-1 h-px bg-slate-200" />
+                <span className="text-[11px] font-medium text-slate-400">New to Virtual Ballot?</span>
+                <span className="flex-1 h-px bg-slate-200" />
+              </div>
+
+              {electionConfig.registryLocked ? (
+                <div
+                  title="The registry is locked — registration has closed"
+                  className="w-full mt-2 min-h-[44px] text-slate-400 text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
+                >
+                  <Lock className="w-3.5 h-3.5" /> Registration closed
+                </div>
+              ) : (
+                <button
+                  onClick={() => navigate(`/vote/${slug}/register`)}
+                  title="Activate your voter account"
+                  className="w-full mt-2 min-h-[44px] text-blue-600 hover:bg-blue-50 text-sm font-semibold rounded-lg flex items-center justify-center transition-all cursor-pointer"
+                >
+                  Activate your account
+                </button>
+              )}
+            </>
+          )}
         </div>
 
-        <p className="text-center mt-3">
+        {/* Foot link */}
+        <div className="mt-4 flex justify-center">
           <button
             onClick={() => navigate("/")}
             title="Back to Virtual Ballot home"
-            className="text-slate-600 hover:text-slate-400 text-xs font-bold flex items-center gap-1.5 mx-auto transition-colors cursor-pointer"
+            className="min-h-[44px] px-3 text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <ShieldAlert className="w-3 h-3" /> Virtual Ballot Home
           </button>
-        </p>
+        </div>
       </div>
     </div>
   );

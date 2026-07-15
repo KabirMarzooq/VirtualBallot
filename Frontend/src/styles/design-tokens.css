@@ -1,0 +1,58 @@
+/* ════════════════════════════════════════════════════════════════════════
+   VIRTUAL BALLOT — DESIGN TOKENS
+   Single source of truth for the blue/white UI system.
+   The gray scale intentionally matches Tailwind's `slate`, and blue/success/
+   warning/danger match Tailwind's blue-600/green-600/amber-600/red-600, so
+   Tailwind utilities map 1:1 onto these tokens. Use Tailwind classes where
+   they map cleanly; use these variables for anything Tailwind can't express.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --blue-50:  #EFF6FF;
+  --blue-100: #DBEAFE;
+  --blue-200: #BFDBFE;
+  --blue-500: #3B82F6;
+  --blue-600: #2563EB;   /* primary action */
+  --blue-700: #1D4ED8;   /* primary action hover */
+
+  /* Surfaces (Tailwind slate) */
+  --white:    #FFFFFF;
+  --gray-50:  #F8FAFC;   /* page background */
+  --gray-100: #F1F5F9;   /* secondary surface */
+  --gray-200: #E2E8F0;   /* borders */
+  --gray-300: #CBD5E1;   /* strong border */
+  --gray-400: #94A3B8;   /* muted text (meta only — not body copy) */
+  --gray-600: #475569;   /* secondary text */
+  --gray-800: #1E293B;   /* primary text */
+  --gray-900: #0F172A;   /* heading text */
+
+  /* Semantic */
+  --success-light: #F0FDF4;
+  --success:       #16A34A;
+  --warning-light: #FFFBEB;
+  --warning:       #D97706;
+  --danger-light:  #FEF2F2;
+  --danger:        #DC2626;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Radii */
+  --radius-sm:  6px;
+  --radius:     8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 20px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow:     0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+  /* Transitions */
+  --transition-fast: all 0.12s ease;
+  --transition:      all 0.18s ease;
+  --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

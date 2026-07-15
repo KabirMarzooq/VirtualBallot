@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 1: Voter Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFFFFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --warning-light:#FFFBEB; --warning:#D97706; --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:6px; --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --transition-fast:all .12s ease; --transition:all .18s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1480px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+/* ── The screen itself ─────────────────────────────────────────────── */
+.screen{width:420px;max-width:100%}
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:32px 28px}
+
+.logo{width:48px;height:48px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto}
+.logo span{color:#fff;font-weight:700;font-size:18px;letter-spacing:-.02em}
+.inst{font-size:11px;line-height:16px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-600);text-align:center;margin-top:16px}
+.election{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900);text-align:center;margin-top:4px}
+.tagline{font-size:13px;line-height:20px;color:var(--gray-400);text-align:center;margin-top:4px}
+
+/* Countdown widget */
+.count{margin-top:24px;border-radius:var(--radius-lg);padding:16px;text-align:center}
+.count .c-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.count .c-time{font-family:var(--font-mono);font-size:28px;line-height:36px;font-weight:600;margin-top:4px}
+.count .c-time .colon{animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:.25}}
+.count.waiting{background:var(--warning-light);border:1px solid #FDE68A}
+.count.waiting .c-label{color:var(--warning)}
+.count.waiting .c-time{color:var(--warning)}
+.count.active{background:var(--white);border:1.5px solid var(--blue-200)}
+.count.active .c-label{color:var(--blue-600)}
+.count.active .c-time{color:var(--gray-900)}
+.count.urgent{background:var(--danger-light);border:1.5px solid #FECACA}
+.count.urgent .c-label{color:var(--danger)}
+.count.urgent .c-time{color:var(--danger)}
+.count.ended{background:var(--gray-100);border:1px solid var(--gray-200)}
+.count.ended .c-label{color:var(--gray-600)}
+.count.ended .c-time{color:var(--gray-400);font-size:16px;line-height:24px;font-family:var(--font-sans);font-weight:500}
+
+/* Form */
+.field{margin-top:24px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--gray-600);margin-bottom:8px}
+.inwrap{position:relative}
+.inwrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray-400)}
+.input{width:100%;font-family:var(--font-sans);font-size:14px;min-height:48px;padding:12px 16px 12px 42px;border:1px solid var(--gray-300);border-radius:var(--radius);background:var(--white);color:var(--gray-800);outline:none;transition:var(--transition-fast)}
+.input::placeholder{color:var(--gray-400)}
+.input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+
+.btn{width:100%;margin-top:16px;font-family:var(--font-sans);font-size:14px;font-weight:600;min-height:48px;padding:12px 20px;border-radius:var(--radius);border:1px solid transparent;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:hover .arr{transform:translateX(3px)}
+.arr{transition:var(--transition-fast)}
+.btn-results{background:var(--blue-50);color:var(--blue-700);border-color:var(--blue-200)}
+.btn-results:hover{background:var(--blue-100)}
+.btn:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;box-shadow:none}
+
+/* Divider + links */
+.divider{display:flex;align-items:center;gap:12px;margin-top:28px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--gray-200)}
+.divider span{font-size:11px;font-weight:500;color:var(--gray-400)}
+.activate{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:8px;font-size:14px;font-weight:600;color:var(--blue-600);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast)}
+.activate:hover{background:var(--blue-50)}
+.foot{margin-top:24px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.foot a{font-size:11px;line-height:16px;color:var(--gray-400);text-decoration:none;font-weight:500;min-height:44px;display:flex;align-items:center;padding:0 8px;border-radius:var(--radius-sm);transition:var(--transition-fast)}
+.foot a:hover{color:var(--gray-600);background:var(--gray-100)}
+
+/* Closed-notice inside ENDED variant */
+.closed-note{margin-top:24px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;text-align:center;font-size:13px;font-weight:500;color:var(--gray-600)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 1 — Voter Login</h1>
+  <p class="sub">5 states · centred card on gray-50 · max-width 420px · works at 375px (card is fluid below 420px)</p>
+
+  <div class="grid">
+
+    <!-- STATE 1: NOT_STARTED -->
+    <div class="variant"><span class="cap">1 · Not started</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="inst">NUESA · University of Lagos</div>
+        <div class="election">Executive Election 2026</div>
+        <div class="tagline">Your vote matters.</div>
+        <div class="count waiting">
+          <div class="c-label">Waiting for polls to open</div>
+          <div class="c-time">--<span class="colon">:</span>--<span class="colon">:</span>--</div>
+        </div>
+        <div class="field"><label>Matric number</label>
+          <div class="inwrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 11v4M8 11a4 4 0 0 1 8 0v2a8 8 0 0 1-1 4M5 15a10 10 0 0 0 .6 3M12 3a8 8 0 0 1 8 8v1M4 9a8 8 0 0 1 4-6"/></svg>
+            <input class="input" placeholder="U/25/0412" />
+          </div></div>
+        <button class="btn btn-primary">Check status</button>
+        <div class="divider"><span>New to Virtual Ballot?</span></div>
+        <div class="activate">Activate your account</div>
+        <div class="foot"><a href="#">Electoral Commission Portal →</a><a href="#">Observer access →</a></div>
+      </div></div>
+    </div>
+
+    <!-- STATE 2: ACTIVE, plenty of time -->
+    <div class="variant"><span class="cap">2 · Active — plenty of time</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="inst">NUESA · University of Lagos</div>
+        <div class="election">Executive Election 2026</div>
+        <div class="tagline">Your vote matters.</div>
+        <div class="count active">
+          <div class="c-label">Voting closes in</div>
+          <div class="c-time">02<span class="colon">:</span>41<span class="colon">:</span>08</div>
+        </div>
+        <div class="field"><label>Matric number</label>
+          <div class="inwrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 11v4M8 11a4 4 0 0 1 8 0v2a8 8 0 0 1-1 4M5 15a10 10 0 0 0 .6 3M12 3a8 8 0 0 1 8 8v1M4 9a8 8 0 0 1 4-6"/></svg>
+            <input class="input" placeholder="U/25/0412" />
+          </div></div>
+        <button class="btn btn-primary">Start voting <svg class="arr" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <div class="divider"><span>New to Virtual Ballot?</span></div>
+        <div class="activate">Activate your account</div>
+        <div class="foot"><a href="#">Electoral Commission Portal →</a><a href="#">Observer access →</a></div>
+      </div></div>
+    </div>
+
+    <!-- STATE 3: ACTIVE, < 5 min -->
+    <div class="variant"><span class="cap">3 · Active — under 5 minutes</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="inst">NUESA · University of Lagos</div>
+        <div class="election">Executive Election 2026</div>
+        <div class="tagline">Your vote matters.</div>
+        <div class="count urgent">
+          <div class="c-label">Voting closes in</div>
+          <div class="c-time">00<span class="colon">:</span>04<span class="colon">:</span>17</div>
+        </div>
+        <div class="field"><label>Matric number</label>
+          <div class="inwrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 11v4M8 11a4 4 0 0 1 8 0v2a8 8 0 0 1-1 4M5 15a10 10 0 0 0 .6 3M12 3a8 8 0 0 1 8 8v1M4 9a8 8 0 0 1 4-6"/></svg>
+            <input class="input" placeholder="U/25/0412" />
+          </div></div>
+        <button class="btn btn-primary">Start voting <svg class="arr" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <div class="divider"><span>New to Virtual Ballot?</span></div>
+        <div class="activate">Activate your account</div>
+        <div class="foot"><a href="#">Electoral Commission Portal →</a><a href="#">Observer access →</a></div>
+      </div></div>
+    </div>
+
+    <!-- STATE 4: ENDED -->
+    <div class="variant"><span class="cap">4 · Ended — tallying</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="inst">NUESA · University of Lagos</div>
+        <div class="election">Executive Election 2026</div>
+        <div class="tagline">Your vote matters.</div>
+        <div class="count ended">
+          <div class="c-label">Voting has closed</div>
+          <div class="c-time">Results are being tallied</div>
+        </div>
+        <div class="closed-note">Thank you for participating. Results will appear here once the commission publishes them.</div>
+        <div class="foot" style="margin-top:28px"><a href="#">Electoral Commission Portal →</a><a href="#">Observer access →</a></div>
+      </div></div>
+    </div>
+
+    <!-- STATE 5: ENDED + results published -->
+    <div class="variant"><span class="cap">5 · Results published</span>
+      <div class="screen"><div class="card">
+        <div class="logo"><span>VB</span></div>
+        <div class="inst">NUESA · University of Lagos</div>
+        <div class="election">Executive Election 2026</div>
+        <div class="tagline">Your vote matters.</div>
+        <div class="count ended">
+          <div class="c-label">Voting has closed</div>
+          <div class="c-time">Official results are out</div>
+        </div>
+        <button class="btn btn-results" style="margin-top:24px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M20 20H4"/></svg>
+          View official results
+        </button>
+        <div class="foot" style="margin-top:28px"><a href="#">Electoral Commission Portal →</a><a href="#">Observer access →</a></div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -20,7 +20,9 @@ export default function CountdownWidget({ electionConfig }) {
 
   if (!electionConfig.showCountdown) return null;
 
-  const { status, endTime } = electionConfig;
+  // The app's canonical field is endsAt; endTime kept as a legacy fallback.
+  const { status } = electionConfig;
+  const endTime = electionConfig.endsAt || electionConfig.endTime;
 
   // NOT_STARTED: placeholder dashes
   if (status === "NOT_STARTED") {
