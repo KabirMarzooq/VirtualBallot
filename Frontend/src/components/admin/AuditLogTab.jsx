@@ -59,55 +59,52 @@ export default function AuditLogTab() {
     );
 
   return (
-    <div className="space-y-5">
-      {/* Header row */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-        <div>
-          <p className="text-white font-black text-lg">Audit Log</p>
-          <p className="text-xs text-slate-400">
-            {activityLog.length} events this session
-          </p>
+    <div className="space-y-4">
+      {/* Live indicator + actions */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-900">
+            Live
+          </span>
+          <span className="text-[11px] text-slate-600">
+            · events appear automatically · {activityLog.length} this session
+          </span>
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setAutoScroll((v) => !v)}
+            title={
+              autoScroll
+                ? "Stop following new events"
+                : "Follow new events as they arrive"
+            }
+            className={`inline-flex items-center gap-2 text-xs font-semibold min-h-[36px] px-3 rounded-lg border transition-all cursor-pointer ${
+              autoScroll
+                ? "bg-blue-50 border-blue-200 text-blue-700"
+                : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
+            }`}
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            {autoScroll ? "Auto-scroll on" : "Auto-scroll off"}
+          </button>
+          <button
             onClick={exportCSV}
             disabled={!activityLog.length}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-colors"
+            title="Download the full log as CSV"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold min-h-[36px] px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white shadow-sm transition-all cursor-pointer"
           >
             <FileDown className="w-3.5 h-3.5" /> Export CSV
           </button>
           <button
             onClick={clear}
             disabled={!activityLog.length}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-red-900/60 hover:text-red-300 disabled:opacity-40 text-slate-400 text-xs font-bold rounded-xl border border-slate-600 transition-colors"
+            title="Delete every log entry"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold min-h-[36px] px-3.5 rounded-lg bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-none disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             <Eraser className="w-3.5 h-3.5" /> Clear
           </button>
         </div>
-      </div>
-
-      {/* Live indicator + auto-scroll toggle */}
-      <div className="flex items-center justify-between bg-slate-800 rounded-2xl px-5 py-3 border border-slate-700">
-        <div className="flex items-center gap-3">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-bold text-green-400 uppercase tracking-widest">
-            Live
-          </span>
-          <span className="text-xs text-slate-500">
-            Events appear automatically
-          </span>
-        </div>
-        <button
-          onClick={() => setAutoScroll((v) => !v)}
-          className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${
-            autoScroll
-              ? "bg-green-900/40 text-green-400 border-green-700/40"
-              : "bg-slate-700 text-slate-400 border-slate-600"
-          }`}
-        >
-          <ChevronDown className="w-3.5 h-3.5" />
-          {autoScroll ? "Auto-scroll on" : "Auto-scroll off"}
-        </button>
       </div>
 
       {/* Type filter pills */}
@@ -115,23 +112,29 @@ export default function AuditLogTab() {
         {allTypes.map((t) => {
           const meta = t === "all" ? null : getMeta(t);
           const count = t === "all" ? activityLog.length : counts[t] || 0;
+          const on = filterType === t;
           return (
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                filterType === t
-                  ? "bg-blue-600 text-white border-blue-500"
-                  : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500"
+              title={`Show ${t === "all" ? "all events" : `${meta.label} events`}`}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold min-h-[32px] px-3 rounded-full border transition-all cursor-pointer ${
+                on
+                  ? "bg-blue-600 border-blue-600 text-white"
+                  : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
               }`}
             >
               {meta && (
-                <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    on ? "bg-white" : meta.dot
+                  }`}
+                />
               )}
               {t === "all" ? "All" : meta.label}
               <span
                 className={`font-mono text-[10px] ${
-                  filterType === t ? "text-blue-200" : "text-slate-600"
+                  on ? "text-blue-100" : "text-slate-400"
                 }`}
               >
                 {count}
@@ -143,35 +146,37 @@ export default function AuditLogTab() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search messages…"
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500 transition-colors"
+          placeholder="Search messages or times…"
+          className="w-full min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg pl-10 pr-4 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 px-5 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
           <span className="col-span-1">#</span>
           <span className="col-span-2">Type</span>
           <span className="col-span-6">Event</span>
           <span className="col-span-2">Time</span>
           <span className="col-span-1">Date</span>
         </div>
-        <div className="overflow-y-auto max-h-96 divide-y divide-slate-700/40">
+        <div className="overflow-y-auto max-h-96">
           {filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <ScrollText className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-              <p className="text-slate-500 font-bold text-sm">
+            <div className="py-14 text-center">
+              <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                <ScrollText className="w-6 h-6" />
+              </div>
+              <p className="text-[15px] font-semibold text-slate-900">
                 {activityLog.length === 0 ? "No events yet" : "No matches"}
               </p>
-              <p className="text-slate-600 text-xs mt-1">
+              <p className="text-xs leading-[18px] text-slate-600 mt-1">
                 {activityLog.length === 0
-                  ? "Actions will be recorded here."
-                  : "Try clearing filters."}
+                  ? "Every admin action, vote, and system event is recorded here with a timestamp."
+                  : "Try clearing the type filter or search."}
               </p>
             </div>
           ) : (
@@ -180,28 +185,26 @@ export default function AuditLogTab() {
               return (
                 <div
                   key={e.id}
-                  className="grid grid-cols-12 gap-2 px-5 py-3 items-start hover:bg-slate-700/30"
+                  className="grid grid-cols-12 gap-2 px-5 py-2.5 items-start border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
                 >
-                  <span className="col-span-1 text-xs font-mono text-slate-600 pt-0.5">
+                  <span className="col-span-1 font-mono text-[11px] text-slate-400 pt-0.5">
                     {e.id}
                   </span>
                   <span className="col-span-2">
                     <span
-                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${meta.badge}`}
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${meta.lightBadge}`}
                     >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${meta.dot}`}
-                      />
+                      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
                       {meta.label}
                     </span>
                   </span>
-                  <span className="col-span-6 text-sm text-slate-300 leading-snug">
+                  <span className="col-span-6 text-[13px] leading-5 text-slate-800">
                     {e.message}
                   </span>
-                  <span className="col-span-2 text-xs font-mono text-slate-500 pt-0.5">
+                  <span className="col-span-2 font-mono text-[11px] text-slate-600 pt-0.5">
                     {e.timestamp}
                   </span>
-                  <span className="col-span-1 text-[10px] text-slate-600 pt-0.5">
+                  <span className="col-span-1 text-[11px] text-slate-400 pt-0.5">
                     {e.date}
                   </span>
                 </div>
@@ -210,7 +213,7 @@ export default function AuditLogTab() {
           )}
           <div ref={bottomRef} />
         </div>
-        <div className="px-5 py-2.5 border-t border-slate-700 flex justify-between items-center text-xs text-slate-600">
+        <div className="px-5 py-2 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-400">
           <span>
             Showing {filtered.length} of {activityLog.length}
           </span>
@@ -220,7 +223,8 @@ export default function AuditLogTab() {
                 setFilterType("all");
                 setSearch("");
               }}
-              className="text-blue-400 hover:text-blue-300 font-bold transition-colors"
+              title="Reset the type filter and search"
+              className="font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
             >
               Clear filters
             </button>

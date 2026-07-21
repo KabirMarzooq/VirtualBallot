@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 14: Audit Log Tab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.pane{width:900px;max-width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:24px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:600;min-height:36px;padding:0 14px;border-radius:var(--radius);border:none;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-outline{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-300)}
+.btn-outline:hover{border-color:var(--gray-400);color:var(--gray-800)}
+.btn-outline.danger:hover{color:var(--danger);border-color:#FECACA;background:var(--danger-light)}
+.btn:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed;border:none}
+
+/* Top row */
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.livebit{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:8px 16px}
+.livebit .dot{width:8px;height:8px;border-radius:50%;background:#22C55E;animation:blink 1.4s ease infinite}
+@keyframes blink{50%{opacity:.35}}
+.livebit .lt{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-900)}
+.livebit .ls{font-size:11px;color:var(--gray-600)}
+.autoscroll{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;min-height:36px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--gray-300);background:var(--white);color:var(--gray-600);cursor:pointer;transition:var(--transition-fast)}
+.autoscroll.on{border-color:var(--blue-200);background:var(--blue-50);color:var(--blue-700)}
+
+/* Filter pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--gray-300);background:var(--white);color:var(--gray-600);cursor:pointer;transition:var(--transition-fast)}
+.pill:hover{border-color:var(--gray-400)}
+.pill.on{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+.pill .pd{width:6px;height:6px;border-radius:50%}
+.pill .pc{font-family:var(--font-mono);font-size:10px;color:var(--gray-400)}
+.pill.on .pc{color:var(--blue-100)}
+.d-vote{background:#22C55E}.d-admin{background:var(--blue-500)}.d-system{background:#A855F7}.d-warning{background:#F59E0B}.d-registry{background:#14B8A6}.d-candidate{background:#6366F1}.d-error{background:#EF4444}
+
+/* Search */
+.searchwrap{position:relative;margin-bottom:16px}
+.searchwrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray-400)}
+.searchwrap input{width:100%;min-height:44px;font-family:var(--font-sans);font-size:13px;color:var(--gray-900);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);padding:10px 16px 10px 40px;outline:none;transition:var(--transition-fast)}
+.searchwrap input::placeholder{color:var(--gray-400)}
+.searchwrap input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+
+/* Table */
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.thead{display:grid;grid-template-columns:.7fr 1.6fr 5fr 1.4fr 1fr;gap:8px;padding:8px 20px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);background:var(--gray-50);border-bottom:1px solid var(--gray-100)}
+.trow{display:grid;grid-template-columns:.7fr 1.6fr 5fr 1.4fr 1fr;gap:8px;align-items:start;padding:10px 20px;border-bottom:1px solid var(--gray-100);transition:var(--transition-fast)}
+.trow:hover{background:var(--gray-50)}
+.trow .idx{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);padding-top:3px}
+.trow .msg{font-size:13px;line-height:20px;color:var(--gray-800)}
+.trow .time{font-family:var(--font-mono);font-size:11px;color:var(--gray-600);padding-top:3px}
+.trow .date{font-size:11px;color:var(--gray-400);padding-top:3px}
+.tbadge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:999px}
+.tbadge .pd{width:6px;height:6px;border-radius:50%}
+.b-vote{background:var(--success-light);color:#15803D}
+.b-admin{background:var(--blue-50);color:var(--blue-700)}
+.b-system{background:#FAF5FF;color:#7E22CE}
+.b-registry{background:#F0FDFA;color:#0F766E}
+.b-warning{background:#FFFBEB;color:#92400E}
+.tfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-top:1px solid var(--gray-100);font-size:11px;color:var(--gray-400)}
+.tfoot a{font-weight:600;color:var(--blue-600);cursor:pointer;text-decoration:none}
+
+/* Empty */
+.empty{padding:56px 24px;text-align:center}
+.empty .eico{width:56px;height:56px;border-radius:50%;background:var(--gray-100);color:var(--gray-400);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.empty h4{font-size:15px;font-weight:600;color:var(--gray-900)}
+.empty p{font-size:12px;line-height:18px;color:var(--gray-600);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 14 — Audit Log Tab</h1>
+  <p class="sub">Content area only — renders inside the Screen 9 shell · in-tab title dropped (the shell topbar already names the tab) · auto-scroll reads as a blue selected state · typed badges move to the light EVENT_META palette · clear stays a quiet danger action behind its confirm</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Populated, filtered -->
+    <div class="variant"><span class="cap">1 · Live log — filtered to Vote events, search active</span>
+      <div class="pane">
+        <div class="toprow">
+          <div class="livebit">
+            <span class="dot"></span>
+            <span class="lt">Live</span>
+            <span class="ls">· events appear automatically · 126 this session</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="autoscroll on">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              Auto-scroll on
+            </button>
+            <button class="btn btn-primary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 10l5 5 5-5"/><path d="M21 21H3"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-outline danger">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div class="pills">
+          <button class="pill">All <span class="pc">126</span></button>
+          <button class="pill on"><span class="pd d-vote" style="background:#fff"></span> Vote <span class="pc">98</span></button>
+          <button class="pill"><span class="pd d-admin"></span> Admin <span class="pc">11</span></button>
+          <button class="pill"><span class="pd d-system"></span> System <span class="pc">6</span></button>
+          <button class="pill"><span class="pd d-warning"></span> Warning <span class="pc">1</span></button>
+          <button class="pill"><span class="pd d-registry"></span> Registry <span class="pc">7</span></button>
+          <button class="pill"><span class="pd d-candidate"></span> Candidate <span class="pc">3</span></button>
+          <button class="pill"><span class="pd d-error"></span> Error <span class="pc">0</span></button>
+        </div>
+
+        <div class="searchwrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input value="receipt" />
+        </div>
+
+        <div class="card">
+          <div class="thead"><span>#</span><span>Type</span><span>Event</span><span>Time</span><span>Date</span></div>
+          <div class="trow">
+            <span class="idx">124</span>
+            <span><span class="tbadge b-vote"><span class="pd d-vote"></span>Vote</span></span>
+            <span class="msg">Ballot cast — receipt VB-7F3A-92C1 issued</span>
+            <span class="time">14:32:08</span>
+            <span class="date">07/22</span>
+          </div>
+          <div class="trow">
+            <span class="idx">123</span>
+            <span><span class="tbadge b-vote"><span class="pd d-vote"></span>Vote</span></span>
+            <span class="msg">Ballot cast — receipt VB-3D81-0AF2 issued</span>
+            <span class="time">14:31:41</span>
+            <span class="date">07/22</span>
+          </div>
+          <div class="trow">
+            <span class="idx">119</span>
+            <span><span class="tbadge b-vote"><span class="pd d-vote"></span>Vote</span></span>
+            <span class="msg">Ballot cast — receipt VB-99C2-D7E4 issued</span>
+            <span class="time">14:28:03</span>
+            <span class="date">07/22</span>
+          </div>
+          <div class="trow">
+            <span class="idx">117</span>
+            <span><span class="tbadge b-vote"><span class="pd d-vote"></span>Vote</span></span>
+            <span class="msg">Receipt VB-51AB-E203 emailed to voter</span>
+            <span class="time">14:25:47</span>
+            <span class="date">07/22</span>
+          </div>
+          <div class="tfoot">
+            <span>Showing 98 of 126</span>
+            <a>Clear filters</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Empty -->
+    <div class="variant"><span class="cap">2 · No events yet (actions disabled with reason implied by the empty log)</span>
+      <div class="pane" style="width:640px">
+        <div class="toprow">
+          <div class="livebit">
+            <span class="dot"></span>
+            <span class="lt">Live</span>
+            <span class="ls">· events appear automatically · 0 this session</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" disabled>Export CSV</button>
+            <button class="btn btn-outline" disabled style="background:var(--gray-200);color:var(--gray-400)">Clear</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="empty">
+            <div class="eico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></svg></div>
+            <h4>No events yet</h4>
+            <p>Every admin action, vote, and system event is recorded here with a timestamp.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
