@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 13: Branding Tab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05); --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.pane{width:960px;max-width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:24px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px}
+.card:last-child{margin-bottom:0}
+.clabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.lockchip{font-size:10px;font-weight:600;background:var(--warning-light);color:var(--warning-ink);border:1px solid var(--warning-border);padding:2px 8px;border-radius:999px;text-transform:none;letter-spacing:0}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;line-height:20px;font-weight:500;color:var(--gray-600);margin-bottom:8px}
+.field .hint{font-size:11px;line-height:16px;color:var(--gray-400);margin-top:6px}
+.input{width:100%;min-height:44px;font-family:var(--font-sans);font-size:13px;color:var(--gray-900);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);padding:10px 14px;outline:none;transition:var(--transition-fast)}
+.input::placeholder{color:var(--gray-400)}
+.input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+.input.pin{font-family:var(--font-mono);font-size:18px;text-align:center;letter-spacing:.3em}
+.input.err{border-color:var(--danger)}
+.errtxt{font-size:11px;font-weight:500;color:var(--danger);margin-top:6px}
+
+/* Choice cards */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{position:relative;text-align:left;background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:var(--transition-fast)}
+.choice:hover{border-color:var(--gray-400)}
+.choice .ct{font-size:13px;font-weight:600;color:var(--gray-900)}
+.choice .cd{font-size:11px;line-height:16px;color:var(--gray-600);margin-top:4px}
+.choice.on{background:var(--blue-50);border-color:var(--blue-600);box-shadow:0 0 0 1px var(--blue-600)}
+.choice.on .ct{color:var(--blue-700)}
+.choice .tick{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--gray-300);background:var(--white)}
+.choice.on .tick{border-color:var(--blue-600);background:var(--blue-600);display:flex;align-items:center;justify-content:center;color:#fff}
+.choice:disabled,.choice.locked{opacity:.55;cursor:not-allowed}
+.subhead{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);margin:16px 0 8px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;min-height:44px;padding:0 18px;border-radius:var(--radius);border:none;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+.btn-saved{background:var(--success-light);color:var(--success);border:1px solid var(--success-border)}
+.btn-sm{min-height:36px;font-size:12px;padding:0 14px}
+
+/* Logo upload */
+.uploadbtn{flex:1;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;font-size:13px;color:var(--gray-600);background:var(--white);border:1px dashed var(--gray-300);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast)}
+.uploadbtn:hover{border-color:var(--blue-500);color:var(--gray-800)}
+.uploadbtn svg{color:var(--gray-400)}
+.logothumb{width:44px;height:44px;border-radius:var(--radius);border:1px solid var(--gray-200);background:var(--gray-100);flex-shrink:0}
+.clearbtn{width:44px;min-height:44px;border-radius:var(--radius);border:1px solid var(--gray-300);background:var(--white);color:var(--gray-400);cursor:pointer;font-weight:600;transition:var(--transition-fast)}
+.clearbtn:hover{color:var(--danger);border-color:#FECACA;background:var(--danger-light)}
+
+/* Bundles */
+.editorbox{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-top:12px}
+.bundlerow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bundlerow .input{min-height:36px;font-size:12px;padding:6px 12px}
+.bundlerow span{font-size:11px;color:var(--gray-600);flex-shrink:0}
+.bundles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.bundle{position:relative;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:12px;text-align:center}
+.bundle .bv{font-size:20px;line-height:24px;font-weight:600;color:var(--gray-900);font-variant-numeric:tabular-nums}
+.bundle .bl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400)}
+.bundle .bp{font-size:13px;font-weight:600;color:var(--blue-700);margin-top:4px}
+.bundle .btag{font-size:10px;color:var(--gray-600);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bundle .bx{position:absolute;top:4px;right:4px;width:22px;height:22px;border:none;background:none;border-radius:50%;color:var(--gray-300);font-size:11px;font-weight:600;cursor:pointer;transition:var(--transition-fast)}
+.bundle .bx:hover{color:var(--danger);background:var(--danger-light)}
+
+/* Payment setup placeholder */
+.paybox{display:flex;align-items:center;gap:10px;background:var(--gray-50);border:1px dashed var(--gray-300);border-radius:var(--radius-lg);padding:12px 16px;margin-top:12px;font-size:12px;color:var(--gray-600)}
+
+/* Login preview */
+.pvwrap{border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.pvhead{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--gray-100);font-size:13px;font-weight:600;color:var(--gray-900)}
+.pvhead .unsaved{margin-left:auto;font-size:10px;font-weight:600;background:var(--warning-light);color:var(--warning-ink);border:1px solid var(--warning-border);padding:2px 8px;border-radius:999px}
+.pvstage{padding:32px;display:flex;justify-content:center;background:#fff;background-image:radial-gradient(circle,var(--blue-200) 1px,transparent 1px);background-size:20px 20px}
+.pvcard{background:var(--white);border:1px solid var(--blue-200);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:28px 24px;width:240px;text-align:center}
+.pvcrest{width:48px;height:48px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#fff;font-size:16px;font-weight:700}
+.pveyebrow{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-600);margin-top:12px}
+.pvname{font-size:16px;line-height:22px;font-weight:600;color:var(--gray-900);margin-top:2px}
+.pvsub{font-size:11px;color:var(--gray-400);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 13 — Branding Tab</h1>
+  <p class="sub">Content area only — renders inside the Screen 9 shell · selection cards get a radio tick so the chosen option is unmistakable · all selected states are blue (Paid is a choice, not a warning) · PIN mismatch gets a written error · login preview mirrors the real rebuilt voter login</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Closed election -->
+    <div class="variant"><span class="cap">1 · Closed election — identity edited (unsaved), PIN mismatch shown</span>
+      <div class="pane">
+        <div class="cols">
+          <!-- Left: type -->
+          <div>
+            <div class="card">
+              <div class="clabel">Election type</div>
+              <div class="choices">
+                <button class="choice on">
+                  <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="ct">Closed</div>
+                  <div class="cd">Roster-based. Voters register with matric + email, verified by OTP.</div>
+                </button>
+                <button class="choice">
+                  <span class="tick"></span>
+                  <div class="ct">Open</div>
+                  <div class="cd">Public link. Anyone can vote — no roster or registration.</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Observer PIN -->
+            <div class="card">
+              <div class="clabel">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                Observer PIN
+              </div>
+              <p style="font-size:12px;line-height:18px;color:var(--gray-600);margin-bottom:16px">
+                Scrutineers use this PIN to open the observer dashboard. The default at registration is <span style="font-family:var(--font-mono);font-weight:600;color:var(--gray-800)">0000</span> — change it before the election.
+              </p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="field" style="margin-bottom:0">
+                  <label>New PIN</label>
+                  <input class="input pin" type="password" value="2026" />
+                </div>
+                <div class="field" style="margin-bottom:0">
+                  <label>Confirm PIN</label>
+                  <input class="input pin err" type="password" value="2025" />
+                  <div class="errtxt">PINs don't match — check both entries.</div>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-top:16px" disabled>Update observer PIN</button>
+            </div>
+          </div>
+
+          <!-- Right: identity + preview -->
+          <div>
+            <div class="card">
+              <div class="clabel">Election identity</div>
+              <div class="field">
+                <label>Election name</label>
+                <input class="input" value="Student Union 2026" />
+                <div class="hint">Appears on the login page, ballot, and results.</div>
+              </div>
+              <div class="field">
+                <label>Institution / organisation name</label>
+                <input class="input" value="Faculty of Engineering" />
+                <div class="hint">Shown as the small eyebrow label above the election name.</div>
+              </div>
+              <div class="field">
+                <label>Organisation logo</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <label class="uploadbtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    Logo uploaded ✓
+                  </label>
+                  <span class="logothumb"></span>
+                  <button class="clearbtn" title="Remove logo">✕</button>
+                </div>
+                <div class="hint">Square PNG, JPG, or SVG under 500 KB. Replaces the “VB” initials on the login page.</div>
+              </div>
+              <button class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>
+                Save branding
+              </button>
+            </div>
+
+            <div class="card" style="padding:0;overflow:hidden">
+              <div class="pvwrap" style="border:none">
+                <div class="pvhead">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                  Login page preview
+                  <span class="unsaved">Unsaved changes</span>
+                </div>
+                <div class="pvstage">
+                  <div class="pvcard">
+                    <div class="pvcrest">FE</div>
+                    <div class="pveyebrow">Faculty of Engineering</div>
+                    <div class="pvname">Student Union 2026</div>
+                    <div class="pvsub">Your vote matters.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Open + paid with bundles -->
+    <div class="variant"><span class="cap">2 · Open election · paid voting with bundle pricing</span>
+      <div class="pane">
+        <div class="cols">
+          <div>
+            <div class="card">
+              <div class="clabel">Election type <span class="lockchip">Locked — election already running</span></div>
+              <div class="choices">
+                <button class="choice locked">
+                  <span class="tick"></span>
+                  <div class="ct">Closed</div>
+                  <div class="cd">Roster-based. Voters register with matric + email, verified by OTP.</div>
+                </button>
+                <button class="choice on locked">
+                  <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="ct">Open</div>
+                  <div class="cd">Public link. Anyone can vote — no roster or registration.</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="clabel">Voting cost <span class="lockchip">Locked</span></div>
+              <div class="choices">
+                <button class="choice locked">
+                  <span class="tick"></span>
+                  <div class="ct">Free</div>
+                  <div class="cd">Standard voting — one vote each, no payment.</div>
+                </button>
+                <button class="choice on locked">
+                  <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="ct">Paid</div>
+                  <div class="cd">Voters pay per vote — buy 1 or many. Proceeds go to your account.</div>
+                </button>
+              </div>
+
+              <div class="paybox">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                Payout account — existing PaymentSetup component renders here (restyles with this tab).
+              </div>
+
+              <div class="subhead">Pricing model</div>
+              <div class="choices">
+                <button class="choice locked">
+                  <span class="tick"></span>
+                  <div class="ct">Fixed price</div>
+                  <div class="cd">One price per vote. Voter picks quantity.</div>
+                </button>
+                <button class="choice on locked">
+                  <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="ct">Bundles</div>
+                  <div class="cd">Preset packs (e.g. ₦500 = 6 votes).</div>
+                </button>
+              </div>
+
+              <div class="editorbox">
+                <div class="clabel" style="margin-bottom:12px">Vote bundles</div>
+                <div class="bundlerow">
+                  <input class="input" style="width:76px" placeholder="Votes" />
+                  <span>for ₦</span>
+                  <input class="input" style="width:96px" placeholder="Amount" />
+                  <input class="input" style="flex:1;min-width:120px" placeholder="Label (optional)" />
+                </div>
+                <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px" disabled>+ Add bundle</button>
+                <div class="bundles">
+                  <div class="bundle">
+                    <button class="bx" title="Remove bundle">✕</button>
+                    <div class="bv">1</div><div class="bl">vote</div>
+                    <div class="bp">₦100</div>
+                  </div>
+                  <div class="bundle">
+                    <button class="bx" title="Remove bundle">✕</button>
+                    <div class="bv">6</div><div class="bl">votes</div>
+                    <div class="bp">₦500</div>
+                    <div class="btag">Best value</div>
+                  </div>
+                  <div class="bundle">
+                    <button class="bx" title="Remove bundle">✕</button>
+                    <div class="bv">15</div><div class="bl">votes</div>
+                    <div class="bp">₦1,000</div>
+                    <div class="btag">Super pack</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="clabel">Vote protection <span class="lockchip">Shown for open + free only</span></div>
+              <div class="choices">
+                <button class="choice on">
+                  <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="ct">Frictionless</div>
+                  <div class="cd">One vote per device. No email needed.</div>
+                </button>
+                <button class="choice">
+                  <span class="tick"></span>
+                  <div class="ct">Email verified</div>
+                  <div class="cd">One vote per email. Stronger integrity.</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="card" style="padding:0;overflow:hidden">
+              <div class="pvwrap" style="border:none">
+                <div class="pvhead">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                  Login page preview
+                </div>
+                <div class="pvstage">
+                  <div class="pvcard">
+                    <div class="pvcrest">MC</div>
+                    <div class="pveyebrow">Music Society</div>
+                    <div class="pvname">Face of Campus 2026</div>
+                    <div class="pvsub">Your vote matters.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

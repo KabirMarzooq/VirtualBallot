@@ -93,6 +93,9 @@ export default function PaymentSetup() {
     }
   };
 
+  const inputClass =
+    "w-full min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all";
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -103,20 +106,18 @@ export default function PaymentSetup() {
 
   if (configured && existing) {
     return (
-      <div className="bg-slate-800 rounded-2xl p-5 border border-green-700/40">
-        <div className="flex items-center gap-2 mb-3">
-          <CheckCircle className="w-4 h-4 text-green-400" />
-          <p className="text-xs font-bold text-green-400 uppercase tracking-widest">
-            Payout Account Active
-          </p>
-        </div>
-        <div className="space-y-1 text-sm">
-          <p className="text-white font-bold">{existing.businessName}</p>
-          <p className="text-slate-400">
-            {existing.bankName} · {existing.accountNumber}
-          </p>
-        </div>
-        <p className="text-xs text-slate-500 mt-3">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <p className="text-[11px] font-semibold text-green-600 uppercase tracking-[0.08em] flex items-center gap-1.5 mb-2">
+          <CheckCircle className="w-3.5 h-3.5" /> Payout account active
+        </p>
+        <p className="text-[13px] font-semibold text-slate-900">
+          {existing.businessName}
+        </p>
+        <p className="text-xs text-slate-600 mt-0.5">
+          {existing.bankName} ·{" "}
+          <span className="font-mono">{existing.accountNumber}</span>
+        </p>
+        <p className="text-[11px] leading-4 text-slate-600 mt-2">
           Paid-vote earnings settle directly to this account.
         </p>
       </div>
@@ -124,32 +125,30 @@ export default function PaymentSetup() {
   }
 
   return (
-    <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 space-y-4">
-      <div className="flex items-center gap-2">
-        <Landmark className="w-4 h-4 text-blue-400" />
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Payout Account · Paid Voting
-        </p>
-      </div>
-      <p className="text-xs text-slate-400">
-        Vote payments settle straight to your bank account. Virtual Ballot takes
-        nothing — voters cover the small Paystack processing fee.
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+      <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] flex items-center gap-1.5 mb-2">
+        <Landmark className="w-3.5 h-3.5 text-blue-600" /> Payout account ·
+        paid voting
+      </p>
+      <p className="text-[11px] leading-4 text-slate-600 mb-4">
+        Vote payments settle straight to your bank account. Virtual Ballot
+        takes nothing — voters cover the small Paystack processing fee.
       </p>
 
-      <div>
-        <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">
-          Business / Account Name
+      <div className="mb-3">
+        <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+          Business / account name
         </label>
         <input
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
           placeholder="e.g. NUESA Faculty Account"
-          className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+          className={inputClass}
         />
       </div>
 
-      <div>
-        <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">
+      <div className="mb-3">
+        <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
           Bank
         </label>
         <select
@@ -158,7 +157,7 @@ export default function PaymentSetup() {
             setBankCode(e.target.value);
             setBankName(e.target.options[e.target.selectedIndex].text);
           }}
-          className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 cursor-pointer"
+          className={`${inputClass} cursor-pointer`}
         >
           <option value="">Select bank…</option>
           {banks.map((b) => (
@@ -169,9 +168,9 @@ export default function PaymentSetup() {
         </select>
       </div>
 
-      <div>
-        <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">
-          Account Number
+      <div className="mb-4">
+        <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+          Account number
         </label>
         <input
           value={accountNumber}
@@ -179,13 +178,15 @@ export default function PaymentSetup() {
             setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
           }
           placeholder="10-digit account number"
-          className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 font-mono"
+          className={`${inputClass} font-mono`}
         />
         {resolving && (
-          <p className="text-xs text-slate-500 mt-1.5">Verifying account…</p>
+          <p className="text-[11px] text-slate-600 mt-1.5">
+            Verifying account…
+          </p>
         )}
         {accountName && (
-          <p className="text-xs text-green-400 font-bold mt-1.5 flex items-center gap-1">
+          <p className="text-[11px] font-semibold text-green-600 mt-1.5 flex items-center gap-1">
             <CheckCircle className="w-3 h-3" /> {accountName}
           </p>
         )}
@@ -194,16 +195,26 @@ export default function PaymentSetup() {
       <button
         onClick={handleSave}
         disabled={saving || !accountName}
-        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+        title={
+          accountName
+            ? "Save this payout account"
+            : "Enter a bank and 10-digit account number to verify first"
+        }
+        className="w-full min-h-[44px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
       >
         {saving ? (
           <VBLoader size="sm" />
         ) : (
           <>
-            <Building2 className="w-4 h-4" /> Save Payout Account
+            <Building2 className="w-4 h-4" /> Save payout account
           </>
         )}
       </button>
+      {!accountName && !resolving && (
+        <p className="text-[11px] leading-4 text-slate-400 text-center mt-2">
+          The save button unlocks once the account name is verified.
+        </p>
+      )}
     </div>
   );
 }

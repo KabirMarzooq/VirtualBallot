@@ -1,14 +1,5 @@
 import { useState } from "react";
-import {
-  Palette,
-  Image,
-  CheckCircle,
-  Eye,
-  X,
-  Key,
-  Vote,
-  Plus,
-} from "lucide-react";
+import { Image, Check, Eye, Save, KeyRound, Plus } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import {
   updateBranding,
@@ -17,6 +8,46 @@ import {
 } from "../../api";
 import VBLoader from "../ui/VBLoader";
 import PaymentSetup from "./PaymentSetup";
+
+/* Selectable option card with an explicit radio tick */
+function Choice({ on, disabled, onClick, title, desc }) {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      title={disabled ? "Locked" : `Select: ${title}`}
+      className={`relative text-left rounded-xl border p-4 pr-9 transition-all cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed ${
+        on
+          ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600"
+          : "bg-white border-slate-300 hover:border-slate-400"
+      }`}
+    >
+      <span
+        className={`absolute top-2.5 right-2.5 w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center ${
+          on ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-300"
+        }`}
+      >
+        {on && <Check className="w-2.5 h-2.5" strokeWidth={3.2} />}
+      </span>
+      <p
+        className={`text-[13px] font-semibold ${
+          on ? "text-blue-700" : "text-slate-900"
+        }`}
+      >
+        {title}
+      </p>
+      <p className="text-[11px] leading-4 text-slate-600 mt-1">{desc}</p>
+    </button>
+  );
+}
+
+function LockChip({ children }) {
+  return (
+    <span className="text-[10px] font-semibold normal-case tracking-normal bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
+      {children}
+    </span>
+  );
+}
 
 export default function BrandingTab() {
   const {
@@ -39,6 +70,7 @@ export default function BrandingTab() {
 
   const dirty = JSON.stringify(form) !== JSON.stringify(branding);
   const locked = electionConfig.status !== "NOT_STARTED";
+  const pinMismatch = !!pinConfirm && pin !== pinConfirm;
 
   const saveElectionType = async (votingMode, fraudTier) => {
     setSavingType(true);
@@ -146,44 +178,38 @@ export default function BrandingTab() {
     savePaidConfig({ voteBundles: next });
   };
 
+  const inputClass =
+    "w-full min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-all";
+  const cardLabel =
+    "text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] flex items-center gap-2 mb-4";
+
   return (
-    <div className="grid lg:grid-cols-2 gap-6 items-start">
-      {/* ════════════ LEFT COLUMN — Election Type + Paid config ════════════ */}
-      <div className="space-y-6">
-        {/* ── Election Type ──────────────────────────────────────────────── */}
-        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
-          <div className="flex items-center gap-2">
-            <Vote className="w-4 h-4 text-blue-400" />
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Election Type
-            </p>
+    <div className="grid lg:grid-cols-2 gap-4 items-start">
+      {/* ════════ LEFT — Election type + cost ════════ */}
+      <div className="space-y-4">
+        {/* Election type */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <p className={cardLabel}>
+            Election type
             {locked && (
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-700/40">
+              <LockChip>
                 Locked — election already{" "}
                 {electionConfig.status === "ACTIVE" ? "running" : "ended"}
-              </span>
+              </LockChip>
             )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Choice
+              on={electionConfig.votingMode === "CLOSED"}
               disabled={locked || savingType}
               onClick={() =>
                 saveElectionType("CLOSED", electionConfig.fraudTier)
               }
-              className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                electionConfig.votingMode === "CLOSED"
-                  ? "bg-blue-950/40 border-blue-500"
-                  : "bg-slate-900 border-slate-700 hover:border-slate-600"
-              }`}
-            >
-              <p className="font-black text-white text-sm">Closed</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Roster-based. Voters register with matric + email, verified by
-                OTP.
-              </p>
-            </button>
-            <button
+              title="Closed"
+              desc="Roster-based. Voters register with matric + email, verified by OTP."
+            />
+            <Choice
+              on={electionConfig.votingMode === "OPEN"}
               disabled={locked || savingType}
               onClick={() =>
                 saveElectionType(
@@ -191,144 +217,82 @@ export default function BrandingTab() {
                   electionConfig.fraudTier === "DEVICE" ? "DEVICE" : "EMAIL"
                 )
               }
-              className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                electionConfig.votingMode === "OPEN"
-                  ? "bg-blue-950/40 border-blue-500"
-                  : "bg-slate-900 border-slate-700 hover:border-slate-600"
-              }`}
-            >
-              <p className="font-black text-white text-sm">Open</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Public link. Anyone can vote — no roster or registration.
-              </p>
-            </button>
+              title="Open"
+              desc="Public link. Anyone can vote — no roster or registration."
+            />
           </div>
 
           {/* Vote protection — only for OPEN + FREE (paid ignores fraud tier) */}
           {electionConfig.votingMode === "OPEN" &&
             electionConfig.voteType !== "PAID" && (
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Vote Protection
+              <>
+                <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mt-4 mb-2">
+                  Vote protection
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Choice
+                    on={electionConfig.fraudTier === "DEVICE"}
                     disabled={locked || savingType}
                     onClick={() => saveElectionType("OPEN", "DEVICE")}
-                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                      electionConfig.fraudTier === "DEVICE"
-                        ? "bg-teal-950/40 border-teal-500"
-                        : "bg-slate-900 border-slate-700 hover:border-slate-600"
-                    }`}
-                  >
-                    <p className="font-bold text-white text-sm">Frictionless</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      One vote per device. No email needed.
-                    </p>
-                  </button>
-                  <button
+                    title="Frictionless"
+                    desc="One vote per device. No email needed."
+                  />
+                  <Choice
+                    on={electionConfig.fraudTier === "EMAIL"}
                     disabled={locked || savingType}
                     onClick={() => saveElectionType("OPEN", "EMAIL")}
-                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                      electionConfig.fraudTier === "EMAIL"
-                        ? "bg-teal-950/40 border-teal-500"
-                        : "bg-slate-900 border-slate-700 hover:border-slate-600"
-                    }`}
-                  >
-                    <p className="font-bold text-white text-sm">
-                      Email verified
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      One vote per email. Stronger integrity.
-                    </p>
-                  </button>
+                    title="Email verified"
+                    desc="One vote per email. Stronger integrity."
+                  />
                 </div>
-              </div>
+              </>
             )}
         </div>
 
-        {/* ── Paid Voting ──────────────────────────────────────────────────── */}
+        {/* Voting cost */}
         {electionConfig.votingMode === "OPEN" && (
-          <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
-            <div className="flex items-center gap-2">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Voting Cost
-              </p>
-              {locked && (
-                <span className="text-[10px] font-bold text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-700/40">
-                  Locked
-                </span>
-              )}
-            </div>
-
-            {/* Free vs Paid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <p className={cardLabel}>
+              Voting cost {locked && <LockChip>Locked</LockChip>}
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Choice
+                on={electionConfig.voteType === "STANDARD"}
                 disabled={locked || savingType}
                 onClick={() => savePaidConfig({ voteType: "STANDARD" })}
-                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                  electionConfig.voteType === "STANDARD"
-                    ? "bg-blue-950/40 border-blue-500"
-                    : "bg-slate-900 border-slate-700 hover:border-slate-600"
-                }`}
-              >
-                <p className="font-black text-white text-sm">Free</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Standard voting — one vote each, no payment.
-                </p>
-              </button>
-              <button
+                title="Free"
+                desc="Standard voting — one vote each, no payment."
+              />
+              <Choice
+                on={electionConfig.voteType === "PAID"}
                 disabled={locked || savingType}
                 onClick={() => savePaidConfig({ voteType: "PAID" })}
-                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                  electionConfig.voteType === "PAID"
-                    ? "bg-amber-950/40 border-amber-500"
-                    : "bg-slate-900 border-slate-700 hover:border-slate-600"
-                }`}
-              >
-                <p className="font-black text-white text-sm">Paid</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Voters pay per vote. Buy 1 or many. Money goes to your
-                  account.
-                </p>
-              </button>
+                title="Paid"
+                desc="Voters pay per vote — buy 1 or many. Proceeds go to your account."
+              />
             </div>
 
             {electionConfig.voteType === "PAID" && (
-              <>
+              <div className="mt-4 space-y-4">
                 {/* Payout account setup */}
                 <PaymentSetup />
 
                 {/* Pricing model */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Choice
+                    on={electionConfig.pricingModel === "FIXED"}
                     disabled={locked || savingType}
                     onClick={() => savePaidConfig({ pricingModel: "FIXED" })}
-                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                      electionConfig.pricingModel === "FIXED"
-                        ? "bg-blue-950/40 border-blue-500"
-                        : "bg-slate-900 border-slate-700 hover:border-slate-600"
-                    }`}
-                  >
-                    <p className="font-bold text-white text-sm">Fixed price</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      One price per vote. Voter picks quantity.
-                    </p>
-                  </button>
-                  <button
+                    title="Fixed price"
+                    desc="One price per vote. Voter picks quantity."
+                  />
+                  <Choice
+                    on={electionConfig.pricingModel === "BUNDLE"}
                     disabled={locked || savingType}
                     onClick={() => savePaidConfig({ pricingModel: "BUNDLE" })}
-                    className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                      electionConfig.pricingModel === "BUNDLE"
-                        ? "bg-blue-950/40 border-blue-500"
-                        : "bg-slate-900 border-slate-700 hover:border-slate-600"
-                    }`}
-                  >
-                    <p className="font-bold text-white text-sm">Bundles</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Preset packs (e.g. ₦500 = 6 votes).
-                    </p>
-                  </button>
+                    title="Bundles"
+                    desc="Preset packs (e.g. ₦500 = 6 votes)."
+                  />
                 </div>
 
                 {electionConfig.pricingModel === "FIXED" ? (
@@ -345,30 +309,23 @@ export default function BrandingTab() {
                     onRemove={removeBundle}
                   />
                 )}
-              </>
+              </div>
             )}
           </div>
         )}
       </div>
 
-      {/* ════════════ RIGHT COLUMN — Identity, PIN, Preview ════════════ */}
-      <div className="space-y-6">
-        {/* ── Election Identity ────────────────────────────────────────────── */}
-        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-5">
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Election Identity
-            </p>
-            {locked && (
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-700/40">
-                Locked
-              </span>
-            )}
-          </div>
+      {/* ════════ RIGHT — Identity, PIN, Preview ════════ */}
+      <div className="space-y-4">
+        {/* Election identity */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <p className={cardLabel}>
+            Election identity {locked && <LockChip>Locked</LockChip>}
+          </p>
 
-          <div>
-            <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
-              Election Name
+          <div className="mb-4">
+            <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+              Election name
             </label>
             <input
               value={form.electionName}
@@ -376,21 +333,21 @@ export default function BrandingTab() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, electionName: e.target.value }))
               }
-              className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={inputClass}
               placeholder={`e.g. ${
                 branding.institutionName
                   ? branding.institutionName.split(" ").slice(-1)[0]
                   : "SRC"
               } General Elections ${new Date().getFullYear()}`}
             />
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-[11px] leading-4 text-slate-400 mt-1.5">
               Appears on the login page, ballot, and results.
             </p>
           </div>
 
-          <div>
-            <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
-              Institution / Organisation Name
+          <div className="mb-4">
+            <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+              Institution / organisation name
             </label>
             <input
               value={form.institutionName}
@@ -398,31 +355,29 @@ export default function BrandingTab() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, institutionName: e.target.value }))
               }
-              className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={inputClass}
               placeholder="e.g. University of Nigeria, Nsukka"
             />
-            <p className="text-xs text-slate-600 mt-1">
-              Shown as a small eyebrow label above the election name.
+            <p className="text-[11px] leading-4 text-slate-400 mt-1.5">
+              Shown as the small eyebrow label above the election name.
             </p>
           </div>
 
-          <div>
-            <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
-              Organization Logo
+          <div className="mb-5">
+            <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+              Organisation logo
             </label>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-2 items-center">
               <label
-                className={`flex-1 flex items-center gap-3 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 transition-colors ${
+                className={`flex-1 flex items-center gap-2.5 min-h-[44px] px-3.5 text-[13px] border border-dashed rounded-lg transition-all ${
                   locked
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:border-blue-500 cursor-pointer"
+                    ? "bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed"
+                    : "bg-white text-slate-600 border-slate-300 hover:border-blue-500 hover:text-slate-800 cursor-pointer"
                 }`}
               >
-                <Image className="w-4 h-4 text-slate-500 shrink-0" />
-                <span className="text-sm text-slate-400 truncate">
-                  {form.logoUrl
-                    ? "Logo uploaded ✓"
-                    : "Click to upload logo image (max 500 KB)…"}
+                <Image className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">
+                  {form.logoUrl ? "Logo uploaded ✓" : "Upload logo image…"}
                 </span>
                 <input
                   type="file"
@@ -432,30 +387,27 @@ export default function BrandingTab() {
                   onChange={handleLogoUpload}
                 />
               </label>
-
               {form.logoUrl && (
                 <>
-                  <div className="w-14 h-14 rounded-xl border-2 border-slate-600 overflow-hidden shrink-0 bg-slate-900">
-                    <img
-                      src={form.logoUrl}
-                      alt="logo preview"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <img
+                    src={form.logoUrl}
+                    alt="logo preview"
+                    className="w-11 h-11 rounded-lg border border-slate-200 bg-slate-100 object-cover shrink-0"
+                  />
                   <button
                     onClick={() => setForm((f) => ({ ...f, logoUrl: "" }))}
                     disabled={locked}
                     title="Remove logo"
-                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer border border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-11 min-h-[44px] rounded-lg border border-slate-300 bg-white text-slate-400 font-semibold hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
-                    <X className="w-4 h-4" />
+                    ✕
                   </button>
                 </>
               )}
             </div>
-            <p className="text-xs text-slate-600 mt-1">
-              Upload a square image (PNG, JPG, or SVG). Replaces the "VB"
-              initials on the login page.
+            <p className="text-[11px] leading-4 text-slate-400 mt-1.5">
+              Square PNG, JPG, or SVG under 500 KB. Replaces the “VB” initials
+              on the login page.
             </p>
           </div>
 
@@ -469,45 +421,42 @@ export default function BrandingTab() {
                 ? "Save branding to database"
                 : "No unsaved changes"
             }
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-2 min-h-[44px] px-5 rounded-lg font-semibold text-[13px] transition-all cursor-pointer ${
               saved
-                ? "bg-green-600 text-white"
-                : dirty
-                ? "bg-blue-600 hover:bg-blue-500 text-white"
-                : "bg-slate-700 text-slate-500 cursor-not-allowed"
+                ? "bg-green-50 text-green-600 border border-green-200"
+                : dirty && !locked
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
             {saving ? (
               <VBLoader size="sm" />
             ) : saved ? (
               <>
-                <CheckCircle className="w-4 h-4" /> Saved!
+                <Check className="w-4 h-4" strokeWidth={2.6} /> Saved
               </>
             ) : (
               <>
-                <Palette className="w-4 h-4" /> Save Branding
+                <Save className="w-4 h-4" /> Save branding
               </>
             )}
           </button>
         </div>
 
-        {/* ── Observer PIN ─────────────────────────────────────────────────── */}
-        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
-          <div className="flex items-center gap-2">
-            <Key className="w-4 h-4 text-teal-400" />
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Observer PIN
-            </p>
-          </div>
-          <p className="text-sm text-slate-400">
-            The PIN your accredited observers use to access the Observer
-            Dashboard. The default at registration is{" "}
-            <span className="font-mono font-bold text-slate-300">0000</span> —
-            change it before the election.
+        {/* Observer PIN */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <p className={cardLabel}>
+            <KeyRound className="w-3.5 h-3.5 text-blue-600" /> Observer PIN
           </p>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <p className="text-xs leading-[18px] text-slate-600 mb-4">
+            Scrutineers use this PIN to open the observer dashboard. The
+            default at registration is{" "}
+            <span className="font-mono font-semibold text-slate-800">0000</span>{" "}
+            — change it before the election.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
+              <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
                 New PIN
               </label>
               <input
@@ -515,12 +464,12 @@ export default function BrandingTab() {
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                 maxLength={8}
-                placeholder="e.g. 2025"
-                className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white text-center font-mono text-xl tracking-widest outline-none focus:border-teal-500"
+                placeholder="e.g. 2026"
+                className={`${inputClass} font-mono text-lg text-center tracking-[0.3em]`}
               />
             </div>
             <div>
-              <label className="text-xs text-slate-500 uppercase font-bold block mb-1.5">
+              <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
                 Confirm PIN
               </label>
               <input
@@ -531,53 +480,63 @@ export default function BrandingTab() {
                 }
                 maxLength={8}
                 placeholder="Repeat PIN"
-                className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white text-center font-mono text-xl tracking-widest outline-none transition-colors ${
-                  pinConfirm && pin !== pinConfirm
-                    ? "border-red-500"
-                    : "border-slate-600 focus:border-teal-500"
+                className={`${inputClass} font-mono text-lg text-center tracking-[0.3em] ${
+                  pinMismatch ? "border-red-500" : ""
                 }`}
               />
+              {pinMismatch && (
+                <p className="text-[11px] leading-4 font-medium text-red-600 mt-1.5">
+                  PINs don't match — check both entries.
+                </p>
+              )}
             </div>
           </div>
           <button
             onClick={handlePinSave}
-            disabled={pinSaving || !pin || !pinConfirm}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-teal-700 hover:bg-teal-600 text-white transition-colors cursor-pointer disabled:opacity-40"
+            disabled={pinSaving || !pin || !pinConfirm || pinMismatch}
+            title="Change the observer PIN"
+            className="inline-flex items-center gap-2 min-h-[44px] px-5 mt-4 rounded-lg font-semibold text-[13px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white shadow-sm transition-all cursor-pointer"
           >
             {pinSaving ? (
               <VBLoader size="sm" />
             ) : (
               <>
-                <Key className="w-4 h-4" /> Update Observer PIN
+                <KeyRound className="w-4 h-4" /> Update observer PIN
               </>
             )}
           </button>
         </div>
 
-        {/* ── Live Preview ─────────────────────────────────────────────────── */}
-        <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-700 flex items-center gap-2">
-            <Eye className="w-4 h-4 text-slate-400" />
-            <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-              Login Page Preview
-            </span>
+        {/* Login page preview */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+            <h4 className="text-[13px] font-semibold text-slate-900 flex items-center gap-2">
+              <Eye className="w-4 h-4 text-blue-600" /> Login page preview
+            </h4>
             {dirty && (
-              <span className="text-[10px] text-amber-400 font-bold px-2 py-0.5 bg-amber-900/30 rounded-full border border-amber-700/40">
-                Unsaved
+              <span className="ml-auto text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
+                Unsaved changes
               </span>
             )}
           </div>
-          <div className="p-8 flex justify-center bg-slate-950/50">
-            <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-8 w-64 text-center shadow-2xl">
+          <div
+            className="p-8 flex justify-center bg-white"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #BFDBFE 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          >
+            <div className="bg-white border border-blue-200 rounded-2xl shadow-md p-7 w-60 text-center">
               {form.logoUrl ? (
                 <img
                   src={form.logoUrl}
                   alt="logo"
-                  className="w-20 h-20 rounded-2xl object-cover mx-auto mb-4 shadow-md border-4 border-slate-800"
+                  className="w-12 h-12 rounded-xl object-cover mx-auto shadow-sm"
                 />
               ) : (
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
-                  <span className="text-2xl font-black text-white">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto">
+                  <span className="text-base font-bold text-white tracking-tight">
                     {form.institutionName
                       ? form.institutionName.slice(0, 2).toUpperCase()
                       : "VB"}
@@ -585,14 +544,16 @@ export default function BrandingTab() {
                 </div>
               )}
               {form.institutionName && (
-                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">
+                <p className="text-[9px] font-semibold text-blue-600 uppercase tracking-[0.1em] mt-3">
                   {form.institutionName}
                 </p>
               )}
-              <p className="font-black text-white text-lg leading-tight">
+              <p className="text-base leading-[22px] font-semibold text-slate-900 mt-0.5">
                 {form.electionName || "Virtual Ballot"}
               </p>
-              <p className="text-slate-500 text-xs mt-1">Your voice matters.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Your vote matters.
+              </p>
             </div>
           </div>
         </div>
@@ -605,8 +566,8 @@ function FixedPriceEditor({ initialKobo, onSave, disabled }) {
   const [naira, setNaira] = useState(initialKobo ? initialKobo / 100 : "");
   const [saved, setSaved] = useState(false);
   return (
-    <div className="bg-slate-900 rounded-xl p-4 border border-slate-700">
-      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+      <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
         Price per vote (₦)
       </label>
       <div className="flex gap-2">
@@ -617,7 +578,7 @@ function FixedPriceEditor({ initialKobo, onSave, disabled }) {
           disabled={disabled}
           onChange={(e) => setNaira(e.target.value)}
           placeholder="e.g. 100"
-          className="flex-1 bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 disabled:bg-slate-100 disabled:cursor-not-allowed transition-all"
         />
         <button
           disabled={disabled || !naira || Number(naira) < 1}
@@ -626,13 +587,14 @@ function FixedPriceEditor({ initialKobo, onSave, disabled }) {
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
           }}
-          className={`font-bold px-5 rounded-xl text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+          title="Save the price per vote"
+          className={`min-h-[44px] px-4 rounded-lg font-semibold text-[13px] transition-all cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed ${
             saved
-              ? "bg-green-600 text-white"
-              : "bg-blue-600 hover:bg-blue-500 text-white"
+              ? "bg-green-50 text-green-600 border border-green-200"
+              : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           }`}
         >
-          {saved ? "Saved!" : "Save"}
+          {saved ? "✓ Saved" : "Save"}
         </button>
       </div>
     </div>
@@ -659,75 +621,77 @@ function BundleEditor({ bundles, onAdd, onRemove, disabled }) {
     setLabel("");
   };
 
+  const smallInput =
+    "min-h-[36px] text-xs text-slate-900 bg-white border border-slate-300 rounded-lg px-3 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 disabled:bg-slate-100 disabled:cursor-not-allowed transition-all";
+
   return (
-    <div className="bg-slate-900 rounded-xl p-4 border border-slate-700 space-y-4">
-      <label className="text-xs font-bold text-slate-500 uppercase block">
-        Vote Bundles
-      </label>
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+      <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-3">
+        Vote bundles
+      </p>
 
-      {/* Single input row */}
-      <div className="space-y-2">
-        <div className="flex gap-2 items-center">
-          <input
-            type="number"
-            placeholder="Votes"
-            value={votes}
-            disabled={disabled}
-            onChange={(e) => setVotes(e.target.value)}
-            className="w-20 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <span className="text-slate-500 text-xs">for ₦</span>
-          <input
-            type="number"
-            placeholder="Amount"
-            value={naira}
-            disabled={disabled}
-            onChange={(e) => setNaira(e.target.value)}
-            className="w-24 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <input
-            placeholder="Label (optional)"
-            value={label}
-            disabled={disabled}
-            onChange={(e) => setLabel(e.target.value)}
-            className="flex-1 min-w-0 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={!canSave}
-          className="w-full flex items-center justify-center gap-1.5 font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white"
-        >
-          <Plus className="w-3.5 h-3.5" /> Save bundle
-        </button>
+      <div className="flex gap-2 items-center flex-wrap">
+        <input
+          type="number"
+          placeholder="Votes"
+          value={votes}
+          disabled={disabled}
+          onChange={(e) => setVotes(e.target.value)}
+          className={`${smallInput} w-[76px]`}
+        />
+        <span className="text-[11px] text-slate-600 shrink-0">for ₦</span>
+        <input
+          type="number"
+          placeholder="Amount"
+          value={naira}
+          disabled={disabled}
+          onChange={(e) => setNaira(e.target.value)}
+          className={`${smallInput} w-24`}
+        />
+        <input
+          placeholder="Label (optional)"
+          value={label}
+          disabled={disabled}
+          onChange={(e) => setLabel(e.target.value)}
+          className={`${smallInput} flex-1 min-w-[120px]`}
+        />
       </div>
+      <button
+        onClick={handleSave}
+        disabled={!canSave}
+        title="Add this bundle"
+        className="w-full mt-2 min-h-[36px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+      >
+        <Plus className="w-3.5 h-3.5" strokeWidth={2.4} /> Add bundle
+      </button>
 
-      {/* Saved bundle cards — 3 per row, area grows in height */}
       {bundles.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
           {bundles.map((b, i) => (
             <div
               key={i}
-              className="relative bg-slate-800 border border-slate-600 rounded-xl p-3 text-center"
+              className="relative bg-white border border-slate-200 rounded-xl p-3 text-center"
             >
               {!disabled && (
                 <button
                   onClick={() => onRemove(i)}
-                  title="Remove bundle"
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center cursor-pointer"
+                  title="Remove this bundle"
+                  className="absolute top-1 right-1 w-[22px] h-[22px] rounded-full text-[11px] font-semibold text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
                 >
                   ✕
                 </button>
               )}
-              <p className="text-xl font-black text-white leading-none">
+              <p className="text-xl leading-6 font-semibold text-slate-900 tabular-nums">
                 {b.votes}
               </p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wider mb-1">
-                votes
+              <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.08em]">
+                vote{b.votes !== 1 ? "s" : ""}
               </p>
-              <p className="text-sm font-bold text-blue-400">{fmt(b.amount)}</p>
+              <p className="text-[13px] font-semibold text-blue-700 mt-1">
+                {fmt(b.amount)}
+              </p>
               {b.label && (
-                <p className="text-[10px] text-amber-400 mt-0.5 truncate">
+                <p className="text-[10px] text-slate-600 mt-0.5 truncate">
                   {b.label}
                 </p>
               )}
@@ -735,7 +699,7 @@ function BundleEditor({ bundles, onAdd, onRemove, disabled }) {
           ))}
         </div>
       ) : (
-        <p className="text-xs text-slate-600 text-center py-2">
+        <p className="text-[11px] text-slate-400 text-center py-2 mt-1">
           No bundles yet. Add one above.
         </p>
       )}
