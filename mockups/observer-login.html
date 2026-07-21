@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 16: Observer Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-100:#DBEAFE; --blue-400:#60A5FA; --blue-500:#3B82F6; --blue-600:#2563EB;
+  --gray-50:#F8FAFC; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-700:#334155; --gray-800:#1E293B; --gray-900:#0F172A;
+  --danger:#DC2626; --danger-dark-text:#F87171;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-lg:0 10px 15px -3px rgb(0 0 0/.35),0 4px 6px -4px rgb(0 0 0/.3);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1480px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+/* Dark auth field (same as admin login) */
+.screen{width:420px;max-width:100%;min-height:540px;background:var(--gray-900);border-radius:var(--radius-xl);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--blue-500) 1px,transparent 1px);background-size:28px 28px;opacity:.14;pointer-events:none}
+.screen::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.16) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(59,130,246,.25);top:50%;left:50%;animation:ring-expand 4s ease-out infinite;pointer-events:none}
+.r1{width:220px;height:220px}.r2{width:380px;height:380px;animation-delay:1.3s}.r3{width:540px;height:540px;animation-delay:2.6s}
+@keyframes ring-expand{0%{opacity:.5;transform:translate(-50%,-50%) scale(.85)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+
+.inner{position:relative;z-index:1;width:100%;max-width:360px}
+.card{background:var(--gray-800);border:1px solid var(--gray-700);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);padding:32px 28px}
+.card.is-shake{animation:shake .35s ease}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+
+.crest{width:56px;height:56px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.h-title{font-size:22px;line-height:28px;font-weight:600;color:#fff;text-align:center;margin-top:16px}
+.h-sub{font-size:13px;line-height:20px;color:var(--gray-400);text-align:center;margin-top:4px}
+.rolenote{display:flex;gap:10px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:var(--radius);padding:10px 14px;margin-top:20px}
+.rolenote svg{color:var(--blue-400);flex-shrink:0;margin-top:1px}
+.rolenote p{font-size:11px;line-height:16px;color:var(--gray-300)}
+
+.field{margin-top:20px}
+.field label{display:block;font-size:13px;line-height:20px;font-weight:500;color:var(--gray-300);margin-bottom:8px}
+.pininput{width:100%;min-height:56px;font-family:var(--font-mono);font-size:26px;font-weight:600;letter-spacing:.5em;text-align:center;text-indent:.5em;color:#fff;background:var(--gray-900);border:1px solid var(--gray-600);border-radius:var(--radius-lg);outline:none;transition:var(--transition-fast)}
+.pininput::placeholder{color:var(--gray-600)}
+.pininput.is-focus{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.pininput.is-error{border-color:var(--danger);color:var(--danger-dark-text)}
+.err{font-size:11px;line-height:16px;font-weight:500;color:var(--danger-dark-text);margin-top:8px;text-align:center}
+.hint{font-size:11px;line-height:16px;color:var(--gray-400);margin-top:8px;text-align:center}
+
+.btn{width:100%;margin-top:20px;font-size:14px;font-weight:600;min-height:48px;border-radius:var(--radius);border:none;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff}
+.btn-primary:hover{background:var(--blue-500)}
+.btn-primary:disabled{background:var(--gray-700);color:var(--gray-400);cursor:not-allowed}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footlinks{margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-700);text-align:center}
+.flink{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;font-size:11px;font-weight:600;color:var(--gray-400);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast);background:none;border:none}
+.flink:hover{color:var(--gray-300);background:rgba(148,163,184,.08)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 16 — Observer Login</h1>
+  <p class="sub">Same dark Commission auth field as Screen 8 — the telescope crest and read-only note carry the role, teal retired · single mono PIN input (PIN length varies 4–8, so no fixed boxes) · vb-shake on wrong PIN</p>
+
+  <div class="grid">
+
+    <!-- STATE 1: Default -->
+    <div class="variant"><span class="cap">1 · Default</span>
+      <div class="screen">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card">
+          <div class="crest"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44"/><path d="m13.56 11.747 4.332-.924"/><path d="m16 21-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z"/><path d="m6.158 8.633 1.114 4.456"/><path d="m8 21 3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg></div>
+          <div class="h-title">Observer Portal</div>
+          <div class="h-sub">Accredited scrutineers only</div>
+
+          <div class="rolenote">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+            <p>Read-only access — you can watch the live tally, vote ledger, and audit stream, but nothing can be changed from this portal.</p>
+          </div>
+
+          <div class="field">
+            <label>Observer PIN</label>
+            <input class="pininput is-focus" type="password" value="20" readonly />
+            <div class="hint">Your electoral commission shares this PIN with accredited observers.</div>
+          </div>
+
+          <button class="btn btn-primary" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+            Enter as observer
+          </button>
+
+          <div class="footlinks">
+            <button class="flink">← Back to commission portal</button>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- STATE 2: Error -->
+    <div class="variant"><span class="cap">2 · Wrong PIN (card shakes · input cleared)</span>
+      <div class="screen">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card is-shake">
+          <div class="crest"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44"/><path d="m13.56 11.747 4.332-.924"/><path d="m16 21-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z"/><path d="m6.158 8.633 1.114 4.456"/><path d="m8 21 3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg></div>
+          <div class="h-title">Observer Portal</div>
+          <div class="h-sub">Accredited scrutineers only</div>
+
+          <div class="field">
+            <label>Observer PIN</label>
+            <input class="pininput is-error" type="password" value="" placeholder="••••" readonly />
+            <div class="err">Incorrect PIN. Check with your electoral commission and try again.</div>
+          </div>
+
+          <button class="btn btn-primary" disabled>Enter as observer</button>
+
+          <div class="footlinks">
+            <button class="flink">← Back to commission portal</button>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- STATE 3: Loading -->
+    <div class="variant"><span class="cap">3 · Verifying</span>
+      <div class="screen">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card">
+          <div class="crest"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44"/><path d="m13.56 11.747 4.332-.924"/><path d="m16 21-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z"/><path d="m6.158 8.633 1.114 4.456"/><path d="m8 21 3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg></div>
+          <div class="h-title">Observer Portal</div>
+          <div class="h-sub">Accredited scrutineers only</div>
+
+          <div class="field">
+            <label>Observer PIN</label>
+            <input class="pininput" type="password" value="2026" readonly />
+          </div>
+
+          <button class="btn btn-primary" disabled style="background:var(--blue-600);color:#fff"><span class="spinner"></span> Verifying…</button>
+
+          <div class="footlinks">
+            <button class="flink">← Back to commission portal</button>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
