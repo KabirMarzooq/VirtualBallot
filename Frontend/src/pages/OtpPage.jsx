@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Check } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import AuthBackground from "../components/layout/AuthBackground";
 import ProgressBar from "../components/ui/ProgressBar";
 import VBLoader from "../components/ui/VBLoader";
 import { verifyOtp } from "../api";
@@ -89,9 +90,9 @@ export default function OtpPage() {
     : "border-slate-300 text-slate-900 bg-white focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
-      <div className="w-full max-w-[400px]">
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-8 sm:px-7 text-center">
+    <AuthBackground>
+      <div className="w-full max-w-[400px] text-slate-800">
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7 text-center">
           <ProgressBar step={verified ? 2 : 1} />
 
           <div
@@ -172,6 +173,6 @@ export default function OtpPage() {
           </button>
         </div>
       </div>
-    </div>
+    </AuthBackground>
   );
 }

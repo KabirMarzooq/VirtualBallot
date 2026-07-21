@@ -1,0 +1,75 @@
+/* ════════════════════════════════════════════════════════════════════════
+   VIRTUAL BALLOT — AUTH PAGE BACKGROUND
+   Approved treatment for auth pages: white field, blue dot grid, soft
+   center glow, three expanding rings. Decorative layers are fixed and
+   pointer-transparent; content sits above and scrolls normally, so cards
+   taller than the viewport (375px screens) are never clipped.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--white);
+}
+
+.auth-page-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Dot grid */
+.auth-page-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--blue-200) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.35;
+}
+
+/* Center glow */
+.auth-page-bg::after {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--blue-50) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Animated rings */
+.auth-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--blue-200);
+  top: 50%;
+  left: 50%;
+  animation: ring-expand 4s ease-out infinite;
+}
+.auth-ring-1 { width: 220px; height: 220px; animation-delay: 0s; }
+.auth-ring-2 { width: 380px; height: 380px; animation-delay: 1.3s; }
+.auth-ring-3 { width: 540px; height: 540px; animation-delay: 2.6s; }
+
+@keyframes ring-expand {
+  0%   { opacity: 0.5; transform: translate(-50%, -50%) scale(0.85); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-ring { animation: none; opacity: 0.25; transform: translate(-50%, -50%); }
+}
+
+.auth-page-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}

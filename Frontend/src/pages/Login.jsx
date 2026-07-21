@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { useSlug } from "../context/SlugContext";
 import CountdownWidget from "../components/ballot/CountdownWidget";
+import AuthBackground from "../components/layout/AuthBackground";
 import VBLoader from "../components/ui/VBLoader";
 import { voterLogin } from "../api";
 
@@ -40,18 +41,18 @@ export default function LoginPage() {
 
   if (appLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <AuthBackground>
         <VBLoader size="lg" label="Loading election..." />
-      </div>
+      </AuthBackground>
     );
   }
 
   const ended = electionConfig.status === "ENDED";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
-      <div className="w-full max-w-[420px]">
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-8 sm:px-7">
+    <AuthBackground>
+      <div className="w-full max-w-[420px] text-slate-800">
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7">
           {/* Branding */}
           <div className="text-center">
             {branding.logoUrl ? (
@@ -183,6 +184,6 @@ export default function LoginPage() {
           </button>
         </div>
       </div>
-    </div>
+    </AuthBackground>
   );
 }
