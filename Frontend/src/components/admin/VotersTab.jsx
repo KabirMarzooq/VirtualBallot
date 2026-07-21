@@ -4,8 +4,6 @@ import {
   Users,
   FileDown,
   Search,
-  UserCheck,
-  UserX,
   Copy,
   Check,
   ClipboardList,
@@ -78,7 +76,7 @@ export default function VotersTab() {
   const voters = users.filter((u) => u.role !== "ADMIN");
   const voted = voters.filter((u) => u.hasVoted);
   const pending = voters.filter((u) => !u.hasVoted);
-  const { pct, accredited } = getTurnout(users);
+  const { accredited } = getTurnout(users);
 
   const filtered = voters.filter((u) => {
     const matchText =
@@ -140,7 +138,9 @@ export default function VotersTab() {
         try {
           const data = await fetchVoters(accessToken, orgSlug);
           setUsers((data.voters || []).map(mapVoter));
-        } catch (_) {}
+        } catch {
+          /* non-fatal — the upload succeeded; the next poll refreshes the list */
+        }
 
         addLog(
           replaceMode
@@ -309,59 +309,86 @@ Your code: ${a.reviewCode}`;
     );
   };
 
+  const pendingApprovals =
+    rosterApproval.totalCount - rosterApproval.approvedCount;
+  const lockReady =
+    rosterApproval.allApproved && !rosterApproval.hasUnresolvedFlags;
+  const lockHint = lockReady
+    ? "All reviewers have approved — locking finalises the roster before voting."
+    : `Waiting on ${
+        pendingApprovals > 0
+          ? `${pendingApprovals} approval${pendingApprovals !== 1 ? "s" : ""}`
+          : ""
+      }${pendingApprovals > 0 && unresolvedFlags.length > 0 ? " and " : ""}${
+        unresolvedFlags.length > 0
+          ? `${unresolvedFlags.length} unresolved flag${
+              unresolvedFlags.length !== 1 ? "s" : ""
+            }`
+          : ""
+      } — the registry locks once every reviewer approves and all flags are resolved.`;
+
+  const statTiles = [
+    { label: "Registered", value: voters.length, f: "all", hint: "Show all" },
+    { label: "Accredited", value: accredited, f: "accredited", hint: "Filter" },
+    { label: "Voted", value: voted.length, f: "voted", hint: "Filter" },
+    { label: "Pending", value: pending.length, f: "pending", hint: "Filter" },
+  ];
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* ── Roster review panel (closed elections only) ────────────────────── */}
       {rosterActive && (
-        <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-          <div className="p-5 border-b border-slate-700">
-            <div className="flex items-center gap-2 mb-4">
-              <ClipboardList className="w-5 h-5 text-slate-400" />
-              <h3 className="text-white font-black uppercase tracking-widest text-sm">
-                Roster Review Panel
-              </h3>
-            </div>
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-100 flex-wrap">
+            <h4 className="text-[13px] font-semibold text-slate-900 flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-blue-600" /> Roster review
+              panel
+            </h4>
+            <span className="ml-auto text-[11px] text-slate-400">
+              Committee sign-off gates the election start
+            </span>
+          </div>
 
+          <div className="p-5 pb-4">
             {/* Add a committee member */}
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-              Add a committee member
-            </p>
             <div className="flex gap-3">
               <input
                 value={reviewerName}
                 onChange={(e) => setReviewerName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddReviewer()}
-                placeholder="Full name (e.g. Kabir Marzooq)"
-                className="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+                placeholder="Committee member's full name (e.g. Kabir Marzooq)"
+                className="flex-1 min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
               />
               <button
                 onClick={handleAddReviewer}
                 disabled={approvalBusy || !reviewerName.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 rounded-xl flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                title="Add this person to the review panel"
+                className="inline-flex items-center gap-2 min-h-[44px] px-4 text-[13px] font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed rounded-lg shadow-sm transition-all cursor-pointer whitespace-nowrap"
               >
-                <UserPlus className="w-4 h-4" /> Add Reviewer
+                <UserPlus className="w-4 h-4" /> Add reviewer
               </button>
             </div>
 
             {/* Progress */}
             {rosterApproval.totalCount > 0 && (
-              <div className="mt-5">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-bold text-slate-300">
-                    {rosterApproval.approvedCount} of {rosterApproval.totalCount}{" "}
-                    reviewers have approved
-                  </p>
-                  <p className="text-sm font-mono font-bold text-white">
+              <div className="mt-4">
+                <div className="flex justify-between items-baseline mb-2">
+                  <span className="text-[13px] font-semibold text-slate-900">
+                    {rosterApproval.approvedCount} of{" "}
+                    {rosterApproval.totalCount} reviewers have approved
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-slate-600 tabular-nums">
                     {Math.round(
-                      (rosterApproval.approvedCount / rosterApproval.totalCount) *
+                      (rosterApproval.approvedCount /
+                        rosterApproval.totalCount) *
                         100
                     )}
                     %
-                  </p>
+                  </span>
                 </div>
-                <div className="w-full bg-slate-700 rounded-full h-3">
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className="bg-blue-500 h-3 rounded-full transition-all duration-700"
+                    className="h-full bg-blue-600 rounded-full transition-all duration-700"
                     style={{
                       width: `${
                         (rosterApproval.approvedCount /
@@ -377,42 +404,45 @@ Your code: ${a.reviewCode}`;
 
           {/* Reviewer table */}
           {rosterApproval.approvals.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8 px-5">
-              No committee members yet. Add reviewers above, then send each
-              person their code and the review portal link.
+            <p className="text-xs leading-[18px] text-slate-600 text-center px-5 pb-5">
+              No committee members yet. Add reviewers, then send each person
+              their code and the review portal link.
             </p>
           ) : (
             <>
-              <div className="grid grid-cols-12 gap-2 px-5 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
-                <span className="col-span-4">Reviewer</span>
+              <div className="grid grid-cols-12 gap-2 px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-y border-slate-100">
+                <span className="col-span-3">Reviewer</span>
                 <span className="col-span-2">Code</span>
                 <span className="col-span-2">Status</span>
-                <span className="col-span-2">Approved At</span>
-                <span className="col-span-2 text-right">Actions</span>
+                <span className="col-span-2">Approved</span>
+                <span className="col-span-3 text-right">Actions</span>
               </div>
-              <div className="divide-y divide-slate-700/40">
+              <div>
                 {rosterApproval.approvals.map((a) => (
                   <div
                     key={a.id}
-                    className="grid grid-cols-12 gap-2 px-5 py-3 items-center"
+                    className="grid grid-cols-12 gap-2 px-5 py-2.5 items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
                   >
-                    <span className="col-span-4 text-sm font-bold text-white truncate">
+                    <span className="col-span-3 text-[13px] font-semibold text-slate-900 truncate">
                       {a.reviewerName}
                     </span>
-                    <span className="col-span-2 font-mono text-xs text-slate-300 tracking-widest">
-                      {a.reviewCode}
-                    </span>
-                    <div className="col-span-2 flex items-center gap-2">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          a.approved ? "bg-blue-400" : "bg-amber-500"
-                        }`}
-                      />
-                      <span className="text-xs text-slate-400">
-                        {a.approved ? "Approved" : "Pending"}
+                    <span className="col-span-2">
+                      <span className="font-mono text-[11px] font-semibold tracking-[0.1em] bg-slate-100 text-slate-800 px-2 py-1 rounded-md">
+                        {a.reviewCode}
                       </span>
-                    </div>
-                    <span className="col-span-2 text-xs text-slate-500">
+                    </span>
+                    <span className="col-span-2">
+                      {a.approved ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-50 text-green-600 border border-green-200 px-2.5 py-0.5 rounded-full">
+                          ✓ Approved
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                          Pending
+                        </span>
+                      )}
+                    </span>
+                    <span className="col-span-2 font-mono text-[11px] text-slate-600">
                       {a.approvedAt
                         ? new Date(a.approvedAt).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -420,23 +450,23 @@ Your code: ${a.reviewCode}`;
                           })
                         : "—"}
                     </span>
-                    <div className="col-span-2 flex justify-end items-center gap-3">
+                    <div className="col-span-3 flex justify-end items-center gap-1">
                       <button
                         onClick={() => copyReviewer(a)}
                         title="Copy this reviewer's link + code"
-                        className={`text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1.5 rounded-md transition-all cursor-pointer ${
                           copiedId === a.id
-                            ? "text-green-400"
-                            : "text-slate-400 hover:text-blue-300"
+                            ? "text-green-600"
+                            : "text-slate-600 hover:text-blue-700 hover:bg-blue-50"
                         }`}
                       >
                         {copiedId === a.id ? (
                           <>
-                            <Check className="w-3.5 h-3.5" /> Copied
+                            <Check className="w-3 h-3" /> Copied
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3.5 h-3.5" /> Copy
+                            <Copy className="w-3 h-3" /> Copy invite
                           </>
                         )}
                       </button>
@@ -444,7 +474,8 @@ Your code: ${a.reviewCode}`;
                         <button
                           onClick={() => handleRemoveReviewer(a)}
                           disabled={approvalBusy}
-                          className="text-red-400 hover:text-red-300 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                          title="Remove this reviewer from the panel"
+                          className="text-xs font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 px-2 py-1.5 rounded-md transition-all cursor-pointer disabled:opacity-50"
                         >
                           Remove
                         </button>
@@ -454,29 +485,31 @@ Your code: ${a.reviewCode}`;
                 ))}
               </div>
 
-              {/* Actions */}
-              <div className="p-5 border-t border-slate-700 flex flex-wrap gap-3">
+              {/* Panel actions */}
+              <div className="flex flex-wrap gap-3 px-5 py-4 border-t border-slate-100">
                 <button
                   onClick={copyAllCodes}
-                  className={`flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  title="Copy every reviewer's code plus the portal link"
+                  className={`inline-flex items-center gap-2 text-xs font-semibold min-h-[36px] px-3 rounded-lg border transition-all cursor-pointer ${
                     codesCopied
-                      ? "bg-slate-600 text-white"
-                      : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+                      ? "bg-green-50 text-green-600 border-green-200"
+                      : "bg-white text-slate-600 border-slate-300 hover:border-slate-400 hover:text-slate-800"
                   }`}
                 >
                   {codesCopied ? (
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3 h-3" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3 h-3" />
                   )}
-                  {codesCopied ? "Copied!" : "Copy all codes + link"}
+                  {codesCopied ? "Copied" : "Copy all codes + link"}
                 </button>
                 <button
                   onClick={handleResetApprovals}
                   disabled={approvalBusy}
-                  className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl text-amber-400 bg-amber-900/20 border border-amber-700/40 hover:bg-amber-900/30 transition-all cursor-pointer disabled:opacity-50"
+                  title="Set every reviewer back to pending"
+                  className="inline-flex items-center gap-2 text-xs font-semibold min-h-[36px] px-3 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" /> Reset all approvals
+                  <RotateCcw className="w-3 h-3" /> Reset all approvals
                 </button>
               </div>
             </>
@@ -484,224 +517,268 @@ Your code: ${a.reviewCode}`;
 
           {/* Flagged entries */}
           {unresolvedFlags.length > 0 && (
-            <div className="px-5 pb-5">
-              <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-700">
-                  <Flag className="w-4 h-4 text-red-400" />
-                  <p className="text-sm font-bold text-slate-300">
-                    Flagged Entries
-                  </p>
-                  <span className="ml-auto text-xs font-mono text-slate-500">
-                    {unresolvedFlags.length} to resolve
-                  </span>
-                </div>
-                <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
-                  <span className="col-span-3">Matric</span>
-                  <span className="col-span-3">Reviewer</span>
-                  <span className="col-span-4">Reason</span>
-                  <span className="col-span-2"></span>
-                </div>
-                {unresolvedFlags.map((f) => (
-                  <div
-                    key={f.id}
-                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center border-b border-slate-700/40 last:border-0"
-                  >
-                    <span className="col-span-3 font-mono text-xs text-slate-300 truncate">
-                      {f.matric}
-                    </span>
-                    <span className="col-span-3 text-xs text-slate-400 truncate">
-                      {f.reviewer}
-                    </span>
-                    <span className="col-span-4 text-xs text-amber-300 truncate">
-                      {f.reason}
-                    </span>
-                    <div className="col-span-2 flex justify-end">
-                      <button
-                        onClick={() => handleResolveFlag(f.id, f.matric)}
-                        disabled={approvalBusy}
-                        className="text-blue-400 hover:text-blue-300 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        Resolve
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            <div className="mx-5 mb-5 border border-amber-200 rounded-xl overflow-hidden">
+              <div className="flex items-center gap-2 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-800">
+                <Flag className="w-3.5 h-3.5" /> Flagged entries ·{" "}
+                {unresolvedFlags.length} to resolve
               </div>
+              <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] border-b border-slate-100">
+                <span className="col-span-3">Matric</span>
+                <span className="col-span-3">Raised by</span>
+                <span className="col-span-4">Reason</span>
+                <span className="col-span-2"></span>
+              </div>
+              {unresolvedFlags.map((f) => (
+                <div
+                  key={f.id}
+                  className="grid grid-cols-12 gap-2 px-4 py-2.5 items-center border-b border-slate-100 last:border-0"
+                >
+                  <span className="col-span-3 font-mono text-xs text-slate-800 truncate">
+                    {f.matric}
+                  </span>
+                  <span className="col-span-3 text-xs text-slate-600 truncate">
+                    {f.reviewer}
+                  </span>
+                  <span className="col-span-4 text-xs text-amber-800 truncate">
+                    {f.reason}
+                  </span>
+                  <div className="col-span-2 flex justify-end">
+                    <button
+                      onClick={() => handleResolveFlag(f.id, f.matric)}
+                      disabled={approvalBusy}
+                      title="Mark this flag as resolved"
+                      className="text-xs font-semibold min-h-[32px] px-3 rounded-lg bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:text-slate-800 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      Resolve
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
           {/* Lock registry — gated on all approved + no unresolved flags */}
           {rosterApproval.totalCount > 0 && (
-            <div className="px-5 pb-5">
-              <button
-                onClick={handleLockRegistry}
-                disabled={
-                  approvalBusy ||
-                  !rosterApproval.allApproved ||
-                  rosterApproval.hasUnresolvedFlags ||
-                  electionConfig.registryLocked
-                }
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Lock className="w-4 h-4" />
-                {electionConfig.registryLocked
-                  ? "Registry Locked"
-                  : rosterApproval.allApproved && !rosterApproval.hasUnresolvedFlags
-                  ? "Lock Registry"
-                  : "Lock Registry — awaiting approvals"}
-              </button>
+            <div className="px-5 pb-5 pt-4 border-t border-slate-100">
+              {electionConfig.registryLocked ? (
+                <div className="flex items-center justify-center gap-2 min-h-[44px] bg-green-50 border border-green-200 rounded-lg text-green-600 text-[13px] font-semibold">
+                  <Lock className="w-3.5 h-3.5" /> Registry locked
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={handleLockRegistry}
+                    disabled={approvalBusy || !lockReady}
+                    title="Finalise the roster so it can no longer be edited"
+                    className="w-full min-h-[44px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5" /> Lock registry
+                  </button>
+                  <p className="text-[11px] leading-4 text-slate-600 text-center mt-2">
+                    {lockHint}
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Org voter URL */}
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-            Voter URL
-          </p>
-          <p className="text-sm font-mono text-blue-400 truncate">{voterUrl}</p>
-        </div>
-        <button
-          onClick={handleCopy}
-          title={copied ? "Copied!" : "Copy voter URL to clipboard"}
-          className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
-            copied
-              ? "bg-green-500/20 text-green-400 border-green-500/30"
-              : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-          }`}
-        >
-          {copied ? (
-            <Check className="w-3.5 h-3.5" />
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
-          {copied ? "Copied!" : "Copy"}
-        </button>
-      </div>
-
-      {/* Org observer URL */}
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-            Observer URL
-          </p>
-          <p className="text-sm font-mono text-teal-400 truncate">
-            {observerUrl}
-          </p>
-        </div>
-        <button
-          onClick={handleCopyObs}
-          title={copiedObs ? "Copied!" : "Copy observer URL to clipboard"}
-          className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
-            copiedObs
-              ? "bg-green-500/20 text-green-400 border-green-500/30"
-              : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-          }`}
-        >
-          {copiedObs ? (
-            <Check className="w-3.5 h-3.5" />
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
-          {copiedObs ? "Copied!" : "Copy"}
-        </button>
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          ["Registered", voters.length, "text-white", "all"],
-          ["Accredited", accredited, "text-blue-400", "accredited"],
-          ["Voted", voted.length, "text-green-400", "voted"],
-          ["Pending", pending.length, "text-amber-400", "pending"],
-        ].map(([l, v, c, f]) => (
-          <button
-            key={l}
-            onClick={() => setFilter(f)}
-            className={`bg-slate-800 rounded-2xl p-5 border text-left hover:border-slate-500 transition-colors cursor-pointer ${
-              filter === f ? "border-blue-500" : "border-slate-700"
-            }`}
-          >
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
-              {l}
+      {/* ── Share links ─────────────────────────────────────────────────────── */}
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="flex items-center gap-3 bg-white border border-blue-200 rounded-xl px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-[0.1em] mb-0.5">
+              Voter URL
             </p>
-            <p className={`text-3xl font-mono font-bold ${c}`}>{v}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Turnout bar */}
-      <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">
-        <div className="flex justify-between items-center mb-2">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            Voter Turnout
-          </p>
-          <p className="text-sm font-mono font-bold text-white">{pct}%</p>
-        </div>
-        <div className="w-full bg-slate-700 rounded-full h-3">
-          <div
-            className="bg-gradient-to-r from-green-500 to-emerald-400 h-3 rounded-full transition-all duration-700"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Actions */}
-      {/* Upload mode toggle + actions */}
-      <div className="space-y-3">
-        {/* Verified-template notice */}
-        <div className="flex items-start gap-3 p-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-400">
-          <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-          <span>
-            Only files downloaded from{" "}
-            <span className="text-slate-300 font-bold">Download Template</span>{" "}
-            can be uploaded. The system verifies each file's signature before
-            accepting it.
-          </span>
-        </div>
-
-        {/* Append vs Replace toggle */}
-        <div className="flex items-center gap-3 bg-slate-800 rounded-xl p-3 border border-slate-700">
-          <div className="flex-1">
-            <p className="text-sm font-bold text-white">
-              {replaceMode ? "Replace roster" : "Add to roster"}
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {replaceMode
-                ? "Clears all unvoted entries and uploads fresh — use for a new election"
-                : "Adds new voters to the existing roster — duplicates are skipped"}
+            <p className="font-mono text-[11px] text-slate-800 truncate">
+              {voterUrl}
             </p>
           </div>
           <button
-            onClick={() => setReplaceMode((v) => !v)}
-            className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${
-              replaceMode ? "bg-amber-500" : "bg-slate-600"
+            onClick={handleCopy}
+            title="Copy the voter URL"
+            className={`text-xs font-semibold min-h-[36px] px-3 rounded-lg transition-all cursor-pointer shrink-0 ${
+              copied
+                ? "bg-green-50 text-green-600 border border-green-200"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
           >
-            <span
-              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                replaceMode ? "translate-x-5" : "translate-x-0"
+            {copied ? "✓ Copied" : "Copy"}
+          </button>
+        </div>
+        <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.1em] mb-0.5">
+              Observer URL
+            </p>
+            <p className="font-mono text-[11px] text-slate-800 truncate">
+              {observerUrl}
+            </p>
+          </div>
+          <button
+            onClick={handleCopyObs}
+            title="Copy the observer URL"
+            className={`text-xs font-semibold min-h-[36px] px-3 rounded-lg transition-all cursor-pointer shrink-0 ${
+              copiedObs
+                ? "bg-green-50 text-green-600 border border-green-200"
+                : "bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:text-slate-800"
+            }`}
+          >
+            {copiedObs ? "✓ Copied" : "Copy"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stat tiles double as filters ───────────────────────────────────── */}
+      {voters.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {statTiles.map((s) => {
+            const on = filter === s.f;
+            return (
+              <button
+                key={s.f}
+                onClick={() => setFilter(s.f)}
+                title={`Filter the table: ${s.label.toLowerCase()}`}
+                className={`text-left rounded-xl border px-4 py-3 transition-all cursor-pointer ${
+                  on
+                    ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600"
+                    : "bg-white border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <p
+                  className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                    on ? "text-blue-700" : "text-slate-600"
+                  }`}
+                >
+                  {s.label}
+                </p>
+                <p className="text-2xl leading-8 font-semibold text-slate-900 tabular-nums mt-0.5">
+                  {s.value}
+                </p>
+                <p
+                  className={`text-[10px] mt-0.5 ${
+                    on ? "text-blue-700" : "text-slate-400"
+                  }`}
+                >
+                  {on ? "Filtering ✓" : s.hint}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Empty state (no roster yet) ────────────────────────────────────── */}
+      {voters.length === 0 && (
+        <div className="bg-white border border-dashed border-slate-300 rounded-xl p-10 text-center">
+          <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-slate-400">
+            <Users className="w-6 h-6" />
+          </div>
+          <h4 className="text-base font-semibold text-slate-900">
+            No voters yet
+          </h4>
+          <p className="text-[13px] leading-5 text-slate-600 mt-1 max-w-sm mx-auto">
+            Download the official template, fill it in, and upload it below.
+            Voters must be on the roster to activate an account and vote.
+          </p>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 max-w-xs mx-auto mt-4 text-left">
+            <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.1em] mb-1.5">
+              Template columns
+            </p>
+            <code className="font-mono text-[11px] leading-[18px] text-slate-800 block whitespace-pre">
+              {"matric,name,email\nU/25/001,Amina Yusuf,amina@edu.ng\nU/25/002,Emeka Obi,emeka@edu.ng"}
+            </code>
+          </div>
+        </div>
+      )}
+
+      {/* ── Roster upload ──────────────────────────────────────────────────── */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-3">
+          Roster upload
+        </p>
+        <div className="flex gap-2.5 bg-blue-50 border border-blue-200 rounded-lg px-3.5 py-2.5 text-xs leading-[18px] text-slate-800 mb-3">
+          <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-px" />
+          <span>
+            Only files downloaded from{" "}
+            <span className="font-semibold">Download template</span> can be
+            uploaded — each file carries a signature that is verified before
+            any voter is added.
+          </span>
+        </div>
+
+        {/* Append vs Replace */}
+        <div
+          className={`flex items-center gap-3 border rounded-xl px-4 py-3 mb-3 transition-colors ${
+            replaceMode
+              ? "bg-amber-50 border-amber-200"
+              : "bg-white border-slate-200"
+          }`}
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-slate-900">
+              {replaceMode ? "Replace roster" : "Add to roster"}
+            </p>
+            <p
+              className={`text-[11px] leading-4 mt-0.5 ${
+                replaceMode ? "text-amber-800" : "text-slate-600"
               }`}
-            />
+            >
+              {replaceMode
+                ? "Clears all unvoted entries and uploads fresh — voters who already voted are preserved"
+                : "Adds new voters to the existing roster — duplicates are skipped"}
+            </p>
+          </div>
+          <span
+            className={`text-[11px] font-semibold shrink-0 ${
+              replaceMode ? "text-amber-800" : "text-slate-600"
+            }`}
+          >
+            {replaceMode ? "Replace" : "Add"}
+          </span>
+          <button
+            onClick={() => setReplaceMode((v) => !v)}
+            title={
+              replaceMode
+                ? "Switch back to add-to-roster mode"
+                : "Switch to replace-roster mode"
+            }
+            className="w-11 h-11 flex items-center justify-center shrink-0 cursor-pointer"
+          >
+            <span
+              className={`relative w-9 h-5 rounded-full transition-colors ${
+                replaceMode ? "bg-amber-600" : "bg-slate-300"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${
+                  replaceMode ? "left-[18px]" : "left-0.5"
+                }`}
+              />
+            </span>
           </button>
         </div>
 
-        {/* Download template + Upload roster */}
         <div className="flex gap-3">
           <button
             onClick={handleDownloadTemplate}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-slate-600 transition-colors cursor-pointer"
+            title="Download the official signed CSV template"
+            className="flex-1 min-h-[44px] bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:text-slate-800 font-semibold text-[13px] rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            <FileDown className="w-4 h-4" /> Download Template
+            <FileDown className="w-4 h-4" /> Download template
           </button>
           <label
-            className={`flex-1 text-white font-bold py-3 px-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors ${
+            title={
+              replaceMode
+                ? "Upload a signed CSV and replace the roster"
+                : "Upload a signed CSV and add to the roster"
+            }
+            className={`flex-1 min-h-[44px] text-white font-semibold text-[13px] rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               uploading
-                ? "bg-slate-600 cursor-not-allowed"
+                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                 : replaceMode
-                ? "bg-amber-600 hover:bg-amber-500"
+                ? "bg-amber-600 hover:bg-amber-700"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
@@ -710,7 +787,7 @@ Your code: ${a.reviewCode}`;
             ) : (
               <>
                 <Upload className="w-4 h-4" />
-                {replaceMode ? "Upload (Replace)" : "Upload Roster"}
+                {replaceMode ? "Upload & replace roster" : "Upload roster"}
               </>
             )}
             <input
@@ -723,57 +800,21 @@ Your code: ${a.reviewCode}`;
           </label>
         </div>
 
-        {/* Export current list (unchanged — reference only) */}
-        <button
-          onClick={exportCSV}
-          className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition-colors cursor-pointer text-sm"
-        >
-          <FileDown className="w-4 h-4" /> Export Current List
-        </button>
+        {voters.length > 0 && (
+          <button
+            onClick={exportCSV}
+            title="Download the current roster as CSV"
+            className="w-full mt-3 min-h-[36px] bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:text-slate-800 font-semibold text-xs rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <FileDown className="w-3.5 h-3.5" /> Export current list
+          </button>
+        )}
       </div>
 
-      {/* Empty state — shown before any roster is uploaded */}
-      {voters.length === 0 && (
-        <div className="bg-slate-800 border border-dashed border-slate-600 rounded-2xl p-10 text-center">
-          <div className="w-16 h-16 bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-slate-500" />
-          </div>
-          <h3 className="text-white font-black mb-2">No voters yet</h3>
-          <p className="text-slate-400 text-sm mb-6 max-w-sm mx-auto">
-            Upload a CSV file to add eligible voters to the roster. Voters must
-            be on the roster to register and vote.
-          </p>
-
-          {/* CSV format reminder */}
-          <div className="bg-slate-900 rounded-xl p-4 text-left max-w-xs mx-auto mb-6">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-              CSV format
-            </p>
-            <code className="text-xs text-green-400 font-mono leading-relaxed block">
-              matric,name,email
-              <br />
-              U/25/001,Amina Yusuf,amina@gmail.com
-              <br />
-              U/25/002,Emeka Obi,emeka@gmail.com
-            </code>
-          </div>
-
-          <label className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl inline-flex items-center gap-2 cursor-pointer transition-colors">
-            <Upload className="w-4 h-4" /> Upload CSV Roster
-            <input
-              type="file"
-              accept=".csv"
-              onChange={upload}
-              className="hidden"
-            />
-          </label>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-        <div className="p-4 border-b border-slate-700 space-y-3">
-          <div className="flex gap-2 flex-wrap items-center">
+      {/* ── Voter table ────────────────────────────────────────────────────── */}
+      {voters.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="flex gap-2 flex-wrap items-center px-5 py-3 border-b border-slate-100">
             {[
               ["all", "All"],
               ["accredited", "Accredited"],
@@ -783,80 +824,84 @@ Your code: ${a.reviewCode}`;
               <button
                 key={v}
                 onClick={() => setFilter(v)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                title={`Show ${l.toLowerCase()} voters`}
+                className={`text-xs font-semibold min-h-[32px] px-3.5 rounded-full border transition-all cursor-pointer ${
                   filter === v
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-700 text-slate-400 hover:bg-slate-600"
+                    ? "bg-blue-600 border-blue-600 text-white"
+                    : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
                 }`}
               >
                 {l}
               </button>
             ))}
-            <div className="flex-1 min-w-40 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <div className="flex-1 min-w-[180px] relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search…"
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg py-1.5 pl-8 pr-3 text-sm outline-none text-white placeholder:text-slate-600 focus:border-blue-500"
+                placeholder="Search name or matric…"
+                className="w-full min-h-[32px] text-xs text-slate-900 bg-white border border-slate-300 rounded-lg pl-8 pr-3 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
               />
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
-          <span className="col-span-3">Matric</span>
-          <span className="col-span-4">Name</span>
-          <span className="col-span-3">Email</span>
-          <span className="col-span-1 text-center">✓</span>
-          <span className="col-span-1"></span>
-        </div>
+          <div className="grid grid-cols-12 gap-2 px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
+            <span className="col-span-3">Matric</span>
+            <span className="col-span-4">Name</span>
+            <span className="col-span-3">Email</span>
+            <span className="col-span-1 text-center">Voted</span>
+            <span className="col-span-1"></span>
+          </div>
 
-        <div className="max-h-72 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-10">
-              No voters match.
-            </p>
-          ) : (
-            filtered.map((u) => (
-              <div
-                key={u.matric}
-                className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-slate-700/30 border-b border-slate-700/30 last:border-0 group"
-              >
-                <span className="col-span-3 font-mono text-sm text-slate-300 truncate">
-                  {u.matric}
-                </span>
-                <span className="col-span-4 text-sm font-bold text-white truncate">
-                  {u.name}
-                </span>
-                <span className="col-span-3 text-xs text-slate-500 truncate">
-                  {u.email ?? "—"}
-                </span>
-                <div className="col-span-1 flex justify-center">
-                  {u.hasVoted ? (
-                    <UserCheck className="w-4 h-4 text-green-400" />
-                  ) : (
-                    <UserX className="w-4 h-4 text-slate-600" />
-                  )}
+          <div className="max-h-72 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="text-[13px] text-slate-400 text-center py-10">
+                No voters match.
+              </p>
+            ) : (
+              filtered.map((u) => (
+                <div
+                  key={u.matric}
+                  className="grid grid-cols-12 gap-2 px-5 py-2.5 items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors group"
+                >
+                  <span className="col-span-3 font-mono text-xs text-slate-800 truncate">
+                    {u.matric}
+                  </span>
+                  <span className="col-span-4 text-[13px] font-semibold text-slate-900 truncate">
+                    {u.name}
+                  </span>
+                  <span className="col-span-3 text-xs text-slate-600 truncate">
+                    {u.email ?? "—"}
+                  </span>
+                  <div className="col-span-1 flex justify-center">
+                    {u.hasVoted ? (
+                      <span className="w-[22px] h-[22px] rounded-full bg-green-50 border border-green-200 text-green-600 inline-flex items-center justify-center">
+                        <Check className="w-3 h-3" strokeWidth={2.6} />
+                      </span>
+                    ) : (
+                      <span className="text-slate-300 text-[13px]">—</span>
+                    )}
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    {!u.hasVoted && (
+                      <button
+                        onClick={() => handleRemove(u)}
+                        title={`Remove ${u.matric} from the roster`}
+                        className="text-xs font-semibold text-slate-400 hover:text-red-600 hover:bg-red-50 px-2 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        ✕ Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="col-span-1 flex justify-center">
-                  {!u.hasVoted && (
-                    <button
-                      onClick={() => handleRemove(u)}
-                      className="text-slate-600 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition-all cursor-pointer font-bold"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
+          <p className="px-5 py-2 border-t border-slate-100 text-[11px] text-slate-400">
+            Showing {filtered.length} of {voters.length}
+          </p>
         </div>
-        <div className="px-4 py-2 border-t border-slate-700 text-xs text-slate-600">
-          Showing {filtered.length} of {voters.length}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
