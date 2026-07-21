@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 12: Candidates Tab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.pane{width:960px;max-width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:24px}
+.cols{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden}
+.cpad{padding:20px}
+.clabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.chead{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--gray-100)}
+.chead h4{font-size:13px;font-weight:600;color:var(--gray-900);display:flex;align-items:center;gap:8px}
+.chead .cmeta{margin-left:auto;font-size:11px;color:var(--gray-400)}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;line-height:20px;font-weight:500;color:var(--gray-600);margin-bottom:8px}
+.field .hint{font-size:11px;line-height:16px;color:var(--gray-400);margin-top:6px}
+.input,textarea.input{width:100%;min-height:44px;font-family:var(--font-sans);font-size:13px;color:var(--gray-900);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);padding:10px 14px;outline:none;transition:var(--transition-fast)}
+.input::placeholder{color:var(--gray-400)}
+.input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+.input:disabled{background:var(--gray-100);color:var(--gray-400);cursor:not-allowed}
+textarea.input{resize:none;line-height:20px}
+
+.uploadrow{display:flex;gap:8px}
+.uploadbtn{flex:1;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;font-size:13px;color:var(--gray-600);background:var(--white);border:1px dashed var(--gray-300);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast)}
+.uploadbtn:hover{border-color:var(--blue-500);color:var(--gray-800)}
+.uploadbtn svg{color:var(--gray-400)}
+.clearbtn{width:44px;min-height:44px;border-radius:var(--radius);border:1px solid var(--gray-300);background:var(--white);color:var(--gray-400);cursor:pointer;font-weight:600;transition:var(--transition-fast)}
+.clearbtn:hover{color:var(--danger);border-color:#FECACA;background:var(--danger-light)}
+.urlrow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.urlrow span{font-size:11px;color:var(--gray-400);flex-shrink:0}
+.urlrow .input{min-height:36px;font-size:12px;padding:6px 12px}
+
+.previewchip{display:flex;align-items:center;gap:12px;background:var(--blue-50);border:1px solid var(--blue-200);border-radius:var(--radius-lg);padding:12px;margin-top:12px}
+.avatar{width:48px;height:48px;border-radius:var(--radius-lg);background:var(--gray-200);object-fit:cover;flex-shrink:0}
+.previewchip .pname{font-size:13px;font-weight:600;color:var(--gray-900)}
+.previewchip .ppos{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-700);margin-top:1px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;min-height:44px;padding:0 16px;border-radius:var(--radius);border:none;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm);width:100%}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+.btn-sm{min-height:32px;font-size:12px;padding:0 12px}
+.btn-outline{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-300);width:auto}
+.btn-outline:hover{border-color:var(--gray-400);color:var(--gray-800)}
+.btn-outline.on{background:var(--blue-600);color:#fff;border-color:var(--blue-600)}
+
+.lockbanner{display:flex;align-items:center;gap:10px;background:var(--warning-light);border:1px solid var(--warning-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px}
+.lockbanner svg{color:var(--warning);flex-shrink:0}
+.lockbanner p{font-size:12px;line-height:16px;font-weight:500;color:var(--warning-ink)}
+
+/* Lineup */
+.posgroup{border-bottom:1px solid var(--gray-100)}
+.posgroup:last-child{border-bottom:none}
+.poshead{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--gray-50);border-bottom:1px solid var(--gray-100)}
+.poshead .pname{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.poshead .pcount{font-size:11px;color:var(--gray-400)}
+.crow{padding:12px 16px;border-bottom:1px solid var(--gray-100)}
+.crow:last-child{border-bottom:none}
+.crow .top{display:flex;align-items:center;gap:12px}
+.crow .cname{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--gray-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .votes{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--gray-600);flex-shrink:0}
+.crow .manif{font-size:11px;line-height:16px;color:var(--gray-600);margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-100);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.crow .manif.none{color:var(--gray-400);font-style:italic}
+.removebtn{font-size:12px;font-weight:600;color:var(--gray-400);background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:6px;transition:var(--transition-fast)}
+.removebtn:hover{color:var(--danger);background:var(--danger-light)}
+
+/* Inline manifesto editor */
+.editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-100)}
+.editor .erow{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.editor .count{font-size:11px;color:var(--gray-400)}
+.editor .savebtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;min-height:32px;padding:0 14px;border-radius:var(--radius);border:none;background:var(--blue-600);color:#fff;cursor:pointer;transition:var(--transition-fast)}
+.editor .savebtn:hover{background:var(--blue-700)}
+
+/* Empty state */
+.empty{border:1px dashed var(--gray-300);border-radius:var(--radius-lg);background:var(--white);padding:40px 24px;text-align:center}
+.empty .eico{width:56px;height:56px;border-radius:var(--radius-lg);background:var(--gray-100);color:var(--gray-400);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.empty h4{font-size:16px;font-weight:600;color:var(--gray-900)}
+.empty p{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:4px;max-width:320px;margin-left:auto;margin-right:auto}
+
+/* Ballot preview */
+.bpsection{margin-bottom:16px}
+.bpdivider{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.bpdivider .line{flex:1;height:1px;background:var(--gray-200)}
+.bpdivider span{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.bpgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bpcard{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;transition:var(--transition-fast)}
+.bpcard:hover{border-color:var(--blue-200);box-shadow:var(--shadow-sm)}
+.bpcard .brow{display:flex;align-items:center;gap:12px}
+.bpcard .bname{font-size:13px;font-weight:600;color:var(--gray-900)}
+.bpcard .bpos{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);margin-top:1px}
+.bpcard .bmanif{font-size:11px;line-height:16px;color:var(--gray-600);margin-top:10px;padding-top:10px;border-top:1px solid var(--gray-100);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bpcard .bmanif.none{color:var(--gray-400);font-style:italic}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 12 — Candidates Tab</h1>
+  <p class="sub">Content area only — renders inside the Screen 9 shell · two-column: add form left, lineup right · candidate color strips dropped (no longer used by the design system) · remove gains a confirm modal · ballot preview cards match the real rebuilt ballot</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Building the ballot -->
+    <div class="variant"><span class="cap">1 · Building — form with photo preview, one manifesto editor open</span>
+      <div class="pane">
+        <div class="cols">
+          <!-- Add form -->
+          <div class="card" style="margin-bottom:0"><div class="cpad">
+            <div class="clabel" style="margin-bottom:16px">Add candidate</div>
+            <div class="field">
+              <label>Full name</label>
+              <input class="input" value="Grace Adeleke" />
+            </div>
+            <div class="field">
+              <label>Position</label>
+              <input class="input is-focus" value="Treasurer" />
+              <div class="hint">Suggests existing positions as you type — everyone with the same position appears together on the ballot.</div>
+            </div>
+            <div class="field">
+              <label>Photo (optional)</label>
+              <div class="uploadrow">
+                <label class="uploadbtn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                  Photo uploaded ✓
+                </label>
+                <button class="clearbtn" title="Remove photo">✕</button>
+              </div>
+              <div class="urlrow"><span>or paste URL:</span><input class="input" placeholder="https://example.com/photo.jpg" /></div>
+              <div class="hint">Under 200 KB. Square images look best.</div>
+              <div class="previewchip">
+                <span class="avatar"></span>
+                <div>
+                  <div class="pname">Grace Adeleke</div>
+                  <div class="ppos">Treasurer</div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Manifesto / bio (optional)</label>
+              <textarea class="input" rows="3" placeholder="A short statement voters will read on the ballot…"></textarea>
+            </div>
+            <button class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Add to ballot
+            </button>
+          </div></div>
+
+          <!-- Lineup -->
+          <div>
+            <div class="card">
+              <div class="chead"><h4>Current lineup</h4><span class="cmeta">5 candidates · 2 positions</span></div>
+
+              <div class="posgroup">
+                <div class="poshead"><span class="pname">President</span><span class="pcount">3 candidates</span></div>
+                <div class="crow">
+                  <div class="top">
+                    <span class="avatar" style="width:40px;height:40px"></span>
+                    <span class="cname">Amina Yusuf</span>
+                    <button class="btn-sm btn btn-outline">Manifesto</button>
+                    <button class="removebtn">✕ Remove</button>
+                  </div>
+                  <div class="manif">Every student deserves a union that shows up. I'll publish budgets quarterly and open committee seats to first-years.</div>
+                </div>
+                <div class="crow">
+                  <div class="top">
+                    <span class="avatar" style="width:40px;height:40px"></span>
+                    <span class="cname">Daniel Okafor</span>
+                    <button class="btn-sm btn btn-outline on">Done</button>
+                    <button class="removebtn">✕ Remove</button>
+                  </div>
+                  <div class="editor">
+                    <textarea class="input" rows="3">Transparency first: open budgets, monthly town halls, and a</textarea>
+                    <div class="erow">
+                      <span class="count">61 characters</span>
+                      <button class="savebtn">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        Save manifesto
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="crow">
+                  <div class="top">
+                    <span class="avatar" style="width:40px;height:40px"></span>
+                    <span class="cname">Grace Adeleke</span>
+                    <button class="btn-sm btn btn-outline">Manifesto</button>
+                    <button class="removebtn">✕ Remove</button>
+                  </div>
+                  <div class="manif none">No manifesto yet</div>
+                </div>
+              </div>
+
+              <div class="posgroup">
+                <div class="poshead"><span class="pname">Treasurer</span><span class="pcount">2 candidates</span></div>
+                <div class="crow">
+                  <div class="top">
+                    <span class="avatar" style="width:40px;height:40px"></span>
+                    <span class="cname">Kunle Bello</span>
+                    <button class="btn-sm btn btn-outline">Manifesto</button>
+                    <button class="removebtn">✕ Remove</button>
+                  </div>
+                  <div class="manif">Every naira accounted for — I'll publish a live ledger of union spending.</div>
+                </div>
+                <div class="crow">
+                  <div class="top">
+                    <span class="avatar" style="width:40px;height:40px"></span>
+                    <span class="cname">Ngozi Eze</span>
+                    <button class="btn-sm btn btn-outline">Manifesto</button>
+                    <button class="removebtn">✕ Remove</button>
+                  </div>
+                  <div class="manif none">No manifesto yet</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ballot preview -->
+            <div class="card" style="margin-bottom:0">
+              <div class="chead">
+                <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg> Ballot preview</h4>
+                <span class="cmeta">What voters see</span>
+              </div>
+              <div class="cpad">
+                <div class="bpsection">
+                  <div class="bpdivider"><div class="line"></div><span>President</span><div class="line"></div></div>
+                  <div class="bpgrid">
+                    <div class="bpcard">
+                      <div class="brow"><span class="avatar" style="width:40px;height:40px"></span><div><div class="bname">Amina Yusuf</div><div class="bpos">President</div></div></div>
+                      <div class="bmanif">Every student deserves a union that shows up. I'll publish budgets quarterly and open committee seats to first-years.</div>
+                    </div>
+                    <div class="bpcard">
+                      <div class="brow"><span class="avatar" style="width:40px;height:40px"></span><div><div class="bname">Daniel Okafor</div><div class="bpos">President</div></div></div>
+                      <div class="bmanif none">No manifesto</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Locked (election live) -->
+    <div class="variant"><span class="cap">2 · Election live — form locked, lineup shows votes, edits hidden</span>
+      <div class="pane">
+        <div class="cols">
+          <div class="card" style="margin-bottom:0"><div class="cpad">
+            <div class="clabel" style="margin-bottom:16px">Add candidate</div>
+            <div class="lockbanner">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <p>Election is live — the candidate list is locked until it ends.</p>
+            </div>
+            <div class="field">
+              <label>Full name</label>
+              <input class="input" disabled placeholder="e.g. Jane Okafor" />
+            </div>
+            <div class="field">
+              <label>Position</label>
+              <input class="input" disabled placeholder="e.g. President" />
+            </div>
+            <div class="field">
+              <label>Manifesto / bio (optional)</label>
+              <textarea class="input" rows="3" disabled placeholder="A short statement voters will read on the ballot…"></textarea>
+            </div>
+            <button class="btn btn-primary" disabled>Add to ballot</button>
+          </div></div>
+
+          <div class="card" style="margin-bottom:0">
+            <div class="chead"><h4>Current lineup</h4><span class="cmeta">3 candidates · live vote counts</span></div>
+            <div class="posgroup">
+              <div class="poshead"><span class="pname">President</span><span class="pcount">203 votes so far</span></div>
+              <div class="crow">
+                <div class="top">
+                  <span class="avatar" style="width:40px;height:40px"></span>
+                  <span class="cname">Amina Yusuf</span>
+                  <span class="votes">118 votes</span>
+                </div>
+              </div>
+              <div class="crow">
+                <div class="top">
+                  <span class="avatar" style="width:40px;height:40px"></span>
+                  <span class="cname">Daniel Okafor</span>
+                  <span class="votes">59 votes</span>
+                </div>
+              </div>
+              <div class="crow">
+                <div class="top">
+                  <span class="avatar" style="width:40px;height:40px"></span>
+                  <span class="cname">Grace Adeleke</span>
+                  <span class="votes">26 votes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 3: Empty -->
+    <div class="variant"><span class="cap">3 · No candidates yet</span>
+      <div class="pane" style="width:520px">
+        <div class="empty">
+          <div class="eico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg></div>
+          <h4>No candidates yet</h4>
+          <p>Use the form to add candidates. Group them by position — everyone with the same position name appears together on the ballot.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
