@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 7: Public Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:6px; --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05); --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.screen{width:720px;max-width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:32px 28px}
+.screen.mobile{width:375px;padding:20px 16px}
+
+/* ── Page header ─────────────────────────────────────────────── */
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px}
+.eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-600)}
+.ptitle{font-size:24px;line-height:32px;font-weight:600;color:var(--gray-900);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
+.psub{font-size:13px;color:var(--gray-600);margin-top:4px}
+.live{display:inline-flex;align-items:center;gap:6px;background:var(--blue-600);color:#fff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;border-radius:999px}
+.live .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:blink 1.2s ease infinite}
+@keyframes blink{50%{opacity:.3}}
+.homebtn{min-height:44px;padding:0 16px;font-size:13px;font-weight:600;color:var(--gray-600);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast);flex-shrink:0}
+.homebtn:hover{border-color:var(--gray-400);color:var(--gray-800)}
+
+/* ── Stale banner ────────────────────────────────────────────── */
+.stale{display:flex;align-items:center;gap:8px;background:var(--warning-light);border:1px solid var(--warning-border);border-radius:var(--radius-lg);padding:10px 16px;margin-bottom:16px}
+.stale .dot{width:8px;height:8px;border-radius:50%;background:var(--warning);animation:blink 1.2s ease infinite;flex-shrink:0}
+.stale p{font-size:12px;line-height:16px;font-weight:500;color:var(--warning-ink)}
+
+/* ── Stat tiles ──────────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.mobile .stats{grid-template-columns:repeat(2,1fr)}
+.stat{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px}
+.stat .slabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.stat .sval{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900);margin-top:4px;font-variant-numeric:tabular-nums}
+.stat.hero{background:var(--blue-600);border-color:var(--blue-600)}
+.stat.hero .slabel{color:var(--blue-100)}
+.stat.hero .sval{color:#fff}
+
+/* ── Participation bar ───────────────────────────────────────── */
+.turnout{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:24px}
+.turnout .trow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.turnout .tlabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.turnout .tval{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--gray-800)}
+.track{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden}
+.fill{height:100%;background:var(--blue-600);border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+/* ── Vote Pulse (live) ───────────────────────────────────────── */
+.pulsecard{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:20px;margin-bottom:24px}
+.pulsehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.pulsehead h3{font-size:15px;font-weight:600;color:var(--gray-900);display:flex;align-items:center;gap:8px}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--success)}
+.conn .dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+.conn.off{color:var(--gray-400)}
+.conn.off .dot{background:var(--gray-400)}
+.lane{display:flex;align-items:center;gap:12px;padding:8px 0}
+.lane img,.avatar{width:36px;height:36px;border-radius:var(--radius);background:var(--gray-200);object-fit:cover;flex-shrink:0}
+.lane .lmain{flex:1;min-width:0}
+.lane .lname{font-size:13px;font-weight:600;color:var(--gray-800);display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lane .lcount{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--gray-800);flex-shrink:0;font-variant-numeric:tabular-nums}
+.pulse-ring{position:relative}
+.pulse-ring::after{content:'';position:absolute;inset:-4px;border:2px solid var(--blue-500);border-radius:var(--radius-lg);animation:ping 1s ease-out infinite}
+@keyframes ping{from{opacity:.7;transform:scale(.9)}to{opacity:0;transform:scale(1.25)}}
+.feed{border-top:1px solid var(--gray-100);margin-top:12px;padding-top:12px}
+.feed p{font-family:var(--font-mono);font-size:11px;line-height:20px;color:var(--gray-400)}
+.feed p b{color:var(--gray-600);font-weight:600}
+.feed p:first-child{color:var(--gray-600);animation:slidein .6s ease-out}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+/* ── Position card ───────────────────────────────────────────── */
+.pos{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:24px;margin-bottom:24px}
+.mobile .pos{padding:16px}
+.poshead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.poshead .pmeta{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gray-400)}
+.poshead h3{font-size:18px;line-height:24px;font-weight:600;color:var(--gray-900);margin-top:2px}
+.posacts{display:flex;align-items:center;gap:8px}
+.pill{font-size:11px;font-weight:600;background:var(--gray-100);color:var(--gray-600);padding:6px 12px;border-radius:999px}
+.pdfbtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;min-height:36px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--gray-300);background:var(--white);color:var(--gray-600);cursor:pointer;transition:var(--transition-fast)}
+.pdfbtn:hover{border-color:var(--gray-400);color:var(--gray-800)}
+
+/* Winner strip */
+.winner{display:flex;align-items:center;gap:16px;background:var(--blue-50);border:1px solid var(--blue-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+.winner .wimgwrap{position:relative;flex-shrink:0}
+.winner .wimg{width:56px;height:56px;border-radius:var(--radius-lg);background:var(--gray-200);object-fit:cover;display:block}
+.winner .trophy{position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;background:var(--blue-600);border:2px solid var(--blue-50);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff}
+.winner .wmain{flex:1;min-width:0}
+.winner .weyebrow{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-700)}
+.winner .wname{font-size:18px;line-height:24px;font-weight:600;color:var(--gray-900);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.winner .wmeta{font-size:12px;color:var(--gray-600);margin-top:2px}
+.arc{position:relative;width:52px;height:52px;flex-shrink:0}
+.arc svg{transform:rotate(-90deg)}
+.arc span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--blue-700);font-variant-numeric:tabular-nums}
+.mobile .winner .arc{display:none}
+
+/* Tie panel */
+.tie{background:var(--warning-light);border:1px solid var(--warning-border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+.tie .thead{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--warning-ink);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.tie .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mobile .tie .tgrid{grid-template-columns:1fr}
+.tie .tcand{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--warning-border);border-radius:var(--radius);padding:8px 12px}
+.tie .tcand .tname{font-size:13px;font-weight:600;color:var(--gray-800)}
+.tie .tcand .tvotes{font-size:11px;color:var(--warning-ink)}
+
+/* Candidate rows */
+.row{padding:12px;border-radius:var(--radius-lg);transition:var(--transition-fast)}
+.row:hover{background:var(--gray-50)}
+.row .rtop{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.row .rname{font-size:14px;font-weight:600;color:var(--gray-800);display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.badge{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px}
+.badge.win{background:var(--blue-600);color:#fff}
+.badge.tied{background:var(--warning);color:#fff}
+.row .rnum{text-align:right;flex-shrink:0}
+.row .rpct{font-size:20px;line-height:24px;font-weight:600;color:var(--gray-900);font-variant-numeric:tabular-nums}
+.row .rvotes{font-size:11px;color:var(--gray-600)}
+.row .track{margin-left:48px}
+.mobile .row .track{margin-left:0}
+.fill.lead{background:var(--blue-600)}
+.fill.rest{background:var(--gray-400)}
+.fill.tiefill{background:var(--warning)}
+
+/* Empty state */
+.empty{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:64px 24px;text-align:center}
+.empty .eico{width:56px;height:56px;border-radius:50%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--gray-400)}
+.empty h3{font-size:18px;font-weight:600;color:var(--gray-900)}
+.empty p{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:4px}
+.empty .note{font-size:11px;color:var(--gray-400);margin-top:12px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 7 — Public Results</h1>
+  <p class="sub">Light theme replaces the dark page · blue marks the leader &amp; live signals, gray recedes, amber is reserved for ties · every bar direct-labelled (name · % · votes) so color never carries meaning alone · 30s poll with stale banner</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Final results (ended, published) -->
+    <div class="variant"><span class="cap">1 · Final results — winner + tie (desktop)</span>
+      <div class="screen">
+        <div class="phead">
+          <div>
+            <div class="eyebrow">Faculty of Engineering</div>
+            <div class="ptitle">Student Union 2026 — Results</div>
+            <div class="psub">Official vote counts and statistics</div>
+          </div>
+          <button class="homebtn">← Home</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="slabel">Registered</div><div class="sval">500</div></div>
+          <div class="stat"><div class="slabel">Accredited</div><div class="sval">438</div></div>
+          <div class="stat hero"><div class="slabel">Votes cast</div><div class="sval">412</div></div>
+          <div class="stat"><div class="slabel">Turnout</div><div class="sval">82%</div></div>
+        </div>
+
+        <div class="turnout">
+          <div class="trow"><span class="tlabel">Participation</span><span class="tval">412 of 500 voters</span></div>
+          <div class="track"><div class="fill" style="width:82%"></div></div>
+        </div>
+
+        <!-- Position with a clear winner -->
+        <div class="pos">
+          <div class="poshead">
+            <div><div class="pmeta">Position</div><h3>President</h3></div>
+            <div class="posacts"><span class="pill">227 votes</span>
+              <button class="pdfbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 10l5 5 5-5"/><path d="M21 21H3"/></svg> PDF</button>
+            </div>
+          </div>
+
+          <div class="winner">
+            <div class="wimgwrap"><span class="wimg avatar"></span>
+              <span class="trophy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
+            </div>
+            <div class="wmain">
+              <div class="weyebrow">Elected President</div>
+              <div class="wname">Amina Yusuf</div>
+              <div class="wmeta">62% of votes · 141 votes</div>
+            </div>
+            <div class="arc">
+              <svg width="52" height="52" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--blue-100)" stroke-width="3"/>
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--blue-600)" stroke-width="3" stroke-dasharray="62 100" stroke-linecap="round"/>
+              </svg>
+              <span>62%</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Amina Yusuf <span class="badge win">Winner</span></span>
+              <span class="rnum"><div class="rpct">62%</div><div class="rvotes">141 votes</div></span>
+            </div>
+            <div class="track"><div class="fill lead" style="width:62%"></div></div>
+          </div>
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Daniel Okafor</span>
+              <span class="rnum"><div class="rpct">27%</div><div class="rvotes">61 votes</div></span>
+            </div>
+            <div class="track"><div class="fill rest" style="width:27%"></div></div>
+          </div>
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Grace Adeleke</span>
+              <span class="rnum"><div class="rpct">11%</div><div class="rvotes">25 votes</div></span>
+            </div>
+            <div class="track"><div class="fill rest" style="width:11%"></div></div>
+          </div>
+        </div>
+
+        <!-- Position with a tie -->
+        <div class="pos">
+          <div class="poshead">
+            <div><div class="pmeta">Position</div><h3>Treasurer</h3></div>
+            <div class="posacts"><span class="pill">185 votes</span>
+              <button class="pdfbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 10l5 5 5-5"/><path d="M21 21H3"/></svg> PDF</button>
+            </div>
+          </div>
+
+          <div class="tie">
+            <div class="thead">⚖️ Tied — commission decision required</div>
+            <div class="tgrid">
+              <div class="tcand"><span class="avatar"></span><div><div class="tname">Kunle Bello</div><div class="tvotes">80 votes · 43%</div></div></div>
+              <div class="tcand"><span class="avatar"></span><div><div class="tname">Ngozi Eze</div><div class="tvotes">80 votes · 43%</div></div></div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Kunle Bello <span class="badge tied">Tied</span></span>
+              <span class="rnum"><div class="rpct">43%</div><div class="rvotes">80 votes</div></span>
+            </div>
+            <div class="track"><div class="fill tiefill" style="width:43%"></div></div>
+          </div>
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Ngozi Eze <span class="badge tied">Tied</span></span>
+              <span class="rnum"><div class="rpct">43%</div><div class="rvotes">80 votes</div></span>
+            </div>
+            <div class="track"><div class="fill tiefill" style="width:43%"></div></div>
+          </div>
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Tunde Alabi</span>
+              <span class="rnum"><div class="rpct">14%</div><div class="rvotes">25 votes</div></span>
+            </div>
+            <div class="track"><div class="fill rest" style="width:14%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Live (active + published) -->
+    <div class="variant"><span class="cap">2 · Live — vote pulse + stale banner (desktop)</span>
+      <div class="screen">
+        <div class="stale">
+          <span class="dot"></span>
+          <p>Connection lost — showing results from 14:32. This page refreshes automatically when back online.</p>
+        </div>
+
+        <div class="phead">
+          <div>
+            <div class="eyebrow">Faculty of Engineering</div>
+            <div class="ptitle">Student Union 2026 — Results <span class="live"><span class="dot"></span>Live</span></div>
+            <div class="psub">Official vote counts and statistics</div>
+          </div>
+          <button class="homebtn">← Home</button>
+        </div>
+
+        <div class="pulsecard">
+          <div class="pulsehead">
+            <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg> Vote Pulse</h3>
+            <span class="conn"><span class="dot"></span>Connected</span>
+          </div>
+          <div class="lane">
+            <span class="avatar pulse-ring"></span>
+            <div class="lmain">
+              <div class="lname">Amina Yusuf</div>
+              <div class="track"><div class="fill lead" style="width:58%"></div></div>
+            </div>
+            <span class="lcount">118</span>
+          </div>
+          <div class="lane">
+            <span class="avatar"></span>
+            <div class="lmain">
+              <div class="lname">Daniel Okafor</div>
+              <div class="track"><div class="fill rest" style="width:29%"></div></div>
+            </div>
+            <span class="lcount">59</span>
+          </div>
+          <div class="lane">
+            <span class="avatar"></span>
+            <div class="lmain">
+              <div class="lname">Grace Adeleke</div>
+              <div class="track"><div class="fill rest" style="width:13%"></div></div>
+            </div>
+            <span class="lcount">26</span>
+          </div>
+          <div class="feed">
+            <p><b>14:32:08</b> · Vote recorded — President</p>
+            <p><b>14:31:54</b> · Vote recorded — Treasurer</p>
+            <p><b>14:31:41</b> · Vote recorded — President</p>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="slabel">Registered</div><div class="sval">500</div></div>
+          <div class="stat"><div class="slabel">Accredited</div><div class="sval">438</div></div>
+          <div class="stat hero"><div class="slabel">Votes cast</div><div class="sval">203</div></div>
+          <div class="stat"><div class="slabel">Turnout</div><div class="sval">41%</div></div>
+        </div>
+
+        <div class="turnout">
+          <div class="trow"><span class="tlabel">Participation</span><span class="tval">203 of 500 voters</span></div>
+          <div class="track"><div class="fill" style="width:41%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 3: Not yet published -->
+    <div class="variant"><span class="cap">3 · Counting in progress (results not broadcast)</span>
+      <div class="screen" style="width:520px">
+        <div class="phead">
+          <div>
+            <div class="eyebrow">Faculty of Engineering</div>
+            <div class="ptitle">Student Union 2026 — Results</div>
+            <div class="psub">Official vote counts and statistics</div>
+          </div>
+          <button class="homebtn">← Home</button>
+        </div>
+        <div class="empty">
+          <div class="eico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M13 17V9"/><path d="M18 17V5"/><path d="M8 17v-3"/></svg></div>
+          <h3>Counting in progress</h3>
+          <p>Results will appear here once the commission broadcasts them.</p>
+          <p class="note">This page checks for updates every 30 seconds.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 4: Mobile 375px -->
+    <div class="variant"><span class="cap">4 · Final results — mobile 375px</span>
+      <div class="screen mobile">
+        <div class="phead" style="flex-direction:column">
+          <div>
+            <div class="eyebrow">Faculty of Engineering</div>
+            <div class="ptitle" style="font-size:20px;line-height:28px">Student Union 2026 — Results</div>
+          </div>
+          <button class="homebtn">← Home</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="slabel">Registered</div><div class="sval">500</div></div>
+          <div class="stat"><div class="slabel">Accredited</div><div class="sval">438</div></div>
+          <div class="stat hero"><div class="slabel">Votes cast</div><div class="sval">412</div></div>
+          <div class="stat"><div class="slabel">Turnout</div><div class="sval">82%</div></div>
+        </div>
+
+        <div class="turnout">
+          <div class="trow"><span class="tlabel">Participation</span><span class="tval">412 / 500</span></div>
+          <div class="track"><div class="fill" style="width:82%"></div></div>
+        </div>
+
+        <div class="pos">
+          <div class="poshead">
+            <div><div class="pmeta">Position</div><h3>President</h3></div>
+            <div class="posacts"><span class="pill">227 votes</span>
+              <button class="pdfbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 10l5 5 5-5"/><path d="M21 21H3"/></svg> PDF</button>
+            </div>
+          </div>
+
+          <div class="winner">
+            <div class="wimgwrap"><span class="wimg avatar"></span>
+              <span class="trophy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
+            </div>
+            <div class="wmain">
+              <div class="weyebrow">Elected President</div>
+              <div class="wname">Amina Yusuf</div>
+              <div class="wmeta">62% of votes · 141 votes</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Amina Yusuf <span class="badge win">Winner</span></span>
+              <span class="rnum"><div class="rpct">62%</div><div class="rvotes">141</div></span>
+            </div>
+            <div class="track"><div class="fill lead" style="width:62%"></div></div>
+          </div>
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Daniel Okafor</span>
+              <span class="rnum"><div class="rpct">27%</div><div class="rvotes">61</div></span>
+            </div>
+            <div class="track"><div class="fill rest" style="width:27%"></div></div>
+          </div>
+          <div class="row">
+            <div class="rtop"><span class="avatar"></span>
+              <span class="rname">Grace Adeleke</span>
+              <span class="rnum"><div class="rpct">11%</div><div class="rvotes">25</div></span>
+            </div>
+            <div class="track"><div class="fill rest" style="width:11%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

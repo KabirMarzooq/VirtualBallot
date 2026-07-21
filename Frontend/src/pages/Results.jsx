@@ -134,7 +134,7 @@ export default function ResultsPage() {
             setResultsData({
               published: false,
               candidates: [],
-              stats: { total: 0, accredited:0, voted: 0 },
+              stats: { total: 0, accredited: 0, voted: 0 },
             });
           }
         })
@@ -176,52 +176,53 @@ export default function ResultsPage() {
     navigate(`/vote/${slug}`);
   };
 
+  const isLive = electionConfig.status === "ACTIVE" && isPublished;
+
   return (
-    <div className="min-h-screen bg-slate-950">
-      <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        {/* Stale-connection banner */}
         {isStale && lastUpdated && (
-          <div
-            className="flex items-center gap-2 bg-amber-950/40 border border-amber-700/40
-    rounded-xl px-4 py-2.5 mb-4"
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
-            <p className="text-xs text-amber-300 font-bold">
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 mb-4">
+            <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse shrink-0" />
+            <p className="text-xs leading-4 font-medium text-amber-800">
               Connection lost — showing results from{" "}
               {lastUpdated.toLocaleTimeString("en-GB", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
-              . Will refresh automatically when back online.
+              . This page refreshes automatically when back online.
             </p>
           </div>
         )}
+
         {/* Header */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <header className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-6">
           <div>
             {branding.institutionName && (
-              <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">
+              <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-[0.1em]">
                 {branding.institutionName}
               </p>
             )}
-            <h1 className="text-3xl font-black text-white flex items-center gap-3">
+            <h1 className="text-2xl leading-8 font-semibold text-slate-900 flex items-center gap-3 flex-wrap mt-1">
               {branding.electionName
                 ? `${branding.electionName} — Results`
                 : "Final Results"}
-              {electionConfig.isPublished &&
-                electionConfig.status === "ACTIVE" && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse uppercase tracking-wider">
-                    Live
-                  </span>
-                )}
+              {isLive && (
+                <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[10px] font-semibold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  Live
+                </span>
+              )}
             </h1>
-            <p className="text-slate-500 mt-1">
+            <p className="text-[13px] leading-5 text-slate-600 mt-1">
               Official vote counts and statistics
             </p>
           </div>
           <button
             onClick={handleHome}
             title="Return to voter home"
-            className="px-5 py-2 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold hover:bg-slate-700 shrink-0 transition-colors cursor-pointer"
+            className="min-h-[44px] px-4 text-[13px] font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:border-slate-400 hover:text-slate-800 shrink-0 transition-all cursor-pointer"
           >
             ← Home
           </button>
@@ -233,53 +234,42 @@ export default function ResultsPage() {
           </div>
         ) : isPublished ? (
           <>
-            {/* Live Pulse */}
-            {electionConfig.status === "ACTIVE" && isPublished && (
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-red-500 text-white text-xs px-2.5 py-1 rounded-full font-black uppercase tracking-wider animate-pulse">
-                    Live
-                  </span>
-                  <h2 className="text-xl font-black text-white">Vote Pulse</h2>
-                  <p className="text-slate-500 text-sm">
-                    Real-time as votes are cast
-                  </p>
-                </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6">
-                  <VotePulse
-                    electionId={electionId}
-                    initialCandidates={displayCandidates}
-                  />
-                </div>
+            {/* Live pulse */}
+            {isLive && (
+              <div className="mb-6">
+                <VotePulse
+                  electionId={electionId}
+                  initialCandidates={displayCandidates}
+                />
               </div>
             )}
 
-            {/* Stats strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* Stat tiles */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {[
-                { label: "Total Registered", value: total, accent: false },
-                { label: "Accredited", value: accredited ?? 0, accent: false },
-                { label: "Votes Cast", value: voted, accent: true },
-                { label: "Voter Turnout", value: `${pct}%`, accent: false },
-              ].map(({ label, value, accent }) => (
+                { label: "Registered", value: total, hero: false },
+                { label: "Accredited", value: accredited ?? 0, hero: false },
+                { label: "Votes cast", value: voted, hero: true },
+                { label: "Turnout", value: `${pct}%`, hero: false },
+              ].map(({ label, value, hero }) => (
                 <div
                   key={label}
-                  className={`p-6 rounded-[2rem] border ${
-                    accent
-                      ? "bg-blue-600 border-blue-500 text-white"
-                      : "bg-slate-900 border-slate-800"
+                  className={`rounded-xl border p-4 ${
+                    hero
+                      ? "bg-blue-600 border-blue-600"
+                      : "bg-white border-slate-200"
                   }`}
                 >
                   <p
-                    className={`text-xs font-bold uppercase tracking-wider mb-2 ${
-                      accent ? "text-blue-200" : "text-slate-500"
+                    className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                      hero ? "text-blue-100" : "text-slate-600"
                     }`}
                   >
                     {label}
                   </p>
                   <p
-                    className={`text-4xl sm:text-5xl font-black ${
-                      accent ? "text-white" : "text-white"
+                    className={`text-[28px] leading-9 font-semibold tabular-nums mt-1 ${
+                      hero ? "text-white" : "text-slate-900"
                     }`}
                   >
                     {value}
@@ -288,26 +278,26 @@ export default function ResultsPage() {
               ))}
             </div>
 
-            {/* Turnout bar */}
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl mb-8">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            {/* Participation bar */}
+            <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+              <div className="flex justify-between items-baseline mb-2">
+                <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
                   Participation
                 </p>
-                <p className="text-sm font-mono font-bold text-slate-300">
+                <p className="text-xs font-mono font-semibold text-slate-800 tabular-nums">
                   {voted} of {total} voters
                 </p>
               </div>
-              <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-1000"
+                  className="h-full bg-blue-600 rounded-full transition-all duration-1000"
                   style={{ width: `${pct}%` }}
                 />
               </div>
             </div>
 
             {/* Per-position results */}
-            <div className="space-y-8">
+            <div className="space-y-6">
               {positions.map((position) => {
                 const pcs = displayCandidates
                   .filter((c) => c.position === position)
@@ -318,24 +308,27 @@ export default function ResultsPage() {
                   topVotes > 0 ? pcs.filter((c) => c.votes === topVotes) : [];
                 const tied = tiedGroup.length > 1;
                 const winner = tot > 0 && !tied ? pcs[0] : null;
+                const winnerPct = winner
+                  ? Math.round((winner.votes / tot) * 100)
+                  : 0;
 
                 return (
                   <div
                     key={position}
-                    className="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-[2.5rem]"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6"
                   >
                     {/* Position header */}
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
                       <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em]">
                           Position
                         </p>
-                        <h3 className="text-xl font-black text-white">
+                        <h3 className="text-lg leading-6 font-semibold text-slate-900 mt-0.5">
                           {position}
                         </h3>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold bg-slate-800 border border-slate-700 text-slate-400 px-3 py-1.5 rounded-full">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full">
                           {tot} vote{tot !== 1 ? "s" : ""}
                         </span>
                         <button
@@ -348,58 +341,50 @@ export default function ResultsPage() {
                             )
                           }
                           title={`Download PDF results for ${position}`}
-                          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-blue-600/20 text-blue-400 border border-blue-600/30 hover:bg-blue-600/30 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold min-h-[36px] px-3 rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800 transition-all cursor-pointer"
                         >
                           <FileDown className="w-3.5 h-3.5" /> PDF
                         </button>
                       </div>
                     </div>
 
-                    {/* Winner card */}
+                    {/* Winner strip */}
                     {winner && (
-                      <div className="relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-6 rounded-3xl mb-6 flex items-center gap-6">
-                        <div
-                          className={`absolute right-0 top-0 bottom-0 w-48 bg-gradient-to-l ${winner.color} opacity-20`}
-                        />
+                      <div className="flex items-center gap-4 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                         <div className="relative shrink-0">
                           <img
                             src={winner.image}
                             alt={winner.name}
-                            className="w-20 h-20 rounded-2xl border-4 border-white/10 bg-slate-700 object-cover"
+                            className="w-14 h-14 rounded-xl object-cover bg-slate-200 block"
                           />
-                          <div className="absolute -bottom-2 -right-2 bg-yellow-400 w-7 h-7 rounded-full flex items-center justify-center shadow-lg">
-                            <Trophy className="w-3.5 h-3.5 text-yellow-900" />
-                          </div>
+                          <span className="absolute -right-1.5 -bottom-1.5 w-[22px] h-[22px] bg-blue-600 border-2 border-blue-50 rounded-full flex items-center justify-center text-white">
+                            <Trophy className="w-3 h-3" strokeWidth={2.4} />
+                          </span>
                         </div>
-                        <div className="relative flex-1 min-w-0">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-[0.1em]">
                             Elected {position}
                           </p>
-                          <h4 className="text-2xl font-black text-white leading-tight truncate">
+                          <h4 className="text-lg leading-6 font-semibold text-slate-900 truncate mt-0.5">
                             {winner.name}
                           </h4>
-                          <div className="flex items-center gap-3 mt-2">
-                            <span className="text-slate-300 text-sm font-bold">
-                              {Math.round((winner.votes / tot) * 100)}% of votes
-                            </span>
-                            <span className="w-1 h-1 rounded-full bg-slate-600" />
-                            <span className="text-slate-400 text-sm">
-                              {winner.votes} vote{winner.votes !== 1 ? "s" : ""}
-                            </span>
-                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5">
+                            {winnerPct}% of votes · {winner.votes} vote
+                            {winner.votes !== 1 ? "s" : ""}
+                          </p>
                         </div>
-                        {/* Arc chart */}
-                        <div className="relative shrink-0 w-14 h-14">
+                        {/* Vote-share arc */}
+                        <div className="relative w-[52px] h-[52px] shrink-0 hidden sm:block">
                           <svg
                             viewBox="0 0 36 36"
-                            className="w-14 h-14 -rotate-90"
+                            className="w-[52px] h-[52px] -rotate-90"
                           >
                             <circle
                               cx="18"
                               cy="18"
                               r="15.9"
                               fill="none"
-                              stroke="#334155"
+                              stroke="#DBEAFE"
                               strokeWidth="3"
                             />
                             <circle
@@ -407,48 +392,41 @@ export default function ResultsPage() {
                               cy="18"
                               r="15.9"
                               fill="none"
-                              stroke="#facc15"
+                              stroke="#2563EB"
                               strokeWidth="3"
-                              strokeDasharray={`${Math.round(
-                                (winner.votes / tot) * 100
-                              )} 100`}
+                              strokeDasharray={`${winnerPct} 100`}
                               strokeLinecap="round"
                             />
                           </svg>
-                          <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-yellow-400">
-                            {Math.round((winner.votes / tot) * 100)}%
+                          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-blue-700 tabular-nums">
+                            {winnerPct}%
                           </span>
                         </div>
                       </div>
                     )}
 
-                    {/* Tie card */}
+                    {/* Tie panel */}
                     {tied && (
-                      <div className="bg-amber-950/30 border border-amber-700/40 rounded-3xl p-6 mb-6">
-                        <div className="flex items-center gap-2 mb-4">
-                          <span className="text-lg">⚖️</span>
-                          <p className="text-xs font-black text-amber-400 uppercase tracking-widest">
-                            Tied — Commission Decision Required
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                        <p className="text-[11px] font-semibold text-amber-800 uppercase tracking-[0.08em] flex items-center gap-1.5 mb-3">
+                          ⚖️ Tied — commission decision required
+                        </p>
+                        <div className="grid sm:grid-cols-2 gap-2">
                           {tiedGroup.map((c) => (
                             <div
                               key={c.id}
-                              className="flex items-center gap-3 bg-amber-900/20
-          border border-amber-700/30 rounded-2xl p-4"
+                              className="flex items-center gap-2.5 bg-white border border-amber-200 rounded-lg px-3 py-2"
                             >
                               <img
                                 src={c.image}
                                 alt={c.name}
-                                className="w-14 h-14 rounded-xl object-cover bg-slate-700 shrink-0
-              border-2 border-amber-600/40"
+                                className="w-9 h-9 rounded-lg object-cover bg-slate-200 shrink-0"
                               />
                               <div className="min-w-0">
-                                <p className="font-black text-white truncate">
+                                <p className="text-[13px] font-semibold text-slate-800 truncate">
                                   {c.name}
                                 </p>
-                                <p className="text-amber-400 text-sm font-bold">
+                                <p className="text-[11px] text-amber-800">
                                   {c.votes} votes ·{" "}
                                   {Math.round((c.votes / tot) * 100)}%
                                 </p>
@@ -459,8 +437,8 @@ export default function ResultsPage() {
                       </div>
                     )}
 
-                    {/* All candidates */}
-                    <div className="space-y-4">
+                    {/* Candidate rows */}
+                    <div>
                       {pcs.map((c, i) => {
                         const cpct =
                           tot === 0 ? 0 : Math.round((c.votes / tot) * 100);
@@ -469,61 +447,47 @@ export default function ResultsPage() {
                         return (
                           <div
                             key={c.id}
-                            className={`p-4 rounded-2xl border ${
-                              isWinner
-                                ? "bg-blue-600/10 border-blue-600/20"
-                                : isTieCandidate
-                                ? "bg-amber-900/20 border-amber-700/30"
-                                : "bg-slate-800 border-slate-700"
-                            }`}
+                            className="p-3 rounded-xl hover:bg-slate-50 transition-colors"
                           >
                             <div className="flex items-center gap-3 mb-2">
                               <img
                                 src={c.image}
                                 alt={c.name}
-                                className="w-10 h-10 rounded-xl object-cover bg-slate-700 shrink-0"
+                                className="w-9 h-9 rounded-lg object-cover bg-slate-200 shrink-0"
                               />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={`font-bold text-sm ${
-                                      isWinner
-                                        ? "text-blue-300"
-                                        : "text-slate-200"
-                                    }`}
-                                  >
-                                    {c.name}
+                              <div className="flex-1 min-w-0 flex items-center gap-2">
+                                <span className="text-sm font-semibold text-slate-800 truncate">
+                                  {c.name}
+                                </span>
+                                {isWinner && (
+                                  <span className="text-[9px] font-semibold px-2 py-0.5 bg-blue-600 text-white rounded-full uppercase tracking-[0.06em] shrink-0">
+                                    Winner
                                   </span>
-                                  {isWinner && (
-                                    <span className="text-[9px] font-black px-2 py-0.5 bg-blue-600 text-white rounded-full uppercase tracking-wider">
-                                      Winner
-                                    </span>
-                                  )}
-                                  {isTieCandidate && (
-                                    <span className="text-[9px] font-black px-2 py-0.5 bg-amber-600 text-white rounded-full uppercase tracking-wider">
-                                      Tied
-                                    </span>
-                                  )}
-                                </div>
+                                )}
+                                {isTieCandidate && (
+                                  <span className="text-[9px] font-semibold px-2 py-0.5 bg-amber-600 text-white rounded-full uppercase tracking-[0.06em] shrink-0">
+                                    Tied
+                                  </span>
+                                )}
                               </div>
                               <div className="text-right shrink-0">
-                                <span
-                                  className={`text-2xl font-black ${
-                                    isWinner
-                                      ? "text-blue-400"
-                                      : "text-slate-400"
-                                  }`}
-                                >
+                                <p className="text-xl leading-6 font-semibold text-slate-900 tabular-nums">
                                   {cpct}%
-                                </span>
-                                <p className="text-xs text-slate-500">
+                                </p>
+                                <p className="text-[11px] text-slate-600">
                                   {c.votes} vote{c.votes !== 1 ? "s" : ""}
                                 </p>
                               </div>
                             </div>
-                            <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden sm:ml-12">
                               <div
-                                className={`h-full bg-gradient-to-r ${c.color} transition-all duration-1000 rounded-full`}
+                                className={`h-full rounded-full transition-all duration-1000 ${
+                                  isWinner
+                                    ? "bg-blue-600"
+                                    : isTieCandidate
+                                    ? "bg-amber-600"
+                                    : "bg-slate-400"
+                                }`}
                                 style={{ width: `${cpct}%` }}
                               />
                             </div>
@@ -537,13 +501,18 @@ export default function ResultsPage() {
             </div>
           </>
         ) : (
-          <div className="bg-slate-900 border border-slate-800 p-20 rounded-[3rem] text-center">
-            <BarChart3 className="w-20 h-20 text-slate-700 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-slate-400">
+          <div className="bg-white border border-slate-200 rounded-2xl py-16 px-6 text-center">
+            <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+              <BarChart3 className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">
               Counting in progress
             </h3>
-            <p className="text-slate-600 mt-2">
-              Results will appear here once the admin broadcasts them.
+            <p className="text-[13px] leading-5 text-slate-600 mt-1">
+              Results will appear here once the commission broadcasts them.
+            </p>
+            <p className="text-[11px] text-slate-400 mt-3">
+              This page checks for updates every 30 seconds.
             </p>
           </div>
         )}

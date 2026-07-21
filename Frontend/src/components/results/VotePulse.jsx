@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { Activity, Wifi, WifiOff } from "lucide-react";
+import { Activity } from "lucide-react";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -131,29 +131,23 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
   const positions = [...new Set(candidates.map((c) => c.position))];
 
   return (
-    <div className="space-y-6">
-      {/* Connection status bar */}
-      <div
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold ${
-          connected
-            ? "bg-green-900/30 border border-green-700/40 text-green-400"
-            : "bg-slate-800 border border-slate-700 text-slate-500"
-        }`}
-      >
-        {connected ? (
-          <>
-            <Wifi className="w-3.5 h-3.5" />
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Live — votes appear here in real time
-          </>
-        ) : (
-          <>
-            <WifiOff className="w-3.5 h-3.5" />
-            Connecting to live feed…
-          </>
-        )}
-        <span className="ml-auto font-mono">
-          {totalVotes} vote{totalVotes !== 1 ? "s" : ""} cast
+    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+      {/* Header: title + connection status */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[15px] font-semibold text-slate-900 flex items-center gap-2">
+          <Activity className="w-4 h-4 text-blue-600" /> Vote Pulse
+        </h3>
+        <span
+          className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${
+            connected ? "text-green-600" : "text-slate-400"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              connected ? "bg-green-600 animate-pulse" : "bg-slate-400"
+            }`}
+          />
+          {connected ? "Connected" : "Connecting…"}
         </span>
       </div>
 
@@ -171,148 +165,103 @@ export default function VotePulse({ electionId, initialCandidates = [] }) {
         );
 
         return (
-          <div
-            key={pos}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden"
-          >
-            <div className="px-5 py-3 border-b border-slate-700 flex items-center justify-between">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+          <div key={pos} className="mt-4 first:mt-0">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em]">
                 {pos}
               </p>
-              <span className="text-xs font-mono text-slate-500">
-                {posTotal} votes
+              <span className="text-[11px] font-mono text-slate-600">
+                {posTotal} vote{posTotal !== 1 ? "s" : ""}
               </span>
             </div>
 
-            <div className="p-4 space-y-4">
-              {posCandidates.map((c, i) => {
-                const votes = c.vote_count ?? c.votes ?? 0;
-                const pct =
-                  posTotal > 0 ? Math.round((votes / posTotal) * 100) : 0;
-                const isLead = i === 0 && posTotal > 0;
-                const pulse = pulsing[c.id];
+            {posCandidates.map((c, i) => {
+              const votes = c.vote_count ?? c.votes ?? 0;
+              const pct =
+                posTotal > 0 ? Math.round((votes / posTotal) * 100) : 0;
+              const isLead = i === 0 && posTotal > 0;
+              const pulse = pulsing[c.id];
 
-                return (
-                  <div key={c.id} className="relative">
-                    <div className="flex items-center gap-3 mb-2">
-                      {/* Avatar with pulse ring */}
-                      <div className="relative shrink-0">
-                        <img
-                          src={c.image || c.image_url}
-                          alt={c.name}
-                          className={`w-10 h-10 rounded-xl object-cover bg-slate-700 transition-transform duration-300 ${
-                            pulse ? "scale-110" : "scale-100"
-                          }`}
-                        />
-                        {/* Pulse ripple ring */}
-                        {pulse && (
-                          <span className="absolute inset-0 rounded-xl border-2 border-blue-400 animate-ping" />
-                        )}
-                        {/* Leading crown */}
-                        {isLead && posTotal > 0 && (
-                          <span className="absolute -top-1.5 -right-1.5 text-[10px]">
-                            ⭐
-                          </span>
-                        )}
-                      </div>
+              return (
+                <div key={c.id} className="flex items-center gap-3 py-2">
+                  {/* Avatar with pulse ring */}
+                  <div className="relative shrink-0">
+                    <img
+                      src={c.image || c.image_url}
+                      alt={c.name}
+                      className={`w-9 h-9 rounded-lg object-cover bg-slate-200 transition-transform duration-300 ${
+                        pulse ? "scale-110" : "scale-100"
+                      }`}
+                    />
+                    {pulse && (
+                      <span className="absolute -inset-1 rounded-xl border-2 border-blue-500 animate-ping" />
+                    )}
+                  </div>
 
-                      {/* Name + flash counter */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-sm font-bold truncate ${
-                              isLead ? "text-white" : "text-slate-300"
-                            }`}
-                          >
-                            {c.name}
-                          </span>
-                          {pulse && (
-                            <span className="text-[10px] font-black text-blue-400 bg-blue-900/40 px-1.5 py-0.5 rounded-full animate-pulse">
-                              +1
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Vote count + percentage */}
-                      <div className="text-right shrink-0">
-                        <span
-                          className={`text-2xl font-black font-mono tabular-nums ${
-                            isLead ? "text-white" : "text-slate-400"
-                          }`}
-                        >
-                          {pct}%
+                  {/* Name + flash counter + bar */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[13px] font-semibold text-slate-800 truncate">
+                        {c.name}
+                      </span>
+                      {pulse && (
+                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full animate-pulse">
+                          +1
                         </span>
-                        <p className="text-[10px] text-slate-500">
-                          {votes} votes
-                        </p>
-                      </div>
+                      )}
                     </div>
-
-                    {/* Progress bar — animates smoothly on update */}
-                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-700 ease-out bg-gradient-to-r ${c.color}`}
+                        className={`h-full rounded-full transition-all duration-700 ease-out ${
+                          isLead ? "bg-blue-600" : "bg-slate-400"
+                        }`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
                   </div>
-                );
-              })}
-            </div>
+
+                  {/* Vote count */}
+                  <span
+                    title={`${pct}% of ${pos} votes`}
+                    className="text-xs font-mono font-semibold text-slate-800 tabular-nums shrink-0"
+                  >
+                    {votes}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         );
       })}
 
       {/* Live vote feed */}
       {feed.length > 0 && (
-        <div className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-700 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-black text-slate-300 uppercase tracking-widest">
-              Live Vote Feed
-            </span>
-            <span className="ml-auto w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          </div>
-          <div className="divide-y divide-slate-700/40 max-h-56 overflow-y-auto">
-            {feed.map((event, i) => (
-              <div
-                key={`${event.id}-${i}`}
-                className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-700/20 transition-colors"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm text-white font-bold">
-                    {event.candidate}
-                  </span>
-                  <span className="text-slate-500 text-sm">
-                    {" "}
-                    received a vote
-                  </span>
-                  <span className="text-xs text-slate-600 ml-1.5">
-                    ({event.position})
-                  </span>
-                </div>
-                <span className="text-xs font-mono text-slate-500 shrink-0">
-                  {event.time}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="border-t border-slate-100 mt-3 pt-3 max-h-40 overflow-y-auto">
+          {feed.map((event, i) => (
+            <p
+              key={`${event.id}-${i}`}
+              className={`font-mono text-[11px] leading-5 ${
+                i === 0 ? "text-slate-600 vb-fade-in" : "text-slate-400"
+              }`}
+            >
+              <span className="font-semibold text-slate-600">{event.time}</span>{" "}
+              · Vote recorded — {event.position}
+            </p>
+          ))}
         </div>
       )}
 
       {/* Empty state before any votes */}
       {candidates.length > 0 && totalVotes === 0 && (
-        <div className="text-center py-8">
-          <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Activity className="w-6 h-6 text-slate-600" />
+        <div className="text-center py-6">
+          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Activity className="w-5 h-5 text-slate-400" />
           </div>
-          <p className="text-slate-500 font-bold text-sm">
-            Waiting for first vote…
+          <p className="text-[13px] font-semibold text-slate-600">
+            Waiting for the first vote…
           </p>
-          <p className="text-slate-600 text-xs mt-1">
-            Bars will animate as votes come in
+          <p className="text-[11px] text-slate-400 mt-1">
+            Bars animate as votes come in
           </p>
         </div>
       )}
