@@ -1,9 +1,9 @@
 import {
   Activity,
   Archive,
-  CheckCircle,
-  Circle,
+  Check,
   ArrowRight,
+  Lock,
   Palette,
   UserSquare2,
   Users,
@@ -12,7 +12,6 @@ import {
 import { getMeta } from "../../constants";
 import { getPositions, getTurnout } from "../../utils";
 import { useApp } from "../../context/AppContext";
-import { useNavigate } from "react-router-dom";
 
 export default function OverviewTab({ onSwitchTab }) {
   const {
@@ -41,261 +40,240 @@ export default function OverviewTab({ onSwitchTab }) {
     electionConfig.status === "NOT_STARTED" &&
     activityLog.length === 0;
 
-  const navigate = useNavigate();
+  const steps = [
+    {
+      done: hasBranding,
+      icon: Palette,
+      label: "Add your organization branding",
+      sub: "Set your election name, institution name, and logo",
+      tab: "branding",
+      cta: "Go to Branding",
+    },
+    {
+      done: hasCandidates,
+      icon: UserSquare2,
+      label: "Add candidates",
+      sub: `${candidates.length} candidate${
+        candidates.length !== 1 ? "s" : ""
+      } added${hasCandidates ? "" : " — add at least one per position"}`,
+      tab: "candidates",
+      cta: "Go to Candidates",
+    },
+    {
+      done: hasVoters,
+      icon: Users,
+      label: "Upload voter roster",
+      sub: `${total} voter${total !== 1 ? "s" : ""} registered${
+        hasVoters ? "" : " — upload a CSV file to add eligible voters"
+      }`,
+      tab: "voters",
+      cta: "Go to Voters",
+    },
+    {
+      done: false, // always shows — it's the final action
+      icon: Vote,
+      label: "Start the election",
+      sub: isReadyToStart
+        ? "Set a duration and go live"
+        : "Locked — complete the steps above first",
+      tab: "election",
+      cta: "Go to Election",
+      locked: !isReadyToStart,
+    },
+  ];
+  // The single next actionable step gets the blue treatment and solid CTA
+  const nextStep = steps.findIndex((s) => !s.done && !s.locked);
+
+  const statusDot =
+    electionConfig.status === "ACTIVE"
+      ? "bg-green-500 animate-pulse"
+      : electionConfig.status === "ENDED"
+      ? "bg-red-500"
+      : "bg-amber-500";
+
+  const kpis = isRosterless
+    ? [
+        { label: "Total votes", value: totalVotesCast, hero: true },
+        { label: "Candidates", value: candidates.length, hero: false },
+      ]
+    : [
+        { label: "Registered", value: total, hero: false },
+        { label: "Accredited", value: accredited, hero: false },
+        { label: "Votes cast", value: voted, hero: true },
+        { label: "Turnout", value: `${pct}%`, hero: false },
+        { label: "Candidates", value: candidates.length, hero: false },
+      ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ── Setup checklist — only shown when election hasn't started yet ── */}
       {electionConfig.status === "NOT_STARTED" && (
         <div
-          className={`rounded-2xl border p-6 ${
+          className={`rounded-xl border p-5 ${
             isReadyToStart
-              ? "bg-green-900/20 border-green-700/40"
-              : "bg-slate-800 border-slate-700"
+              ? "bg-green-50 border-green-200"
+              : "bg-white border-slate-200"
           }`}
         >
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <h3 className="text-white font-black text-lg">
-                {isFirstTime
-                  ? "Welcome! Let's set up your election 👋"
-                  : isReadyToStart
-                  ? "You're ready to start the election ✓"
-                  : "Complete setup before starting"}
-              </h3>
-              <p className="text-slate-400 text-sm mt-1">
-                {isFirstTime
-                  ? "Complete these steps in order and you'll be ready to go."
-                  : isReadyToStart
-                  ? "All steps complete. Head to the Election tab to set a timer and go live."
-                  : "Finish the remaining steps below before starting the election."}
-              </p>
-            </div>
-            {isReadyToStart && (
-              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-                <CheckCircle className="w-6 h-6 text-white fill-white" />
-              </div>
-            )}
-          </div>
+          <h3 className="text-base leading-6 font-semibold text-slate-900">
+            {isFirstTime
+              ? "Welcome! Let's set up your election"
+              : isReadyToStart
+              ? "You're ready to start the election"
+              : "Complete setup before starting"}
+          </h3>
+          <p className="text-[13px] leading-5 text-slate-600 mt-1 mb-4">
+            {isFirstTime
+              ? "Complete these steps in order and you'll be ready to go."
+              : isReadyToStart
+              ? "All steps complete. Head to the Election tab to set a timer and go live."
+              : "Finish the remaining steps below, then start the election from the Election tab."}
+          </p>
 
-          <div className="space-y-3">
-            {[
-              {
-                done: hasBranding,
-                icon: Palette,
-                label: "Add your organization branding",
-                sub: "Set your election name, institution name, and logo",
-                tab: "branding",
-                cta: "Go to Branding →",
-              },
-              {
-                done: hasCandidates,
-                icon: UserSquare2,
-                label: "Add candidates",
-                sub: `${candidates.length} candidate${
-                  candidates.length !== 1 ? "s" : ""
-                } added${
-                  hasCandidates ? "" : " — add at least one per position"
-                }`,
-                tab: "candidates",
-                cta: "Go to Candidates →",
-              },
-              {
-                done: hasVoters,
-                icon: Users,
-                label: "Upload voter roster",
-                sub: `${total} voter${total !== 1 ? "s" : ""} registered${
-                  hasVoters ? "" : " — upload a CSV file to add eligible voters"
-                }`,
-                tab: "voters",
-                cta: "Go to Voters →",
-              },
-              {
-                done: false, // always shows — it's the final action
-                icon: Vote,
-                label: "Start the election",
-                sub: isReadyToStart
-                  ? "Set a duration and go live"
-                  : "Complete the steps above first",
-                tab: "election",
-                cta: "Go to Election →",
-                locked: !isReadyToStart,
-              },
-            ].map(({ done, icon: Icon, label, sub, tab, cta, locked }) => (
-              <div
-                key={label}
-                className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${
-                  done
-                    ? "bg-green-900/20 border border-green-800/40"
-                    : locked
-                    ? "bg-slate-700/30 border border-slate-700/30 opacity-50"
-                    : "bg-slate-700/50 border border-slate-600/50 hover:border-slate-500"
-                }`}
-              >
-                {/* Check / circle */}
+          <div className="space-y-2">
+            {steps.map(({ done, icon: Icon, label, sub, tab, cta, locked }, i) => {
+              const isNext = i === nextStep;
+              return (
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  key={label}
+                  className={`flex items-center gap-3 p-3 rounded-xl border ${
                     done
-                      ? "bg-green-500"
+                      ? "bg-green-50 border-green-200"
                       : locked
-                      ? "bg-slate-700"
-                      : "bg-slate-600"
+                      ? "bg-white border-slate-200"
+                      : isNext
+                      ? "bg-blue-50 border-blue-200"
+                      : "bg-white border-slate-200"
                   }`}
                 >
-                  {done ? (
-                    <CheckCircle className="w-4 h-4 text-white fill-white" />
-                  ) : (
-                    <Icon
-                      className={`w-4 h-4 ${
-                        locked ? "text-slate-600" : "text-slate-300"
-                      }`}
-                    />
-                  )}
-                </div>
-
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-bold ${
+                  {/* Check / icon */}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                       done
-                        ? "text-green-300 line-through decoration-green-600"
+                        ? "bg-green-600 text-white"
                         : locked
-                        ? "text-slate-500"
-                        : "text-white"
+                        ? "bg-slate-100 text-slate-400"
+                        : isNext
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {label}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
-                </div>
+                    {done ? (
+                      <Check className="w-4 h-4" strokeWidth={2.4} />
+                    ) : locked ? (
+                      <Lock className="w-3.5 h-3.5" />
+                    ) : (
+                      <Icon className="w-4 h-4" />
+                    )}
+                  </div>
 
-                {/* CTA button — only when not done and not locked */}
-                {!done && !locked && (
-                  <button
-                    onClick={() => onSwitchTab?.(tab)}
-                    className="text-xs font-bold text-blue-400 hover:text-blue-300 whitespace-nowrap flex items-center gap-1 cursor-pointer transition-colors"
-                    title={`Go to ${tab} tab`}
-                  >
-                    {cta} <ArrowRight className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            ))}
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-[13px] leading-5 font-semibold ${
+                        locked ? "text-slate-400" : "text-slate-900"
+                      }`}
+                    >
+                      {label}
+                    </p>
+                    <p
+                      className={`text-[11px] leading-4 mt-0.5 ${
+                        locked ? "text-slate-400" : "text-slate-600"
+                      }`}
+                    >
+                      {sub}
+                    </p>
+                  </div>
+
+                  {/* Right side: done mark or CTA */}
+                  {done ? (
+                    <span className="text-[11px] font-semibold text-green-600 shrink-0">
+                      ✓ Done
+                    </span>
+                  ) : (
+                    !locked && (
+                      <button
+                        onClick={() => onSwitchTab?.(tab)}
+                        title={`Open the ${tab} tab`}
+                        className={`inline-flex items-center gap-1 text-xs font-semibold min-h-[32px] px-3 rounded-lg shrink-0 transition-all cursor-pointer ${
+                          isNext
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "text-blue-600 hover:bg-blue-50"
+                        }`}
+                      >
+                        {cta} <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* KPI strip */}
       {/* KPI strip */}
       <div
         className={`grid gap-3 ${
           isRosterless ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"
         }`}
       >
-        {(isRosterless
-          ? [
-              {
-                label: "Total Votes",
-                value: totalVotesCast,
-                color: "text-green-300",
-                bg: "bg-blue-600",
-              },
-              {
-                label: "Candidates",
-                value: candidates.length,
-                color: "text-indigo-300",
-                bg: "bg-slate-800",
-              },
-            ]
-          : [
-              {
-                label: "Registered",
-                value: total,
-                color: "text-white",
-                bg: "bg-blue-600",
-              },
-              {
-                label: "Accredited",
-                value: accredited,
-                color: "text-blue-200",
-                bg: "bg-slate-800",
-              },
-              {
-                label: "Votes Cast",
-                value: voted,
-                color: "text-green-300",
-                bg: "bg-slate-800",
-              },
-              {
-                label: "Turnout",
-                value: `${pct}%`,
-                color: "text-amber-300",
-                bg: "bg-slate-800",
-              },
-              {
-                label: "Candidates",
-                value: candidates.length,
-                color: "text-indigo-300",
-                bg: "bg-slate-800",
-              },
-            ]
-        ).map((s) => (
+        {kpis.map((s) => (
           <div
             key={s.label}
-            className={`${s.bg} rounded-2xl p-5 border border-white/10`}
+            className={`rounded-xl border p-4 ${
+              s.hero ? "bg-blue-600 border-blue-600" : "bg-white border-slate-200"
+            }`}
           >
-            <p className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1">
+            <p
+              className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                s.hero ? "text-blue-100" : "text-slate-600"
+              }`}
+            >
               {s.label}
             </p>
-            <p className={`text-4xl font-mono font-bold ${s.color}`}>
+            <p
+              className={`text-[28px] leading-9 font-semibold tabular-nums mt-1 ${
+                s.hero ? "text-white" : "text-slate-900"
+              }`}
+            >
               {s.value}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Status + turnout bar */}
-      <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                electionConfig.status === "ACTIVE"
-                  ? "bg-green-500 animate-pulse"
-                  : electionConfig.status === "ENDED"
-                  ? "bg-red-500"
-                  : "bg-amber-500"
-              }`}
-            />
-            <span className="font-bold text-white uppercase text-sm">
-              {electionConfig.status.replace("_", " ")}
+      {/* Status + participation */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="flex items-center gap-3 flex-wrap mb-3">
+          <span className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.04em] text-slate-900">
+            <span className={`w-2.5 h-2.5 rounded-full ${statusDot}`} />
+            {electionConfig.status.replace("_", " ")}
+          </span>
+          {electionConfig.status === "ACTIVE" && timeLeft && (
+            <span className="font-mono text-[13px] font-semibold text-blue-700">
+              {timeLeft} remaining
             </span>
-            {electionConfig.status === "ACTIVE" && (
-              <span className="font-mono text-blue-400 text-sm">
-                {timeLeft}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {electionConfig.isPublished && (
-              <span className="bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30">
-                Broadcasting
-              </span>
-            )}
-            {electionConfig.registryLocked && (
-              <span className="bg-red-500/20 text-red-300 text-xs font-bold px-3 py-1 rounded-full border border-red-500/30">
-                Registry Locked
-              </span>
-            )}
-          </div>
+          )}
+          <span className="flex-1" />
+          {electionConfig.isPublished && (
+            <span className="text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full">
+              Broadcasting results
+            </span>
+          )}
+          {electionConfig.registryLocked && (
+            <span className="text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full">
+              Registry locked
+            </span>
+          )}
         </div>
-        <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
+        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all duration-700"
+            className="h-full bg-blue-600 rounded-full transition-all duration-700"
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs leading-4 text-slate-600 mt-2">
           {voted} of {total} voters have cast their ballot
         </p>
       </div>
@@ -311,37 +289,48 @@ export default function OverviewTab({ onSwitchTab }) {
             return (
               <div
                 key={pos}
-                className="bg-slate-800 rounded-2xl p-5 border border-slate-700"
+                className="bg-white border border-slate-200 rounded-xl"
               >
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                  {pos}
-                </p>
-                {pcs.map((c, i) => {
-                  const pct = tot === 0 ? 0 : Math.round((c.votes / tot) * 100);
-                  return (
-                    <div key={c.id} className="mb-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="flex items-center gap-2">
-                          {i === 0 && tot > 0 && (
-                            <span className="text-yellow-400 text-xs">★</span>
-                          )}
-                          <span className="text-sm font-bold text-white">
-                            {c.name}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                  <h4 className="text-[13px] font-semibold text-slate-900">
+                    {pos}
+                  </h4>
+                  <span className="text-[11px] text-slate-600">
+                    {tot} vote{tot !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="p-4">
+                  {pcs.map((c, i) => {
+                    const cpct =
+                      tot === 0 ? 0 : Math.round((c.votes / tot) * 100);
+                    const lead = i === 0 && tot > 0;
+                    return (
+                      <div key={c.id} className="mb-3 last:mb-0">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="text-[13px] font-semibold text-slate-800 flex items-center gap-2 min-w-0">
+                            <span className="truncate">{c.name}</span>
+                            {lead && (
+                              <span className="text-[9px] font-semibold uppercase tracking-[0.06em] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-px rounded-full shrink-0">
+                                Leading
+                              </span>
+                            )}
+                          </span>
+                          <span className="font-mono text-xs font-semibold text-slate-600 tabular-nums shrink-0">
+                            {c.votes} · {cpct}%
                           </span>
                         </div>
-                        <span className="text-sm font-mono text-slate-400">
-                          {c.votes} · {pct}%
-                        </span>
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${
+                              lead ? "bg-blue-600" : "bg-slate-400"
+                            }`}
+                            style={{ width: `${cpct}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-slate-700 rounded-full h-2">
-                        <div
-                          className={`bg-gradient-to-r ${c.color} h-2 rounded-full`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
@@ -349,21 +338,18 @@ export default function OverviewTab({ onSwitchTab }) {
       )}
 
       {/* Activity feed */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-700 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-400" />
-            <span className="text-sm font-bold text-white">
-              Recent Activity
-            </span>
-          </div>
-          <span className="text-xs text-slate-500">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+          <h4 className="text-[13px] font-semibold text-slate-900 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-blue-600" /> Recent activity
+          </h4>
+          <span className="text-[11px] text-slate-400">
             {activityLog.length} total events
           </span>
         </div>
-        <div className="divide-y divide-slate-700/50 max-h-56 overflow-y-auto">
+        <div className="max-h-56 overflow-y-auto">
           {activityLog.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">
+            <p className="text-[13px] text-slate-400 text-center py-8">
               No activity yet.
             </p>
           ) : (
@@ -375,23 +361,21 @@ export default function OverviewTab({ onSwitchTab }) {
                 return (
                   <div
                     key={e.id}
-                    className="flex items-start gap-3 px-5 py-3 hover:bg-slate-700/20"
+                    className="flex items-start gap-3 px-4 py-2.5 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
                   >
                     <span
-                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${meta.dot}`}
+                      className={`mt-[5px] w-2 h-2 rounded-full shrink-0 ${meta.dot}`}
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-300 truncate">
-                        {e.message}
-                      </p>
-                      <p className="text-xs text-slate-600 mt-0.5">
-                        {e.timestamp}
-                      </p>
-                    </div>
+                    <p className="flex-1 min-w-0 text-[13px] leading-5 text-slate-800 truncate">
+                      {e.message}
+                    </p>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${meta.badge}`}
+                      className={`text-[9px] font-semibold uppercase tracking-[0.06em] px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${meta.lightBadge}`}
                     >
                       {meta.label}
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-400 shrink-0 mt-0.5">
+                      {e.timestamp}
                     </span>
                   </div>
                 );
@@ -399,29 +383,29 @@ export default function OverviewTab({ onSwitchTab }) {
           )}
         </div>
         {activityLog.length > 8 && (
-          <div className="px-5 py-2 border-t border-slate-700 text-center">
-            <span className="text-xs text-slate-500">
-              +{activityLog.length - 8} more in Audit Log tab
-            </span>
-          </div>
+          <p className="px-4 py-2 border-t border-slate-100 text-center text-[11px] text-slate-400">
+            +{activityLog.length - 8} more in the Audit Log tab
+          </p>
         )}
       </div>
 
       {/* Past elections */}
       {electionHistory.length > 0 && (
-        <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-700 flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
             <Archive className="w-4 h-4 text-slate-400" />
-            <span className="text-sm font-bold text-white">Past Elections</span>
+            <h4 className="text-[13px] font-semibold text-slate-900">
+              Past elections
+            </h4>
           </div>
           {electionHistory.map((a) => (
             <div
               key={a.id}
-              className="px-5 py-4 border-b border-slate-700/50 last:border-0"
+              className="px-4 py-4 border-b border-slate-100 last:border-0"
             >
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs text-slate-400">{a.date}</span>
-                <span className="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">
+                <span className="text-xs text-slate-600">{a.date}</span>
+                <span className="text-[11px] font-mono font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
                   {a.totalVotes} votes
                 </span>
               </div>
@@ -429,21 +413,24 @@ export default function OverviewTab({ onSwitchTab }) {
                 {getPositions(a.candidates).map((pos) => {
                   const w = a.candidates
                     .filter((c) => c.position === pos)
-                    .sort((a, b) => b.votes - a.votes)[0];
+                    .sort((x, y) => y.votes - x.votes)[0];
                   return (
-                    <div key={pos} className="bg-slate-700/50 rounded-xl p-3">
-                      <p className="text-xs text-slate-400 uppercase font-bold mb-1">
+                    <div
+                      key={pos}
+                      className="bg-slate-50 border border-slate-200 rounded-lg p-3"
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400 mb-1.5">
                         {pos}
                       </p>
                       <div className="flex items-center gap-2">
                         {w && (
                           <img
                             src={w.image}
-                            className="w-6 h-6 rounded-full"
+                            className="w-6 h-6 rounded-full object-cover bg-slate-200"
                             alt=""
                           />
                         )}
-                        <p className="text-sm font-bold text-white">
+                        <p className="text-[13px] font-semibold text-slate-800 truncate">
                           {w?.name ?? "N/A"}
                         </p>
                       </div>

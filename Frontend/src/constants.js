@@ -51,14 +51,16 @@ export const INITIAL_BRANDING = {
 
 // ─── Event Metadata ───────────────────────────────────────────────────────────
 
+// `badge` styles the dark (legacy) surfaces, `lightBadge` the new light UI.
+// Drop `badge` once every consumer is on the light design system.
 export const EVENT_META = {
-    vote: { label: "Vote", dot: "bg-green-500", badge: "bg-green-900/40 text-green-300 border border-green-700/40" },
-    admin: { label: "Admin", dot: "bg-blue-500", badge: "bg-blue-900/40 text-blue-300 border border-blue-700/40" },
-    system: { label: "System", dot: "bg-purple-500", badge: "bg-purple-900/40 text-purple-300 border border-purple-700/40" },
-    warning: { label: "Warning", dot: "bg-amber-500", badge: "bg-amber-900/40 text-amber-300 border border-amber-700/40" },
-    registry: { label: "Registry", dot: "bg-teal-500", badge: "bg-teal-900/40 text-teal-300 border border-teal-700/40" },
-    candidate: { label: "Candidate", dot: "bg-indigo-500", badge: "bg-indigo-900/40 text-indigo-300 border border-indigo-700/40" },
-    error: { label: "Error", dot: "bg-red-500", badge: "bg-red-900/40 text-red-300 border border-red-700/40" },
+    vote: { label: "Vote", dot: "bg-green-500", badge: "bg-green-900/40 text-green-300 border border-green-700/40", lightBadge: "bg-green-50 text-green-700" },
+    admin: { label: "Admin", dot: "bg-blue-500", badge: "bg-blue-900/40 text-blue-300 border border-blue-700/40", lightBadge: "bg-blue-50 text-blue-700" },
+    system: { label: "System", dot: "bg-purple-500", badge: "bg-purple-900/40 text-purple-300 border border-purple-700/40", lightBadge: "bg-purple-50 text-purple-700" },
+    warning: { label: "Warning", dot: "bg-amber-500", badge: "bg-amber-900/40 text-amber-300 border border-amber-700/40", lightBadge: "bg-amber-50 text-amber-800" },
+    registry: { label: "Registry", dot: "bg-teal-500", badge: "bg-teal-900/40 text-teal-300 border border-teal-700/40", lightBadge: "bg-teal-50 text-teal-700" },
+    candidate: { label: "Candidate", dot: "bg-indigo-500", badge: "bg-indigo-900/40 text-indigo-300 border border-indigo-700/40", lightBadge: "bg-indigo-50 text-indigo-700" },
+    error: { label: "Error", dot: "bg-red-500", badge: "bg-red-900/40 text-red-300 border border-red-700/40", lightBadge: "bg-red-50 text-red-700" },
 }
 
 export const getMeta = (t) => EVENT_META[t] ?? EVENT_META.system

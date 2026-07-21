@@ -29,19 +29,25 @@ import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import { fetchAdminOverview, createNewElection } from "../api";
 
 const TABS = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "election", label: "Election", icon: Vote },
-  { id: "voters", label: "Voters", icon: Users },
-  { id: "candidates", label: "Candidates", icon: UserSquare2 },
-  { id: "branding", label: "Branding", icon: Palette },
-  { id: "invoices", label: "Invoices", icon: Receipt },
-  { id: "history", label: "History", icon: Archive },
-  { id: "staff", label: "Staff", icon: Headset },
-  { id: "audit", label: "Audit Log", icon: ScrollText },
+  { id: "overview", label: "Overview", icon: LayoutDashboard, desc: "Live picture of your election" },
+  { id: "election", label: "Election", icon: Vote, desc: "Start, end, and broadcast the election" },
+  { id: "voters", label: "Voters", icon: Users, desc: "Roster upload and voter management" },
+  { id: "candidates", label: "Candidates", icon: UserSquare2, desc: "Positions and candidates on the ballot" },
+  { id: "branding", label: "Branding", icon: Palette, desc: "Election name, institution, and logo" },
+  { id: "invoices", label: "Invoices", icon: Receipt, desc: "Payment invoices for this election" },
+  { id: "history", label: "History", icon: Archive, desc: "Results from past elections" },
+  { id: "staff", label: "Staff", icon: Headset, desc: "Support staff accounts and assignments" },
+  { id: "audit", label: "Audit Log", icon: ScrollText, desc: "Every event in this election, timestamped" },
+];
+
+const NAV_GROUPS = [
+  { label: "Election", ids: ["overview", "election", "voters", "candidates", "branding"] },
+  { label: "Console", ids: ["invoices", "history", "staff", "audit"] },
 ];
 
 export default function AdminPage() {
   const {
+    currentUser,
     setCurrentUser,
     resetBallotSession,
     electionConfig,
@@ -58,6 +64,7 @@ export default function AdminPage() {
     showConfirm,
     addLog,
     branding,
+    timeLeft,
   } = useApp();
   const navigate = useNavigate();
 
@@ -239,152 +246,237 @@ export default function AdminPage() {
   const voters = (users || []).filter((u) => u.role !== "ADMIN");
   const votedCount = voters.filter((u) => u.hasVoted).length;
 
-  const statusColors = {
-    ACTIVE: "text-green-400",
-    ENDED: "text-red-400",
-    NOT_STARTED: "text-amber-400",
-  };
   const statusDots = {
     ACTIVE: "bg-green-500 animate-pulse",
     ENDED: "bg-red-500",
     NOT_STARTED: "bg-amber-500",
   };
 
+  const tabVisible = (id) => {
+    // Open elections have no roster — hide the Voters tab
+    if (electionConfig.votingMode === "OPEN" && id === "voters") return false;
+    // Invoices only relevant for paid elections
+    if (electionConfig.voteType !== "PAID" && id === "invoices") return false;
+    return true;
+  };
+  const visibleTabs = TABS.filter((t) => tabVisible(t.id));
+  const activeMeta = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+  const initials = (currentUser?.email || "AD").slice(0, 2).toUpperCase();
+
+  const tabBadge = (id, active) => {
+    if (id === "voters" && votedCount > 0)
+      return (
+        <span
+          className={`ml-auto font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+            active ? "bg-white/20 text-white" : "bg-blue-600 text-white"
+          }`}
+        >
+          {votedCount}
+        </span>
+      );
+    if (id === "audit" && activityLog.length > 0)
+      return (
+        <span
+          className={`ml-auto font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+            active ? "bg-white/20 text-white" : "bg-slate-700 text-slate-300"
+          }`}
+        >
+          {activityLog.length}
+        </span>
+      );
+    return null;
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* ── Header ────────────────────────────────────────────────────────────── */}
-      <div className="border-b border-slate-800 px-4 md:px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-              <ShieldAlert className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-white font-black text-base leading-tight">
-                {branding?.institutionName || "Admin Console"}
-              </h1>
-              <p className="text-slate-600 text-xs">
-                {branding?.electionName ||
-                  "Virtual Ballot — Election Management"}
-              </p>
-            </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
+      <aside className="hidden lg:flex w-[232px] bg-slate-900 flex-col shrink-0 sticky top-0 h-screen">
+        {/* Brand */}
+        <div className="flex items-center gap-3 px-4 py-5">
+          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
+            <ShieldAlert className="w-4 h-4" />
           </div>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {/* Election status pill */}
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
-              <span
-                className={`w-2 h-2 rounded-full shrink-0 ${
-                  statusDots[electionConfig.status] ?? "bg-slate-500"
-                }`}
-              />
-              <span
-                className={`text-xs font-bold uppercase tracking-wider ${
-                  statusColors[electionConfig.status] ?? "text-slate-400"
-                }`}
-              >
-                {electionConfig.status.replace("_", " ")}
-              </span>
-            </div>
-
-            {/* New Election — show when not actively running */}
-            {electionConfig.status !== "ACTIVE" && (
-              <button
-                onClick={handleNewElection}
-                disabled={creating}
-                title="Create a new election"
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> New Election
-              </button>
-            )}
-
-            {/* Manual refresh */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              title="Refresh dashboard data"
-              className="text-slate-500 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-              />
-            </button>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              title="Sign out of admin console"
-              className="flex items-center gap-2 text-slate-500 hover:text-white text-sm font-bold px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden md:inline">Sign out</span>
-            </button>
+          <div className="min-w-0">
+            <p className="text-[13px] leading-4 font-semibold text-white truncate">
+              {branding?.institutionName || "Admin Console"}
+            </p>
+            <p className="text-[11px] leading-4 text-slate-400 truncate">
+              {branding?.electionName || "Virtual Ballot"}
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* ── Content ───────────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-        <MobileNoticeBanner message="The admin console is built for larger displays — for the best experience, switch to a laptop or desktop." />
+        {/* Status chip */}
+        <div className="mx-4 mb-2 flex items-center gap-2 bg-slate-400/10 border border-slate-700 rounded-lg px-3 py-2">
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              statusDots[electionConfig.status] ?? "bg-slate-500"
+            }`}
+          />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-300">
+            {electionConfig.status.replace("_", " ")}
+          </span>
+          {electionConfig.status === "ACTIVE" && timeLeft && (
+            <span className="ml-auto font-mono text-[11px] font-semibold text-blue-400">
+              {timeLeft}
+            </span>
+          )}
+        </div>
 
-        {/* Tab bar */}
-        <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 overflow-x-auto scrollbar-hide">
-          {TABS.filter((t) => {
-            // Open elections have no roster — hide the Voters tab
-            if (electionConfig.votingMode === "OPEN" && t.id === "voters")
-              return false;
-            // Invoices only relevant for paid elections
-            if (electionConfig.voteType !== "PAID" && t.id === "invoices")
-              return false;
-            return true;
-          }).map((t) => {
-            const Icon = t.icon;
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-2 pb-2">
+          {NAV_GROUPS.map((group) => {
+            const items = group.ids
+              .filter(tabVisible)
+              .map((id) => TABS.find((t) => t.id === id))
+              .filter(Boolean);
+            if (items.length === 0) return null;
+            return (
+              <div key={group.label} className="pt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400 px-3 mb-1">
+                  {group.label}
+                </p>
+                {items.map((t) => {
+                  const Icon = t.icon;
+                  const active = activeTab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      title={t.label}
+                      className={`w-full flex items-center gap-2.5 min-h-[40px] px-3 my-px rounded-lg text-[13px] transition-all cursor-pointer ${
+                        active
+                          ? "bg-blue-600 text-white font-semibold"
+                          : "text-slate-400 font-medium hover:text-slate-200 hover:bg-slate-400/10"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {t.label}
+                      {tabBadge(t.id, active)}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Foot: admin identity + sign out */}
+        <div className="px-4 py-3 border-t border-slate-800 flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-slate-700 text-slate-300 text-xs font-semibold flex items-center justify-center shrink-0">
+            {initials}
+          </div>
+          <p className="flex-1 min-w-0 text-[11px] text-slate-400 truncate">
+            {currentUser?.email || "Admin"}
+          </p>
+          <button
+            onClick={handleLogout}
+            title="Sign out of the commission console"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-400/10 transition-all cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Mobile top bar + tab strip ──────────────────────────────────── */}
+      <div className="lg:hidden bg-slate-900">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
+            <ShieldAlert className="w-4 h-4" />
+          </div>
+          <p className="flex-1 min-w-0 text-[13px] font-semibold text-white truncate">
+            {branding?.institutionName || "Admin Console"}
+          </p>
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              statusDots[electionConfig.status] ?? "bg-slate-500"
+            }`}
+          />
+          <button
+            onClick={handleLogout}
+            title="Sign out of the commission console"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex gap-1 px-3 pb-2 overflow-x-auto">
+          {visibleTabs.map((t) => {
             const active = activeTab === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
                 title={t.label}
-                className={`flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center whitespace-nowrap cursor-pointer ${
+                className={`shrink-0 min-h-[36px] px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   active
-                    ? "bg-slate-800 text-white shadow"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span className="hidden sm:inline">{t.label}</span>
-                {t.id === "voters" && votedCount > 0 && (
-                  <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono hidden sm:inline">
-                    {votedCount}
-                  </span>
-                )}
-                {t.id === "audit" && activityLog.length > 0 && (
-                  <span className="bg-slate-700 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full font-mono hidden sm:inline">
-                    {activityLog.length}
-                  </span>
-                )}
+                {t.label}
               </button>
             );
           })}
         </div>
+      </div>
 
-        {/* Tab content */}
-        <div>
-          {activeTab === "overview" && (
-            <OverviewTab onSwitchTab={setActiveTab} />
-          )}
-          {activeTab === "election" && <ElectionTab />}
-          {activeTab === "voters" && <VotersTab />}
-          {activeTab === "candidates" && <CandidatesTab />}
-          {activeTab === "branding" && <BrandingTab />}
-          {activeTab === "invoices" && <InvoiceTab />}
-          {activeTab === "history" && <HistoryTab />}
-          {activeTab === "staff" && <StaffTab />}
-          {activeTab === "audit" && <AuditLogTab />}
+      {/* ── Main ────────────────────────────────────────────────────────── */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Topbar */}
+        <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg leading-6 font-semibold text-slate-900">
+              {activeMeta.label}
+            </h2>
+            <p className="text-xs leading-4 text-slate-600 mt-0.5 truncate">
+              {activeMeta.desc}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {electionConfig.status !== "ACTIVE" && (
+              <button
+                onClick={handleNewElection}
+                disabled={creating}
+                title="Create a new election"
+                className="inline-flex items-center gap-1.5 min-h-[36px] px-3.5 text-[13px] font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 rounded-lg shadow-sm transition-all cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">New election</span>
+              </button>
+            )}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh dashboard data"
+              className="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800 disabled:opacity-40 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+            </button>
+          </div>
         </div>
+
+        {/* Content */}
+        <main className="flex-1 p-4 md:p-6">
+          <div className="max-w-6xl mx-auto">
+            <MobileNoticeBanner message="The admin console is built for larger displays — for the best experience, switch to a laptop or desktop." />
+
+            {activeTab === "overview" && (
+              <OverviewTab onSwitchTab={setActiveTab} />
+            )}
+            {activeTab === "election" && <ElectionTab />}
+            {activeTab === "voters" && <VotersTab />}
+            {activeTab === "candidates" && <CandidatesTab />}
+            {activeTab === "branding" && <BrandingTab />}
+            {activeTab === "invoices" && <InvoiceTab />}
+            {activeTab === "history" && <HistoryTab />}
+            {activeTab === "staff" && <StaffTab />}
+            {activeTab === "audit" && <AuditLogTab />}
+          </div>
+        </main>
       </div>
     </div>
   );

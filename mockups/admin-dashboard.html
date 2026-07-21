@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 9: Admin Dashboard Shell + Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-400:#60A5FA; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-700:#334155; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --danger-light:#FEF2F2; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:6px; --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+/* ══ SHELL ══════════════════════════════════════════════════════ */
+.shell{width:1200px;max-width:100%;height:760px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);overflow:hidden;display:flex}
+
+/* Sidebar — dark Commission identity */
+.side{width:232px;background:var(--gray-900);display:flex;flex-direction:column;flex-shrink:0}
+.side .brand{display:flex;align-items:center;gap:12px;padding:20px 16px}
+.side .crest{width:36px;height:36px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.side .bname{font-size:13px;line-height:16px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side .bsub{font-size:11px;line-height:16px;color:var(--gray-400);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side .statusrow{margin:0 16px 8px;display:flex;align-items:center;gap:8px;background:rgba(148,163,184,.08);border:1px solid var(--gray-700);border-radius:var(--radius);padding:8px 12px}
+.side .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdot.active{background:#22C55E;animation:blink 1.4s ease infinite}
+.sdot.notstarted{background:var(--warning)}
+.sdot.ended{background:var(--danger)}
+@keyframes blink{50%{opacity:.35}}
+.side .stext{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-300)}
+.side .stime{margin-left:auto;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--blue-400)}
+
+.side .group{padding:12px 8px 0}
+.side .glabel{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gray-400);padding:0 12px;margin-bottom:4px}
+.nav{list-style:none;padding:0}
+.nav a{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;margin:1px 0;font-size:13px;font-weight:500;color:var(--gray-400);border-radius:var(--radius);cursor:pointer;text-decoration:none;transition:var(--transition-fast)}
+.nav a:hover{color:var(--gray-200);background:rgba(148,163,184,.08)}
+.nav a.on{background:var(--blue-600);color:#fff;font-weight:600}
+.nav a svg{flex-shrink:0}
+.nav .count{margin-left:auto;font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--gray-700);color:var(--gray-300)}
+.nav a.on .count{background:rgba(255,255,255,.2);color:#fff}
+.nav .count.hot{background:var(--blue-600);color:#fff}
+.nav a.on .count.hot{background:rgba(255,255,255,.2)}
+
+.side .foot{margin-top:auto;padding:12px 16px;border-top:1px solid var(--gray-800);display:flex;align-items:center;gap:10px}
+.side .uava{width:32px;height:32px;border-radius:50%;background:var(--gray-700);color:var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.side .uemail{flex:1;min-width:0;font-size:11px;color:var(--gray-400);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side .outbtn{width:32px;height:32px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--gray-400);background:none;border:none;cursor:pointer;transition:var(--transition-fast)}
+.side .outbtn:hover{color:#fff;background:rgba(148,163,184,.12)}
+
+/* Content area */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;background:var(--white);border-bottom:1px solid var(--gray-200)}
+.topbar h2{font-size:18px;line-height:24px;font-weight:600;color:var(--gray-900)}
+.topbar .tsub{font-size:12px;color:var(--gray-600);margin-top:2px}
+.topacts{display:flex;align-items:center;gap:8px}
+.iconbtn{width:36px;height:36px;border-radius:var(--radius);border:1px solid var(--gray-300);background:var(--white);color:var(--gray-600);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition-fast)}
+.iconbtn:hover{border-color:var(--gray-400);color:var(--gray-800)}
+.btn-new{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;font-size:13px;font-weight:600;color:#fff;background:var(--blue-600);border:none;border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast);box-shadow:var(--shadow-sm)}
+.btn-new:hover{background:var(--blue-700)}
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* ══ OVERVIEW CONTENT ═══════════════════════════════════════════ */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px}
+.kpi .klabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.kpi .kval{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900);margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi.hero{background:var(--blue-600);border-color:var(--blue-600)}
+.kpi.hero .klabel{color:var(--blue-100)}
+.kpi.hero .kval{color:#fff}
+
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);margin-bottom:16px}
+.card .chead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--gray-100)}
+.card .chead h4{font-size:13px;font-weight:600;color:var(--gray-900);display:flex;align-items:center;gap:8px}
+.card .chead .cmeta{font-size:11px;color:var(--gray-400)}
+.card .cbody{padding:16px}
+
+/* Status + participation */
+.statusline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.statusline .big{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-900)}
+.statusline .cd{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--blue-700)}
+.tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px}
+.tag.bcast{background:var(--blue-50);color:var(--blue-700);border:1px solid var(--blue-200)}
+.tag.locked{background:var(--warning-light);color:var(--warning-ink);border:1px solid var(--warning-border)}
+.track{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden}
+.fill{height:100%;background:var(--blue-600);border-radius:4px}
+.subnote{font-size:12px;color:var(--gray-600);margin-top:8px}
+
+/* Tally grid */
+.tallygrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.tallygrid .card{margin-bottom:0}
+.trow{margin-bottom:12px}
+.trow:last-child{margin-bottom:0}
+.trow .tline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.trow .tname{font-size:13px;font-weight:600;color:var(--gray-800);display:flex;align-items:center;gap:8px}
+.lead-tag{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--blue-700);background:var(--blue-50);border:1px solid var(--blue-200);padding:1px 7px;border-radius:999px}
+.trow .tnum{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--gray-600);font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+.bar .lead{background:var(--blue-600)}
+.bar .rest{background:var(--gray-400)}
+
+/* Activity feed */
+.feedrow{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid var(--gray-100);transition:var(--transition-fast)}
+.feedrow:last-child{border-bottom:none}
+.feedrow:hover{background:var(--gray-50)}
+.fdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.fdot.vote{background:var(--blue-500)}
+.fdot.adm{background:var(--gray-400)}
+.fdot.sys{background:var(--success)}
+.fmsg{flex:1;min-width:0;font-size:13px;line-height:20px;color:var(--gray-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ftime{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);flex-shrink:0;margin-top:2px}
+.fbadge{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;flex-shrink:0;margin-top:2px}
+.fbadge.vote{background:var(--blue-50);color:var(--blue-700)}
+.fbadge.adm{background:var(--gray-100);color:var(--gray-600)}
+.fbadge.sys{background:var(--success-light);color:var(--success)}
+.feedfoot{padding:8px 16px;border-top:1px solid var(--gray-100);text-align:center;font-size:11px;color:var(--gray-400)}
+
+/* Setup checklist */
+.check{border-radius:var(--radius-lg);border:1px solid var(--gray-200);background:var(--white);padding:20px;margin-bottom:16px}
+.check h3{font-size:16px;font-weight:600;color:var(--gray-900)}
+.check .csub{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:4px;margin-bottom:16px}
+.step{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-lg);border:1px solid var(--gray-200);margin-bottom:8px}
+.step:last-child{margin-bottom:0}
+.step .sico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step.done{background:var(--success-light);border-color:var(--success-border)}
+.step.done .sico{background:var(--success);color:#fff}
+.step.now{border-color:var(--blue-200);background:var(--blue-50)}
+.step.now .sico{background:var(--blue-600);color:#fff}
+.step.wait .sico{background:var(--gray-100);color:var(--gray-400)}
+.step .smain{flex:1;min-width:0}
+.step .slabel{font-size:13px;font-weight:600;color:var(--gray-900)}
+.step.wait .slabel{color:var(--gray-400)}
+.step .ssub{font-size:11px;line-height:16px;color:var(--gray-600);margin-top:1px}
+.step.wait .ssub{color:var(--gray-400)}
+.step .go{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#fff;background:var(--blue-600);min-height:32px;padding:0 12px;border-radius:var(--radius);border:none;cursor:pointer;flex-shrink:0;transition:var(--transition-fast)}
+.step .go:hover{background:var(--blue-700)}
+.step .donetxt{font-size:11px;font-weight:600;color:var(--success);flex-shrink:0}
+
+/* ══ MOBILE SHELL ═══════════════════════════════════════════════ */
+.mshell{width:375px;max-width:100%;height:700px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);overflow:hidden;display:flex;flex-direction:column}
+.mtop{background:var(--gray-900);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.mtop .crest{width:32px;height:32px;background:var(--blue-600);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.mtop .mname{flex:1;min-width:0;font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtop .sdot{margin-left:auto}
+.mtabs{display:flex;gap:4px;padding:8px 12px;background:var(--gray-900);overflow-x:auto}
+.mtabs a{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;font-size:12px;font-weight:600;color:var(--gray-400);border-radius:var(--radius);text-decoration:none}
+.mtabs a.on{background:var(--blue-600);color:#fff}
+.mbody{flex:1;overflow-y:auto;padding:16px}
+.mbody .kpis{grid-template-columns:1fr 1fr}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 9 — Admin Dashboard Shell + Overview</h1>
+  <p class="sub">Dark Commission sidebar (continuity with Screen 8) + light content area (data density, same components as the rest of the system) · this shell hosts screens 9–15 · status uses semantic colors, blue stays a signal · sidebar collapses to a top bar + scrollable tab strip at 375px</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Active election -->
+    <div class="variant"><span class="cap">1 · Active election — desktop shell</span>
+      <div class="shell">
+        <!-- Sidebar -->
+        <aside class="side">
+          <div class="brand">
+            <div class="crest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+            <div style="min-width:0">
+              <div class="bname">Faculty of Engineering</div>
+              <div class="bsub">Student Union 2026</div>
+            </div>
+          </div>
+          <div class="statusrow"><span class="sdot active"></span><span class="stext">Active</span><span class="stime">02:41:16</span></div>
+
+          <div class="group">
+            <div class="glabel">Election</div>
+            <ul class="nav">
+              <li><a class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg> Overview</a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/></svg> Election</a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Voters <span class="count hot">203</span></a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg> Candidates</a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg> Branding</a></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="glabel">Console</div>
+            <ul class="nav">
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg> Invoices</a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg> History</a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/><path d="M21 16v2a4 4 0 0 1-4 4h-5"/></svg> Staff</a></li>
+              <li><a><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></svg> Audit Log <span class="count">126</span></a></li>
+            </ul>
+          </div>
+
+          <div class="foot">
+            <div class="uava">CE</div>
+            <div class="uemail">chair@eng.edu.ng</div>
+            <button class="outbtn" title="Sign out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
+          </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="main">
+          <div class="topbar">
+            <div>
+              <h2>Overview</h2>
+              <div class="tsub">Live picture of the election · auto-refreshes every 30s</div>
+            </div>
+            <div class="topacts">
+              <button class="iconbtn" title="Refresh dashboard data"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></button>
+            </div>
+          </div>
+
+          <div class="content">
+            <div class="kpis">
+              <div class="kpi"><div class="klabel">Registered</div><div class="kval">500</div></div>
+              <div class="kpi"><div class="klabel">Accredited</div><div class="kval">438</div></div>
+              <div class="kpi hero"><div class="klabel">Votes cast</div><div class="kval">203</div></div>
+              <div class="kpi"><div class="klabel">Turnout</div><div class="kval">41%</div></div>
+              <div class="kpi"><div class="klabel">Candidates</div><div class="kval">9</div></div>
+            </div>
+
+            <div class="card">
+              <div class="cbody">
+                <div class="statusline">
+                  <span class="big"><span class="sdot active"></span> Active</span>
+                  <span class="cd">02:41:16 remaining</span>
+                  <span style="flex:1"></span>
+                  <span class="tag bcast">Broadcasting results</span>
+                  <span class="tag locked">Registry locked</span>
+                </div>
+                <div class="track"><div class="fill" style="width:41%"></div></div>
+                <div class="subnote">203 of 500 voters have cast their ballot</div>
+              </div>
+            </div>
+
+            <div class="tallygrid">
+              <div class="card">
+                <div class="chead"><h4>President</h4><span class="cmeta">203 votes</span></div>
+                <div class="cbody">
+                  <div class="trow">
+                    <div class="tline"><span class="tname">Amina Yusuf <span class="lead-tag">Leading</span></span><span class="tnum">118 · 58%</span></div>
+                    <div class="bar"><i class="lead" style="width:58%"></i></div>
+                  </div>
+                  <div class="trow">
+                    <div class="tline"><span class="tname">Daniel Okafor</span><span class="tnum">59 · 29%</span></div>
+                    <div class="bar"><i class="rest" style="width:29%"></i></div>
+                  </div>
+                  <div class="trow">
+                    <div class="tline"><span class="tname">Grace Adeleke</span><span class="tnum">26 · 13%</span></div>
+                    <div class="bar"><i class="rest" style="width:13%"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="chead"><h4>Treasurer</h4><span class="cmeta">160 votes</span></div>
+                <div class="cbody">
+                  <div class="trow">
+                    <div class="tline"><span class="tname">Kunle Bello <span class="lead-tag">Leading</span></span><span class="tnum">80 · 50%</span></div>
+                    <div class="bar"><i class="lead" style="width:50%"></i></div>
+                  </div>
+                  <div class="trow">
+                    <div class="tline"><span class="tname">Ngozi Eze</span><span class="tnum">55 · 34%</span></div>
+                    <div class="bar"><i class="rest" style="width:34%"></i></div>
+                  </div>
+                  <div class="trow">
+                    <div class="tline"><span class="tname">Tunde Alabi</span><span class="tnum">25 · 16%</span></div>
+                    <div class="bar"><i class="rest" style="width:16%"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="chead"><h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg> Recent activity</h4><span class="cmeta">126 total events</span></div>
+              <div>
+                <div class="feedrow"><span class="fdot vote"></span><span class="fmsg">Ballot cast — receipt VB-7F3A-92C1 issued</span><span class="fbadge vote">Vote</span><span class="ftime">14:32:08</span></div>
+                <div class="feedrow"><span class="fdot vote"></span><span class="fmsg">Ballot cast — receipt VB-3D81-0AF2 issued</span><span class="fbadge vote">Vote</span><span class="ftime">14:31:41</span></div>
+                <div class="feedrow"><span class="fdot adm"></span><span class="fmsg">Results broadcasting enabled by admin</span><span class="fbadge adm">Admin</span><span class="ftime">14:05:12</span></div>
+                <div class="feedrow"><span class="fdot sys"></span><span class="fmsg">Voter roster locked — 500 voters frozen</span><span class="fbadge sys">System</span><span class="ftime">14:00:00</span></div>
+              </div>
+              <div class="feedfoot">+122 more in the Audit Log tab</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Not started — setup checklist -->
+    <div class="variant"><span class="cap">2 · Not started — setup checklist drives the first run</span>
+      <div class="shell" style="height:640px">
+        <aside class="side">
+          <div class="brand">
+            <div class="crest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+            <div style="min-width:0">
+              <div class="bname">Faculty of Engineering</div>
+              <div class="bsub">Virtual Ballot</div>
+            </div>
+          </div>
+          <div class="statusrow"><span class="sdot notstarted"></span><span class="stext">Not started</span></div>
+          <div class="group">
+            <div class="glabel">Election</div>
+            <ul class="nav">
+              <li><a class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg> Overview</a></li>
+              <li><a>Election</a></li>
+              <li><a>Voters</a></li>
+              <li><a>Candidates</a></li>
+              <li><a>Branding</a></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="glabel">Console</div>
+            <ul class="nav">
+              <li><a>History</a></li>
+              <li><a>Staff</a></li>
+              <li><a>Audit Log</a></li>
+            </ul>
+          </div>
+          <div class="foot">
+            <div class="uava">CE</div>
+            <div class="uemail">chair@eng.edu.ng</div>
+            <button class="outbtn" title="Sign out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
+          </div>
+        </aside>
+
+        <div class="main">
+          <div class="topbar">
+            <div>
+              <h2>Overview</h2>
+              <div class="tsub">Set up your election, then go live from the Election tab</div>
+            </div>
+            <div class="topacts">
+              <button class="iconbtn" title="Refresh dashboard data"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></button>
+              <button class="btn-new"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> New election</button>
+            </div>
+          </div>
+
+          <div class="content">
+            <div class="check">
+              <h3>Complete setup before starting</h3>
+              <p class="csub">Finish the remaining steps below, then start the election from the Election tab.</p>
+
+              <div class="step done">
+                <div class="sico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="smain">
+                  <div class="slabel">Add your organization branding</div>
+                  <div class="ssub">Student Union 2026 · Faculty of Engineering · logo uploaded</div>
+                </div>
+                <span class="donetxt">✓ Done</span>
+              </div>
+
+              <div class="step done">
+                <div class="sico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="smain">
+                  <div class="slabel">Add candidates</div>
+                  <div class="ssub">9 candidates added across 3 positions</div>
+                </div>
+                <span class="donetxt">✓ Done</span>
+              </div>
+
+              <div class="step now">
+                <div class="sico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                <div class="smain">
+                  <div class="slabel">Upload voter roster</div>
+                  <div class="ssub">0 voters registered — upload a CSV to add eligible voters</div>
+                </div>
+                <button class="go">Go to Voters →</button>
+              </div>
+
+              <div class="step wait">
+                <div class="sico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="smain">
+                  <div class="slabel">Start the election</div>
+                  <div class="ssub">Locked — complete the steps above first</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kpis">
+              <div class="kpi"><div class="klabel">Registered</div><div class="kval">0</div></div>
+              <div class="kpi"><div class="klabel">Accredited</div><div class="kval">0</div></div>
+              <div class="kpi hero"><div class="klabel">Votes cast</div><div class="kval">0</div></div>
+              <div class="kpi"><div class="klabel">Turnout</div><div class="kval">0%</div></div>
+              <div class="kpi"><div class="klabel">Candidates</div><div class="kval">9</div></div>
+            </div>
+
+            <div class="card">
+              <div class="chead"><h4>Recent activity</h4><span class="cmeta">2 total events</span></div>
+              <div>
+                <div class="feedrow"><span class="fdot adm"></span><span class="fmsg">9 candidates added by admin</span><span class="fbadge adm">Admin</span><span class="ftime">11:42:19</span></div>
+                <div class="feedrow"><span class="fdot sys"></span><span class="fmsg">New election created</span><span class="fbadge sys">System</span><span class="ftime">11:20:03</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 3: Mobile 375px -->
+    <div class="variant"><span class="cap">3 · Mobile 375px — top bar + scrollable tab strip</span>
+      <div class="mshell">
+        <div class="mtop">
+          <div class="crest"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+          <div class="mname">Faculty of Engineering</div>
+          <span class="sdot active"></span>
+        </div>
+        <div class="mtabs">
+          <a class="on">Overview</a><a>Election</a><a>Voters</a><a>Candidates</a><a>Branding</a><a>Audit</a>
+        </div>
+        <div class="mbody">
+          <div class="kpis">
+            <div class="kpi"><div class="klabel">Registered</div><div class="kval">500</div></div>
+            <div class="kpi"><div class="klabel">Accredited</div><div class="kval">438</div></div>
+            <div class="kpi hero"><div class="klabel">Votes cast</div><div class="kval">203</div></div>
+            <div class="kpi"><div class="klabel">Turnout</div><div class="kval">41%</div></div>
+          </div>
+          <div class="card">
+            <div class="cbody">
+              <div class="statusline">
+                <span class="big"><span class="sdot active"></span> Active</span>
+                <span class="cd">02:41:16</span>
+              </div>
+              <div class="track"><div class="fill" style="width:41%"></div></div>
+              <div class="subnote">203 of 500 voters have voted</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="chead"><h4>President</h4><span class="cmeta">203 votes</span></div>
+            <div class="cbody">
+              <div class="trow">
+                <div class="tline"><span class="tname">Amina Yusuf <span class="lead-tag">Leading</span></span><span class="tnum">58%</span></div>
+                <div class="bar"><i class="lead" style="width:58%"></i></div>
+              </div>
+              <div class="trow">
+                <div class="tline"><span class="tname">Daniel Okafor</span><span class="tnum">29%</span></div>
+                <div class="bar"><i class="rest" style="width:29%"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
