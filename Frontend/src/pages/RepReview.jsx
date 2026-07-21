@@ -1,12 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ClipboardList,
-  ArrowRight,
-  Flag,
-  CheckCircle,
-  ShieldCheck,
-} from "lucide-react";
+import { ClipboardList, Flag, ShieldCheck } from "lucide-react";
+import AuthBackground from "../components/layout/AuthBackground";
 import VBLoader from "../components/ui/VBLoader";
 import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import {
@@ -36,11 +31,14 @@ export default function RepReviewPage() {
   const [flagBusy, setFlagBusy] = useState(false);
 
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
+  // Presentational only: estimated rows the reviewer has had on screen
+  const [seenCount, setSeenCount] = useState(0);
   const [confirmation, setConfirmation] = useState(null);
 
   const listRef = useRef(null);
 
   const hasFlags = Object.keys(flags).length > 0;
+  const flagCount = Object.keys(flags).length;
 
   // ── Step 1: look up the code → load the voter list ──────────────────────────
   const handleReview = async () => {
@@ -56,8 +54,8 @@ export default function RepReviewPage() {
       setVoters(data.voters);
       setAlreadyApproved(data.alreadyApproved);
       setStep(2);
-    } catch (_) {
-      setError("Invalid or expired review code");
+    } catch {
+      setError("Invalid or expired review code — check the invite you received.");
     } finally {
       setLoading(false);
     }
@@ -67,14 +65,31 @@ export default function RepReviewPage() {
   useEffect(() => {
     if (step !== 2) return;
     const el = listRef.current;
-    if (el && el.scrollHeight <= el.clientHeight + 20) {
+    if (!el) return;
+    if (el.scrollHeight <= el.clientHeight + 20) {
       setScrolledToBottom(true);
+      setSeenCount(voters.length);
+    } else if (voters.length > 0) {
+      // Initial estimate of rows visible before any scrolling
+      setSeenCount(
+        Math.min(
+          voters.length,
+          Math.ceil((el.clientHeight / el.scrollHeight) * voters.length)
+        )
+      );
     }
   }, [step, voters]);
 
   const handleScroll = (e) => {
     const { scrollTop, clientHeight, scrollHeight } = e.target;
     if (scrollTop + clientHeight >= scrollHeight - 20) setScrolledToBottom(true);
+    if (voters.length > 0) {
+      const est = Math.min(
+        voters.length,
+        Math.ceil(((scrollTop + clientHeight) / scrollHeight) * voters.length)
+      );
+      setSeenCount((prev) => Math.max(prev, est));
+    }
   };
 
   // ── Flag a specific voter entry ─────────────────────────────────────────────
@@ -114,45 +129,66 @@ export default function RepReviewPage() {
   const approveDisabled =
     loading || alreadyApproved || hasFlags || !scrolledToBottom;
 
+  // Why the approve button is disabled, in words (UX rule: no silent disables)
+  const gateReasons = [];
+  if (hasFlags)
+    gateReasons.push(
+      `you have ${flagCount} flagged entr${
+        flagCount === 1 ? "y" : "ies"
+      } — the commission must resolve ${flagCount === 1 ? "it" : "them"} first`
+    );
+  if (!scrolledToBottom)
+    gateReasons.push("scroll through the full list to confirm you've seen it");
+  const gateHint =
+    gateReasons.length > 0
+      ? `Before you can approve: ${gateReasons.join("; ")}.`
+      : "Approving records your name and a timestamp for the commission.";
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <AuthBackground>
+      <div
+        className={`w-full text-slate-800 ${
+          step === 2 ? "max-w-[540px]" : "max-w-[400px]"
+        }`}
+      >
         <MobileNoticeBanner message="The roster review portal is built for larger displays — for the best experience, switch to a laptop or desktop." />
 
-        <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl p-8 sm:p-10">
-          {/* Branding */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
-              <ClipboardList className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-black text-white">Roster Review Portal</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Committee members only
-            </p>
-          </div>
-
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-7 sm:p-8">
           {/* ── Step 1: code entry ─────────────────────────────────────────── */}
           {step === 1 && (
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 text-center">
-                  Review Code
+            <>
+              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
+                <ClipboardList className="w-6 h-6" />
+              </div>
+              <h1 className="text-[22px] leading-7 font-semibold text-slate-900 text-center mt-4">
+                Roster Review Portal
+              </h1>
+              <p className="text-[13px] leading-5 text-slate-600 text-center mt-1">
+                Committee members only
+              </p>
+
+              <div className="mt-5">
+                <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+                  Review code
                 </label>
                 <input
                   value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setCode(e.target.value.toUpperCase());
+                    setError("");
+                  }}
                   onKeyDown={(e) => e.key === "Enter" && code && handleReview()}
                   maxLength={6}
                   autoFocus
                   placeholder="XK4M9P"
-                  className={`w-full bg-slate-800 text-white text-center text-2xl font-mono tracking-[0.4em] py-5 rounded-2xl border-2 outline-none transition-all placeholder:text-slate-700 ${
+                  className={`w-full min-h-[56px] font-mono text-2xl font-semibold text-center tracking-[0.4em] indent-[0.4em] bg-white border rounded-xl outline-none transition-all placeholder:text-slate-300 ${
                     error
-                      ? "border-red-500 text-red-400"
-                      : "border-slate-700 focus:border-blue-500"
+                      ? "border-red-500 text-red-600"
+                      : "border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100"
                   }`}
                 />
                 {error && (
-                  <p className="text-red-400 text-xs font-bold text-center mt-2">
+                  <p className="text-[11px] leading-4 font-medium text-red-600 text-center mt-2">
                     {error}
                   </p>
                 )}
@@ -161,48 +197,49 @@ export default function RepReviewPage() {
               <button
                 onClick={handleReview}
                 disabled={!code.trim() || loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-colors cursor-pointer"
+                title="Open the voter list for review"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                {loading ? (
-                  <VBLoader size="sm" />
-                ) : (
-                  <>
-                    Review Voter List
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
+                {loading ? <VBLoader size="sm" /> : <>Review voter list →</>}
               </button>
-            </div>
+              <p className="text-[11px] leading-4 text-slate-400 text-center mt-2">
+                Your commission sent you a personal 6-character code with the
+                invite.
+              </p>
+            </>
           )}
 
           {/* ── Step 2: voter list review ──────────────────────────────────── */}
           {step === 2 && approval && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em]">
+            <>
+              <div className="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div className="text-center mt-3">
+                <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-[0.15em]">
                   Reviewing as
                 </p>
-                <p className="text-lg font-black text-white">
+                <p className="text-base leading-6 font-semibold text-slate-900 mt-0.5">
                   {approval.reviewerName}
                 </p>
               </div>
 
               {alreadyApproved && (
-                <div className="flex items-center gap-3 p-4 bg-blue-900/30 border border-blue-700/40 rounded-xl">
-                  <ShieldCheck className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <p className="text-sm font-bold text-blue-300">
+                <div className="flex items-center gap-2.5 bg-blue-50 border border-blue-200 rounded-xl px-3.5 py-2.5 mt-4">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                  <p className="text-xs leading-4 font-medium text-slate-800">
                     You approved this voter list on{" "}
                     {approval.approvedAt
                       ? new Date(approval.approvedAt).toLocaleString()
                       : "record"}
-                    .
+                    . The list below is read-only.
                   </p>
                 </div>
               )}
 
               {/* Voter table */}
-              <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-                <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/50">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mt-3">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
                   <span className="col-span-1">#</span>
                   <span className="col-span-4">Matric</span>
                   <span className="col-span-5">Name</span>
@@ -214,83 +251,89 @@ export default function RepReviewPage() {
                   className="max-h-80 overflow-y-auto"
                 >
                   {voters.length === 0 ? (
-                    <p className="text-slate-500 text-sm text-center py-10">
+                    <p className="text-[13px] text-slate-600 text-center py-10">
                       No voters on the roster yet.
                     </p>
                   ) : (
                     voters.map((v, i) => {
                       const flaggedReason = flags[v.matric];
+                      const isFlagging = flaggingMatric === v.matric;
                       return (
                         <div
                           key={v.matric}
-                          className={`px-4 py-2.5 border-b border-slate-700/30 last:border-0 ${
-                            flaggedReason ? "bg-slate-900/60" : ""
+                          className={`px-4 py-2.5 border-b border-slate-100 last:border-0 ${
+                            flaggedReason ? "bg-amber-50" : ""
                           }`}
                         >
                           <div className="grid grid-cols-12 gap-2 items-center">
-                            <span className="col-span-1 text-xs text-slate-600 font-mono">
+                            <span className="col-span-1 font-mono text-[11px] text-slate-400">
                               {i + 1}
                             </span>
-                            <span className="col-span-4 font-mono text-sm text-slate-300 truncate">
+                            <span className="col-span-4 font-mono text-xs text-slate-800 truncate">
                               {v.matric}
                             </span>
-                            <span className="col-span-5 text-sm font-bold text-white truncate">
+                            <span className="col-span-5 text-[13px] font-semibold text-slate-900 truncate">
                               {v.name}
                             </span>
                             <div className="col-span-2 flex justify-end">
                               {flaggedReason ? (
-                                <span className="text-[10px] font-bold text-red-400 flex items-center gap-1">
-                                  <Flag className="w-3 h-3" /> Flagged
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-600 text-white px-2 py-0.5 rounded-full">
+                                  <Flag className="w-2.5 h-2.5" /> Flagged
                                 </span>
                               ) : (
-                                !alreadyApproved && (
+                                !alreadyApproved &&
+                                (isFlagging ? (
+                                  <button
+                                    onClick={() => {
+                                      setFlaggingMatric(null);
+                                      setFlagReason("");
+                                    }}
+                                    title="Cancel flagging this entry"
+                                    className="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-1 rounded-md transition-all cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                ) : (
                                   <button
                                     onClick={() => {
                                       setFlaggingMatric(v.matric);
                                       setFlagReason("");
                                     }}
-                                    className="text-[11px] font-bold text-slate-500 hover:text-red-400 transition-colors cursor-pointer flex items-center gap-1"
+                                    title={`Flag ${v.matric} for the commission`}
+                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-amber-800 hover:bg-amber-50 px-2 py-1 rounded-md transition-all cursor-pointer"
                                   >
                                     <Flag className="w-3 h-3" /> Flag
                                   </button>
-                                )
+                                ))
                               )}
                             </div>
                           </div>
 
                           {flaggedReason && (
-                            <p className="text-xs text-amber-300 mt-1 ml-[8.333%]">
+                            <p className="text-[11px] leading-4 text-amber-800 mt-1.5 pl-[12%]">
                               Reason: {flaggedReason}
                             </p>
                           )}
 
-                          {flaggingMatric === v.matric && (
-                            <div className="mt-2 flex gap-2">
+                          {isFlagging && (
+                            <div className="flex gap-2 mt-2">
                               <input
                                 value={flagReason}
                                 onChange={(e) => setFlagReason(e.target.value)}
                                 onKeyDown={(e) =>
                                   e.key === "Enter" && submitFlag(v.matric)
                                 }
-                                placeholder="Reason (e.g. Not a registered student)"
+                                placeholder="Reason (e.g. not a registered student)"
                                 autoFocus
-                                className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-red-500 placeholder:text-slate-600"
+                                className="flex-1 min-h-[36px] text-xs text-slate-900 bg-white border border-slate-300 rounded-lg px-3 outline-none placeholder:text-slate-400 focus:border-amber-600 focus:ring-[3px] focus:ring-amber-50 transition-all"
                               />
                               <button
                                 onClick={() => submitFlag(v.matric)}
                                 disabled={!flagReason.trim() || flagBusy}
-                                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer disabled:opacity-50"
+                                title="Send this flag to the commission"
+                                className="text-xs font-semibold min-h-[36px] px-3 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white transition-all cursor-pointer"
                               >
-                                Flag
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setFlaggingMatric(null);
-                                  setFlagReason("");
-                                }}
-                                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors cursor-pointer"
-                              >
-                                Cancel
+                                Flag entry
                               </button>
                             </div>
                           )}
@@ -299,52 +342,86 @@ export default function RepReviewPage() {
                     })
                   )}
                 </div>
-                <div className="px-4 py-2 border-t border-slate-700 text-[11px] text-slate-600">
-                  {voters.length} voters — scroll to the bottom to enable approval
+                <div className="flex items-center gap-2 px-4 py-2 border-t border-slate-100 text-[11px] text-slate-600">
+                  {voters.length} voter{voters.length !== 1 ? "s" : ""} on the
+                  roster
+                  {!scrolledToBottom && voters.length > 0 && (
+                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                      {seenCount} of {voters.length} seen — keep scrolling
+                    </span>
+                  )}
+                  {scrolledToBottom && voters.length > 0 && (
+                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      ✓ Full list seen
+                    </span>
+                  )}
                 </div>
               </div>
 
               {error && (
-                <p className="text-sm font-bold text-red-400 text-center">
+                <p className="text-[11px] leading-4 font-medium text-red-600 text-center mt-3">
                   {error}
                 </p>
               )}
 
-              {hasFlags && !alreadyApproved && (
-                <p className="text-xs font-bold text-amber-400 text-center">
-                  Resolve your flagged entries or remove your flags before
-                  approving — the admin has been notified.
-                </p>
-              )}
-
               {!alreadyApproved && (
-                <button
-                  onClick={handleApprove}
-                  disabled={approveDisabled}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  {loading ? (
-                    <VBLoader size="sm" />
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-5 h-5" /> I approve this voter list
-                    </>
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={handleApprove}
+                    disabled={approveDisabled}
+                    title="Record your approval of this voter list"
+                    className="w-full mt-4 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    {loading ? (
+                      <VBLoader size="sm" />
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" /> I approve this voter
+                        list
+                      </>
+                    )}
+                  </button>
+                  <p
+                    className={`text-[11px] leading-4 text-center mt-2 ${
+                      approveDisabled && !loading
+                        ? "text-amber-800"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {gateHint}
+                  </p>
+                </>
               )}
-            </div>
+            </>
           )}
 
           {/* ── Step 3: confirmation ───────────────────────────────────────── */}
           {step === 3 && confirmation && (
-            <div className="text-center space-y-4 py-4">
-              <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-11 h-11 text-blue-400" />
+            <div className="text-center py-2">
+              <div className="w-[72px] h-[72px] bg-green-50 border-[1.5px] border-green-200 rounded-full flex items-center justify-center mx-auto text-green-600">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path
+                    d="M20 6 9 17l-5-5"
+                    className="vb-draw"
+                    style={{ strokeDasharray: 24, strokeDashoffset: 24 }}
+                  />
+                </svg>
               </div>
-              <h2 className="text-2xl font-black text-white">Approval recorded</h2>
-              <p className="text-sm text-slate-300">
+              <h2 className="text-[22px] leading-7 font-semibold text-slate-900 mt-4">
+                Approval recorded
+              </h2>
+              <p className="text-[13px] leading-5 text-slate-600 mt-2">
                 You approved the voter list as{" "}
-                <span className="font-bold text-white">
+                <span className="font-semibold text-slate-900">
                   {confirmation.reviewerName}
                 </span>{" "}
                 on{" "}
@@ -353,24 +430,25 @@ export default function RepReviewPage() {
                   : "record"}
                 .
               </p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Your approval has been recorded. The electoral commission has been
-                notified.
+              <p className="text-[11px] leading-4 text-slate-400 mt-3 max-w-[340px] mx-auto">
+                The electoral commission has been notified. You can close this
+                page — your part is done.
               </p>
             </div>
           )}
         </div>
 
-        <p className="text-center mt-3">
+        {/* Foot link */}
+        <div className="mt-4 flex justify-center">
           <button
             onClick={() => navigate("/")}
             title="Back to Virtual Ballot home"
-            className="text-slate-600 hover:text-slate-400 text-xs font-bold mx-auto transition-colors cursor-pointer"
+            className="min-h-[44px] px-3 text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
           >
             ← Virtual Ballot Home
           </button>
-        </p>
+        </div>
       </div>
-    </div>
+    </AuthBackground>
   );
 }
