@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Screen 10: Election Control Tab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --danger-light:#FEF2F2; --danger:#DC2626; --danger-border:#FECACA;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.pane{width:900px;max-width:100%;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:24px}
+
+.card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px}
+.card .clabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);margin-bottom:16px}
+
+/* Phase stepper */
+.phases{display:flex;align-items:flex-start}
+.phase{flex:1;display:flex;align-items:center}
+.pcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pbubble{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--gray-300);color:var(--gray-400);background:var(--white)}
+.pdone .pbubble{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+.pactive .pbubble{border-color:var(--blue-600);color:var(--blue-700)}
+.plabel{font-size:10px;font-weight:600;text-align:center;color:var(--gray-400)}
+.pdone .plabel{color:var(--gray-800)}
+.pactive .plabel{color:var(--blue-700)}
+.pline{height:2px;width:100%;max-width:48px;background:var(--gray-200);margin-top:15px}
+.pdone .pline{background:var(--blue-600)}
+
+.cols{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+.cols .card{margin-bottom:12px}
+
+/* Duration inputs */
+.durs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.durs label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);margin-bottom:8px}
+.durs input{width:100%;min-height:48px;background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);text-align:center;font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--gray-900);outline:none;transition:var(--transition-fast)}
+.durs input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+
+/* Roster gate */
+.gate{display:flex;gap:12px;background:var(--warning-light);border:1px solid var(--warning-border);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:16px}
+.gate svg{color:var(--warning);flex-shrink:0;margin-top:2px}
+.gate .gtitle{font-size:13px;font-weight:600;color:var(--warning-ink)}
+.gate .gsub{font-size:11px;line-height:16px;color:var(--warning-ink);margin-top:2px;opacity:.85}
+.gate .gsub a{color:var(--warning-ink);font-weight:600}
+
+.btn{width:100%;font-size:14px;font-weight:600;min-height:48px;border-radius:var(--radius);border:none;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+.btn-danger{background:var(--danger-light);color:var(--danger);border:1px solid var(--danger-border)}
+.btn-danger:hover{background:#FEE2E2}
+
+/* Countdown (active) */
+.cdwrap{text-align:center;padding:8px 0 16px}
+.cdwrap .cdlabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.cdwrap .cd{font-family:var(--font-mono);font-size:44px;line-height:52px;font-weight:600;color:var(--blue-700);font-variant-numeric:tabular-nums;margin-top:8px}
+
+/* Concluded */
+.donewrap{text-align:center;padding:8px 0}
+.donewrap .ico{width:56px;height:56px;border-radius:50%;background:var(--success-light);border:1.5px solid var(--success-border);color:var(--success);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.donewrap h4{font-size:16px;font-weight:600;color:var(--gray-900)}
+.donewrap p{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:4px}
+
+/* Setting rows with switches */
+.setting{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px}
+.setting .sico{width:36px;height:36px;border-radius:var(--radius);background:var(--gray-100);color:var(--gray-600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.setting.live .sico{background:var(--blue-50);color:var(--blue-600)}
+.setting .smain{flex:1;min-width:0}
+.setting .stitle{font-size:13px;font-weight:600;color:var(--gray-900);display:flex;align-items:center;gap:8px}
+.setting .ssub{font-size:11px;line-height:16px;color:var(--gray-600);margin-top:1px}
+.livepill{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--blue-600);color:#fff;padding:2px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+.livepill i{width:4px;height:4px;border-radius:50%;background:#fff;animation:blink 1.2s ease infinite}
+@keyframes blink{50%{opacity:.3}}
+.switch{width:36px;height:20px;border-radius:999px;background:var(--gray-300);position:relative;flex-shrink:0;cursor:pointer;transition:var(--transition-fast);border:none}
+.switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:var(--transition-fast);box-shadow:var(--shadow-sm)}
+.switch.on{background:var(--blue-600)}
+.switch.on::after{left:18px}
+.state{font-size:11px;font-weight:600;flex-shrink:0;width:44px;text-align:right}
+.state.on{color:var(--blue-700)}
+.state.off{color:var(--gray-600)}
+
+/* Config summary */
+.cfg .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.cfg .row:last-child{border-bottom:none}
+.cfg .k{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600)}
+.pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px}
+.pill.green{background:var(--success-light);color:var(--success);border:1px solid var(--success-border)}
+.pill.blue{background:var(--blue-50);color:var(--blue-700);border:1px solid var(--blue-200)}
+.pill.amber{background:var(--warning-light);color:var(--warning-ink);border:1px solid var(--warning-border)}
+.pill.gray{background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-200)}
+
+/* Share links */
+.linkcard{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--blue-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px}
+.linkcard.neutral{border-color:var(--gray-200)}
+.linkcard .lmain{flex:1;min-width:0}
+.linkcard .llabel{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-700);margin-bottom:4px}
+.linkcard.neutral .llabel{color:var(--gray-600)}
+.linkcard .lurl{font-family:var(--font-mono);font-size:12px;color:var(--gray-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copybtn{font-size:12px;font-weight:600;min-height:36px;padding:0 14px;border-radius:var(--radius);border:none;cursor:pointer;transition:var(--transition-fast);flex-shrink:0;background:var(--blue-600);color:#fff}
+.copybtn:hover{background:var(--blue-700)}
+.copybtn.neutral{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-300)}
+.copybtn.done{background:var(--success-light);color:var(--success);border:1px solid var(--success-border)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Screen 10 — Election Control Tab</h1>
+  <p class="sub">Content area only — renders inside the Screen 9 shell · start = blue primary (the consequential action), end = quiet danger, going-live state = semantic green dot · toggles become labelled switches with explanatory sublines · disabled start explains itself via the amber roster gate</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Not started, blocked by roster approval -->
+    <div class="variant"><span class="cap">1 · Not started — start blocked until the roster is approved</span>
+      <div class="pane">
+        <div class="card">
+          <div class="clabel">Election phase</div>
+          <div class="phases">
+            <div class="phase pdone"><div class="pcol"><div class="pbubble">✓</div><div class="plabel">Setup</div></div><div class="pline"></div></div>
+            <div class="phase pactive"><div class="pcol"><div class="pbubble">2</div><div class="plabel">Registration</div></div><div class="pline"></div></div>
+            <div class="phase"><div class="pcol"><div class="pbubble">3</div><div class="plabel">Voting &amp; live count</div></div><div class="pline"></div></div>
+            <div class="phase"><div class="pcol"><div class="pbubble">4</div><div class="plabel">Results published</div></div></div>
+          </div>
+        </div>
+
+        <div class="cols">
+          <div>
+            <div class="card">
+              <div class="clabel">Set duration</div>
+              <div class="durs">
+                <div><label>Days</label><input value="0" readonly /></div>
+                <div><label>Hours</label><input value="6" readonly /></div>
+                <div><label>Mins</label><input value="0" readonly /></div>
+                <div><label>Secs</label><input value="0" readonly /></div>
+              </div>
+              <div class="gate">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <div>
+                  <div class="gtitle">Voter roster not yet approved</div>
+                  <div class="gsub">2 of 3 committee reviewers have approved. Starting unlocks when all reviewers sign off — check progress in the <a>Voters tab</a>.</div>
+                </div>
+              </div>
+              <button class="btn btn-primary" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                Start election
+              </button>
+            </div>
+
+            <div class="setting live">
+              <div class="sico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Broadcast live results</div>
+                <div class="ssub">Voters and the public can watch the tally in real time</div>
+              </div>
+              <span class="state off">Off</span>
+              <button class="switch" title="Turn on results broadcasting"></button>
+            </div>
+
+            <div class="setting">
+              <div class="sico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Registry lock</div>
+                <div class="ssub">Stops new voter account activations</div>
+              </div>
+              <span class="state off">Open</span>
+              <button class="switch" title="Lock the voter registry"></button>
+            </div>
+
+            <div class="setting">
+              <div class="sico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Voter countdown timer</div>
+                <div class="ssub">Show time remaining on the voter login page</div>
+              </div>
+              <span class="state on">Visible</span>
+              <button class="switch on" title="Hide the login countdown"></button>
+            </div>
+          </div>
+
+          <div class="card cfg">
+            <div class="clabel">Current config</div>
+            <div class="row"><span class="k">Status</span><span class="pill amber">Not started</span></div>
+            <div class="row"><span class="k">Results</span><span class="pill gray">Hidden</span></div>
+            <div class="row"><span class="k">Registration</span><span class="pill green">Open</span></div>
+            <div class="row"><span class="k">Mode</span><span class="pill gray">Closed roster</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Active -->
+    <div class="variant"><span class="cap">2 · Active — countdown, quiet danger end, broadcasting on</span>
+      <div class="pane">
+        <div class="card">
+          <div class="clabel">Election phase</div>
+          <div class="phases">
+            <div class="phase pdone"><div class="pcol"><div class="pbubble">✓</div><div class="plabel">Setup</div></div><div class="pline"></div></div>
+            <div class="phase pdone"><div class="pcol"><div class="pbubble">✓</div><div class="plabel">Registration</div></div><div class="pline"></div></div>
+            <div class="phase pactive"><div class="pcol"><div class="pbubble">3</div><div class="plabel">Voting &amp; live count</div></div><div class="pline"></div></div>
+            <div class="phase"><div class="pcol"><div class="pbubble">4</div><div class="plabel">Results published</div></div></div>
+          </div>
+        </div>
+
+        <div class="cols">
+          <div>
+            <div class="card">
+              <div class="cdwrap">
+                <div class="cdlabel">Time remaining</div>
+                <div class="cd">02:41:16</div>
+              </div>
+              <button class="btn btn-danger">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6"/></svg>
+                End election now
+              </button>
+            </div>
+
+            <div class="setting live">
+              <div class="sico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Broadcast live results <span class="livepill"><i></i>Live</span></div>
+                <div class="ssub">Voters and the public can watch the tally in real time</div>
+              </div>
+              <span class="state on">On</span>
+              <button class="switch on" title="Stop broadcasting results"></button>
+            </div>
+
+            <div class="setting">
+              <div class="sico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Registry lock</div>
+                <div class="ssub">Locked automatically when the election started</div>
+              </div>
+              <span class="state on">Locked</span>
+              <button class="switch on" title="Unlock the voter registry"></button>
+            </div>
+
+            <div class="setting">
+              <div class="sico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Voter countdown timer</div>
+                <div class="ssub">Show time remaining on the voter login page</div>
+              </div>
+              <span class="state on">Visible</span>
+              <button class="switch on" title="Hide the login countdown"></button>
+            </div>
+          </div>
+
+          <div class="card cfg">
+            <div class="clabel">Current config</div>
+            <div class="row"><span class="k">Status</span><span class="pill green">Active</span></div>
+            <div class="row"><span class="k">Results</span><span class="pill blue">Public</span></div>
+            <div class="row"><span class="k">Registration</span><span class="pill amber">Locked</span></div>
+            <div class="row"><span class="k">Mode</span><span class="pill gray">Closed roster</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 3: Ended + open-election share links -->
+    <div class="variant"><span class="cap">3 · Ended · open election shows its share links (one just copied)</span>
+      <div class="pane">
+        <div class="linkcard">
+          <div class="lmain">
+            <div class="llabel">Public voting link · open election</div>
+            <div class="lurl">virtualballot.app/open/eng-su-2026</div>
+          </div>
+          <button class="copybtn done">✓ Copied</button>
+        </div>
+        <div class="linkcard neutral">
+          <div class="lmain">
+            <div class="llabel">Observer link · live monitoring</div>
+            <div class="lurl">virtualballot.app/observer/login?slug=eng-su-2026</div>
+          </div>
+          <button class="copybtn neutral">Copy link</button>
+        </div>
+
+        <div class="card">
+          <div class="clabel">Election phase</div>
+          <div class="phases">
+            <div class="phase pdone"><div class="pcol"><div class="pbubble">✓</div><div class="plabel">Setup</div></div><div class="pline"></div></div>
+            <div class="phase pdone"><div class="pcol"><div class="pbubble">✓</div><div class="plabel">Registration</div></div><div class="pline"></div></div>
+            <div class="phase pdone"><div class="pcol"><div class="pbubble">✓</div><div class="plabel">Voting &amp; live count</div></div><div class="pline"></div></div>
+            <div class="phase pactive"><div class="pcol"><div class="pbubble">4</div><div class="plabel">Results published</div></div></div>
+          </div>
+        </div>
+
+        <div class="cols">
+          <div>
+            <div class="card">
+              <div class="donewrap">
+                <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <h4>Election concluded</h4>
+                <p>Results are saved. Use “New election” in the top bar to start a fresh one.</p>
+              </div>
+            </div>
+
+            <div class="setting live">
+              <div class="sico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
+              <div class="smain">
+                <div class="stitle">Broadcast final results <span class="livepill"><i></i>Live</span></div>
+                <div class="ssub">The results page shows the final tally publicly</div>
+              </div>
+              <span class="state on">On</span>
+              <button class="switch on" title="Stop broadcasting results"></button>
+            </div>
+          </div>
+
+          <div class="card cfg">
+            <div class="clabel">Current config</div>
+            <div class="row"><span class="k">Status</span><span class="pill gray">Ended</span></div>
+            <div class="row"><span class="k">Results</span><span class="pill blue">Public</span></div>
+            <div class="row"><span class="k">Registration</span><span class="pill amber">Locked</span></div>
+            <div class="row"><span class="k">Mode</span><span class="pill blue">Open · anyone with the link</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
