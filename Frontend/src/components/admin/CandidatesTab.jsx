@@ -97,7 +97,8 @@ export default function CandidatesTab() {
         } finally {
           setSaving(false);
         }
-      }
+      },
+      "danger"
     );
   };
 

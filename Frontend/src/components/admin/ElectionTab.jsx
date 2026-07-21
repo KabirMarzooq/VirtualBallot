@@ -146,8 +146,12 @@ export default function ElectionTab() {
   };
 
   const end = () =>
-    showConfirm("End Early?", "Stop voting now? Cannot be undone.", () =>
-      patch({ status: "ENDED" }, "Election ended early by admin", "warning")
+    showConfirm(
+      "End Early?",
+      "Stop voting now? Cannot be undone.",
+      () =>
+        patch({ status: "ENDED" }, "Election ended early by admin", "warning"),
+      "danger"
     );
 
   const phases = PHASES(electionConfig);

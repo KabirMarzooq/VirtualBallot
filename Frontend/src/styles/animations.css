@@ -37,6 +37,20 @@
 }
 .vb-draw { animation: vb-draw 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; }
 
+/* Modal entrance — quick pop confirms the state change */
+@keyframes vb-modal-pop {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.vb-modal-pop { animation: vb-modal-pop 0.18s cubic-bezier(0.34, 1.4, 0.64, 1); }
+
+/* Overlay fade-in */
+@keyframes vb-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.vb-fade { animation: vb-fade 0.15s ease; }
+
 /* Skeleton shimmer */
 @keyframes vb-shimmer {
   to { background-position: -200% 0; }

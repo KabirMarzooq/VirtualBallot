@@ -239,7 +239,8 @@ export default function AdminPage() {
         } finally {
           setCreating(false);
         }
-      }
+      },
+      "danger"
     );
   };
 

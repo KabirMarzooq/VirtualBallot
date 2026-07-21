@@ -345,8 +345,10 @@ export function AppProvider({ children }) {
 
   const showAlert = (title, message) =>
     setModal({ isOpen: true, type: "alert", title, message, onConfirm: null });
-  const showConfirm = (title, message, onConfirm) =>
-    setModal({ isOpen: true, type: "confirm", title, message, onConfirm });
+  // `tone` is presentational: "danger" renders a red confirm button for
+  // destructive actions. Omitting it keeps the default blue confirm.
+  const showConfirm = (title, message, onConfirm, tone) =>
+    setModal({ isOpen: true, type: "confirm", title, message, onConfirm, tone });
   const closeModal = () => setModal((m) => ({ ...m, isOpen: false }));
 
   // Reload roster-approval state from the backend (admin, closed elections only).

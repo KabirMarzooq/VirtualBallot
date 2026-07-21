@@ -55,7 +55,8 @@ export default function AuditLogTab() {
     showConfirm(
       "Clear Audit Log",
       "Delete all log entries? This cannot be undone.",
-      () => setActivityLog([])
+      () => setActivityLog([]),
+      "danger"
     );
 
   return (

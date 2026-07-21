@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Shared Component: GlobalModal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-100:#DBEAFE; --blue-600:#2563EB; --blue-700:#1D4ED8; --blue-50:#EFF6FF; --blue-200:#BFDBFE;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1480px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+/* Stage simulating a page behind the modal */
+.stage{width:520px;max-width:100%;height:400px;border:1px solid var(--gray-200);border-radius:var(--radius-xl);position:relative;overflow:hidden;background:var(--gray-50)}
+.fakepage{position:absolute;inset:0;padding:20px}
+.fakebar{height:12px;border-radius:6px;background:var(--gray-200);margin-bottom:12px}
+.fakecard{height:80px;border-radius:12px;background:var(--white);border:1px solid var(--gray-200);margin-bottom:12px}
+
+/* Overlay */
+.overlay{position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadein .15s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* Modal */
+.modal{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:0 20px 40px -12px rgb(0 0 0/.25);padding:24px;max-width:380px;width:100%;animation:pop .18s cubic-bezier(.34,1.4,.64,1)}
+@keyframes pop{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.modal h3{font-size:16px;line-height:24px;font-weight:600;color:var(--gray-900)}
+.modal p{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:8px}
+.modal .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.mbtn{display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;min-height:44px;padding:0 18px;border-radius:var(--radius);border:none;cursor:pointer;transition:var(--transition-fast)}
+.mbtn.ghost{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-300)}
+.mbtn.ghost:hover{border-color:var(--gray-400);color:var(--gray-800)}
+.mbtn.primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.mbtn.primary:hover{background:var(--blue-700)}
+.esc{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:rgba(255,255,255,.5)}
+.esc kbd{font-family:var(--font-mono);font-size:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Shared Component — GlobalModal</h1>
+  <p class="sub">Every alert and confirm in the app flows through this one component · token radii and type scale replace the old rounded-3xl/font-black · scale-pop entrance (motion confirms the state change) · Escape closes, backdrop click cancels — both from the brief's modal spec</p>
+
+  <div class="grid">
+
+    <!-- VARIANT 1: Alert -->
+    <div class="variant"><span class="cap">1 · Alert (OK only)</span>
+      <div class="stage">
+        <div class="fakepage">
+          <div class="fakebar" style="width:40%"></div>
+          <div class="fakecard"></div>
+          <div class="fakecard"></div>
+        </div>
+        <div class="overlay">
+          <div class="modal">
+            <h3>Registry Locked</h3>
+            <p>The voter registry is now locked. You can start the election from the Election tab.</p>
+            <div class="btns">
+              <button class="mbtn primary">OK</button>
+            </div>
+          </div>
+          <div class="esc"><kbd>Esc</kbd> closes · clicking the backdrop closes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: Confirm -->
+    <div class="variant"><span class="cap">2 · Confirm (cancel + confirm)</span>
+      <div class="stage">
+        <div class="fakepage">
+          <div class="fakebar" style="width:55%"></div>
+          <div class="fakecard"></div>
+          <div class="fakecard"></div>
+        </div>
+        <div class="overlay">
+          <div class="modal">
+            <h3>Start Election</h3>
+            <p>Begin a 6h 0m 0s election? Voting opens immediately and the registry locks automatically.</p>
+            <div class="btns">
+              <button class="mbtn ghost">Cancel</button>
+              <button class="mbtn primary">Confirm</button>
+            </div>
+          </div>
+          <div class="esc"><kbd>Esc</kbd> cancels · clicking the backdrop cancels</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 3: Destructive confirm (same component, message carries the weight) -->
+    <div class="variant"><span class="cap">3 · Destructive confirm — same layout, message carries the warning</span>
+      <div class="stage">
+        <div class="fakepage">
+          <div class="fakebar" style="width:35%"></div>
+          <div class="fakecard"></div>
+          <div class="fakecard"></div>
+        </div>
+        <div class="overlay">
+          <div class="modal">
+            <h3>End Early?</h3>
+            <p>Stop voting now? This cannot be undone.</p>
+            <div class="btns">
+              <button class="mbtn ghost">Cancel</button>
+              <button class="mbtn primary">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

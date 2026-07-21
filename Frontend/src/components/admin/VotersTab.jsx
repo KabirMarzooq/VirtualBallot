@@ -166,14 +166,22 @@ export default function VotersTab() {
     reader.readAsText(file);
   };
 
-  const handleRemove = async (voter) => {
-    try {
-      await removeVoter(voter.id, accessToken, orgSlug);
-      setUsers((prev) => prev.filter((u) => u.matric !== voter.matric));
-      addLog(`Voter ${voter.matric} removed from roster`, "registry");
-    } catch (err) {
-      showAlert("Cannot Remove", err.message);
-    }
+  // Destructive — always confirmed before it runs.
+  const handleRemove = (voter) => {
+    showConfirm(
+      "Remove voter?",
+      `Remove ${voter.matric} (${voter.name}) from the roster? They will no longer be able to activate an account or vote.`,
+      async () => {
+        try {
+          await removeVoter(voter.id, accessToken, orgSlug);
+          setUsers((prev) => prev.filter((u) => u.matric !== voter.matric));
+          addLog(`Voter ${voter.matric} removed from roster`, "registry");
+        } catch (err) {
+          showAlert("Cannot Remove", err.message);
+        }
+      },
+      "danger"
+    );
   };
 
   // ── Roster review panel helpers ─────────────────────────────────────────────
@@ -217,7 +225,8 @@ export default function VotersTab() {
         } finally {
           setApprovalBusy(false);
         }
-      }
+      },
+      "danger"
     );
   };
 
