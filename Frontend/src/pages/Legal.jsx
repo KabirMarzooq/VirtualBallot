@@ -203,6 +203,9 @@ export default function LegalPage({ doc = "terms" }) {
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = `${data.title} · Virtual Ballot`;
+    return () => {
+      document.title = "Virtual Ballot";
+    };
   }, [data.title]);
 
   return (
