@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Staff Support Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-400:#60A5FA; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-700:#334155; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --danger-light:#FEF2F2; --danger:#DC2626; --danger-border:#FECACA;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05); --shadow-lg:0 10px 15px -3px rgb(0 0 0/.35),0 4px 6px -4px rgb(0 0 0/.3);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1600px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+/* ── Console shell ── */
+.console{width:1080px;max-width:100%;height:660px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);overflow:hidden;display:flex;flex-direction:column}
+.topbar{background:var(--gray-900);display:flex;align-items:center;gap:12px;padding:10px 20px;flex-shrink:0}
+.crest{width:36px;height:36px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.topbar .tt{font-size:14px;font-weight:600;color:#fff;line-height:16px}
+.topbar .ts{font-size:11px;color:var(--gray-400)}
+.picker{margin-left:auto;display:flex;align-items:center;gap:8px}
+.selwrap{position:relative}
+.selwrap select{appearance:none;background:rgba(148,163,184,.08);border:1px solid var(--gray-700);color:#fff;border-radius:var(--radius);font-size:12px;font-weight:600;padding:8px 30px 8px 12px;outline:none;cursor:pointer;max-width:220px}
+.selwrap svg{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none}
+.statuspill{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:999px}
+.statuspill.active{background:rgba(34,197,94,.18);color:#4ADE80}
+.outbtn{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--gray-400);background:none;border:none;cursor:pointer;transition:var(--transition-fast)}
+.outbtn:hover{color:#fff;background:rgba(148,163,184,.12)}
+
+.body{flex:1;display:flex;min-height:0}
+
+/* ── Queue (left) ── */
+.queue{width:320px;border-right:1px solid var(--gray-200);background:var(--white);display:flex;flex-direction:column;flex-shrink:0}
+.qhead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--gray-100)}
+.qhead .ql{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);display:flex;align-items:center;gap:8px}
+.qcounts{display:flex;gap:6px}
+.qc{font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+.qc.wait{background:var(--warning-light);color:var(--warning-ink)}
+.qc.total{background:var(--gray-100);color:var(--gray-600)}
+.qlist{flex:1;overflow-y:auto}
+.qrow{position:relative;display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--gray-100);cursor:pointer;transition:var(--transition-fast)}
+.qrow:hover{background:var(--gray-50)}
+.qrow.on{background:var(--blue-50)}
+.qrow.urgent::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--danger)}
+.qav{width:36px;height:36px;border-radius:50%;background:var(--gray-100);color:var(--gray-600);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.qav.urgent{background:var(--danger-light);color:var(--danger)}
+.qmain{flex:1;min-width:0}
+.qtop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.qname{font-size:13px;font-weight:600;color:var(--gray-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qtime{font-size:10px;color:var(--gray-400);flex-shrink:0}
+.qmatric{font-family:var(--font-mono);font-size:10px;color:var(--gray-400)}
+.qmsg{font-size:12px;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.qmsg .typing{color:var(--blue-600);font-style:italic}
+.qtags{display:flex;align-items:center;gap:6px;margin-top:6px}
+.tag{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px}
+.tag.urgent{background:var(--danger-light);color:var(--danger)}
+.tag.wait{background:var(--warning-light);color:var(--warning-ink)}
+.tag.claimed{background:var(--success-light);color:var(--success)}
+.qassignee{font-size:10px;color:var(--gray-400);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.claimbtn{margin-left:auto;font-size:10px;font-weight:600;background:var(--blue-600);color:#fff;border:none;padding:3px 10px;border-radius:var(--radius);cursor:pointer;transition:var(--transition-fast)}
+.claimbtn:hover{background:var(--blue-700)}
+.online{border-top:1px solid var(--gray-100);padding:12px 16px;flex-shrink:0}
+.online .ol{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.online .odot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+.online .orow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.online .orow span:last-child{font-size:12px;color:var(--gray-800)}
+
+/* ── Conversation (right) ── */
+.convo{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--gray-50)}
+.chead{background:var(--white);border-bottom:1px solid var(--gray-200);padding:12px 20px;flex-shrink:0}
+.ctop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cvoter{display:flex;align-items:center;gap:10px;min-width:0}
+.cav{width:40px;height:40px;border-radius:50%;background:var(--danger-light);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+.cname{font-size:14px;font-weight:600;color:var(--gray-900)}
+.cmatric{font-family:var(--font-mono);font-size:11px;color:var(--gray-400)}
+.transbtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--gray-600);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);min-height:36px;padding:0 12px;cursor:pointer;transition:var(--transition-fast)}
+.transbtn:hover{border-color:var(--gray-400);color:var(--gray-800)}
+.suggest{margin-top:12px}
+.sugbtn{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--blue-700);cursor:pointer;background:none;border:none}
+.sugcard{display:block;width:100%;text-align:left;background:var(--blue-50);border:1px solid var(--blue-200);border-radius:var(--radius);padding:8px 12px;margin-top:8px;cursor:pointer}
+.sugcard .sq{font-size:12px;font-weight:600;color:var(--gray-900)}
+.sugcard .sa{font-size:11px;color:var(--gray-600);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+
+.thread{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;flex-direction:column;max-width:72%}
+.msg.staff{align-self:flex-end;align-items:flex-end}
+.msg.voter,.msg.auto{align-self:flex-start;align-items:flex-start}
+.msglabel{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-400);margin-bottom:4px;padding:0 4px}
+.bubble{font-size:13px;line-height:20px;padding:9px 14px;border-radius:var(--radius-lg)}
+.msg.staff .bubble{background:var(--blue-600);color:#fff;border-bottom-right-radius:4px}
+.msg.voter .bubble{background:var(--white);border:1px solid var(--gray-200);color:var(--gray-800);border-bottom-left-radius:4px}
+.msg.auto .bubble{background:var(--gray-100);color:var(--gray-600);border-bottom-left-radius:4px}
+.msgtime{font-size:10px;color:var(--gray-400);margin-top:4px;padding:0 4px}
+.typingline{font-size:12px;color:var(--blue-600);font-style:italic}
+
+.inputbar{background:var(--white);border-top:1px solid var(--gray-200);padding:12px;flex-shrink:0;position:relative}
+.cannedpop{position:absolute;bottom:100%;left:12px;margin-bottom:8px;width:280px;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:6px;z-index:10}
+.cannedpop button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:var(--radius);background:none;border:none;cursor:pointer}
+.cannedpop button:hover{background:var(--gray-50)}
+.cannedpop .cl{font-size:12px;font-weight:600;color:var(--gray-900);display:block}
+.cannedpop .cb{font-size:11px;color:var(--gray-600);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inputrow{display:flex;align-items:flex-end;gap:8px}
+.iconbtn{width:40px;height:40px;flex-shrink:0;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:var(--transition-fast)}
+.iconbtn.canned{background:var(--blue-50);color:var(--blue-600)}
+.iconbtn.canned:hover{background:var(--blue-100)}
+.iconbtn.send{background:var(--blue-600);color:#fff}
+.iconbtn.send:hover{background:var(--blue-700)}
+.replyin{flex:1;resize:none;min-height:40px;max-height:96px;font-family:var(--font-sans);font-size:13px;color:var(--gray-900);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:9px 14px;outline:none;transition:var(--transition-fast)}
+.replyin::placeholder{color:var(--gray-400)}
+.replyin:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+.convacts{display:flex;gap:8px;margin-top:8px}
+.actbtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;min-height:32px;padding:0 12px;border-radius:var(--radius);cursor:pointer;border:1px solid var(--gray-300);background:var(--white);color:var(--gray-600);transition:var(--transition-fast)}
+.actbtn:hover{border-color:var(--gray-400);color:var(--gray-800)}
+.actbtn.resolve{border-color:var(--success-border);background:var(--success-light);color:var(--success)}
+.actbtn.resolve:hover{background:#DCFCE7}
+
+/* empty */
+.emptyconv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--gray-400)}
+.emptyconv .ei{width:56px;height:56px;border-radius:50%;background:var(--gray-100);display:flex;align-items:center;justify-content:center}
+.emptyconv p{font-size:13px;color:var(--gray-600)}
+
+/* login */
+.loginscreen{width:420px;max-width:100%;min-height:520px;background:var(--gray-900);border-radius:var(--radius-xl);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.loginscreen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--blue-500) 1px,transparent 1px);background-size:28px 28px;opacity:.14}
+.loginscreen::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.16) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%)}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(59,130,246,.25);top:50%;left:50%;animation:re 4s ease-out infinite}
+.r1{width:220px;height:220px}.r2{width:380px;height:380px;animation-delay:1.3s}.r3{width:540px;height:540px;animation-delay:2.6s}
+@keyframes re{0%{opacity:.5;transform:translate(-50%,-50%) scale(.85)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+.logincard{position:relative;z-index:1;width:100%;max-width:340px;background:var(--gray-800);border:1px solid var(--gray-700);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);padding:32px 28px}
+.logincard .lc{width:56px;height:56px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#fff}
+.logincard h2{font-size:22px;font-weight:600;color:#fff;text-align:center;margin-top:16px}
+.logincard .lsub{font-size:13px;color:var(--gray-400);text-align:center;margin-top:4px}
+.lfield{margin-top:20px}
+.lfield label{display:block;font-size:13px;font-weight:500;color:var(--gray-300);margin-bottom:8px}
+.lin{width:100%;min-height:48px;font-size:14px;color:#fff;background:var(--gray-900);border:1px solid var(--gray-600);border-radius:var(--radius);padding:12px 16px;outline:none}
+.lin.foc{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.lbtn{width:100%;margin-top:20px;min-height:48px;background:var(--blue-600);color:#fff;font-size:14px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer}
+
+/* transcript modal */
+.tmodal{width:520px;max-width:100%;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:0 20px 40px -12px rgb(0 0 0/.25);overflow:hidden}
+.tmhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--gray-100)}
+.tmhead h3{font-size:15px;font-weight:600;color:var(--gray-900)}
+.tmsub{padding:10px 20px;font-size:11px;color:var(--gray-600);border-bottom:1px solid var(--gray-100)}
+.tmbody{padding:16px 20px;max-height:280px;overflow-y:auto}
+.tmline{font-size:13px;line-height:20px;margin-bottom:8px}
+.tmline b{font-weight:600;color:var(--gray-900)}
+.tmline .who-staff{color:var(--blue-700)}
+.tmfoot{padding:12px 20px;border-top:1px solid var(--gray-100);display:flex;justify-content:flex-end}
+.printbtn{font-size:13px;font-weight:600;color:#fff;background:var(--blue-600);border:none;border-radius:var(--radius);min-height:40px;padding:0 16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Staff Support Console — Live Chat</h1>
+  <p class="sub">Joins the dark-header / light-content staff family (admin, observer) · urgent stays red (a real alert), waiting amber, claimed/resolved/online green, blue for claim/send/your-messages/selection · login joins the dark rings auth family · transcript modal on the token system</p>
+
+  <div class="grid">
+
+    <!-- MAIN CONSOLE -->
+    <div class="variant"><span class="cap">1 · Console — urgent chat claimed &amp; open, suggestions shown</span>
+      <div class="console">
+        <div class="topbar">
+          <div class="crest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/><path d="M21 16v2a4 4 0 0 1-4 4h-5"/></svg></div>
+          <div>
+            <div class="tt">Support Console</div>
+            <div class="ts">Kabir Marzooq</div>
+          </div>
+          <div class="picker">
+            <div class="selwrap">
+              <select><option>Student Union 2026</option></select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <span class="statuspill active">Active</span>
+            <button class="outbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
+          </div>
+        </div>
+
+        <div class="body">
+          <!-- queue -->
+          <aside class="queue">
+            <div class="qhead">
+              <span class="ql"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg> Live queue</span>
+              <div class="qcounts"><span class="qc wait">2 waiting</span><span class="qc total">4</span></div>
+            </div>
+            <div class="qlist">
+              <div class="qrow urgent">
+                <div class="qav urgent">AO</div>
+                <div class="qmain">
+                  <div class="qtop"><span class="qname">Amara Okeke</span><span class="qtime">just now</span></div>
+                  <div class="qmatric">U/25/0412</div>
+                  <div class="qmsg">I paid but my vote didn't go through!</div>
+                  <div class="qtags"><span class="tag urgent">Urgent</span><span class="tag wait">Waiting</span><button class="claimbtn">Claim</button></div>
+                </div>
+              </div>
+              <div class="qrow on">
+                <div class="qav">CN</div>
+                <div class="qmain">
+                  <div class="qtop"><span class="qname">Chidi Nnamdi</span><span class="qtime">2m ago</span></div>
+                  <div class="qmatric">U/25/0388</div>
+                  <div class="qmsg"><span class="typing">typing…</span></div>
+                  <div class="qtags"><span class="tag claimed">Claimed</span><span class="qassignee">you</span></div>
+                </div>
+              </div>
+              <div class="qrow">
+                <div class="qav">BA</div>
+                <div class="qmain">
+                  <div class="qtop"><span class="qname">Bola Adewale</span><span class="qtime">5m ago</span></div>
+                  <div class="qmatric">U/25/0156</div>
+                  <div class="qmsg">Where do I find my receipt hash?</div>
+                  <div class="qtags"><span class="tag wait">Waiting</span><button class="claimbtn">Claim</button></div>
+                </div>
+              </div>
+              <div class="qrow">
+                <div class="qav">GE</div>
+                <div class="qmain">
+                  <div class="qtop"><span class="qname">Grace Eze</span><span class="qtime">8m ago</span></div>
+                  <div class="qmatric">U/25/0091</div>
+                  <div class="qmsg">Thanks, that worked!</div>
+                  <div class="qtags"><span class="tag claimed">Claimed</span><span class="qassignee">Muiz A.</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="online">
+              <div class="ol"><span class="odot"></span> Online (2)</div>
+              <div class="orow"><span class="odot"></span><span>Muiz Ademola</span></div>
+              <div class="orow"><span class="odot"></span><span>Fatima Bello</span></div>
+            </div>
+          </aside>
+
+          <!-- conversation -->
+          <section class="convo">
+            <div class="chead">
+              <div class="ctop">
+                <div class="cvoter">
+                  <div class="cav" style="background:var(--gray-100);color:var(--gray-600)">CN</div>
+                  <div style="min-width:0">
+                    <div class="cname">Chidi Nnamdi</div>
+                    <div class="cmatric">U/25/0388</div>
+                  </div>
+                </div>
+                <button class="transbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></svg> Transcript</button>
+              </div>
+              <div class="suggest">
+                <button class="sugbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> Suggested answers (2) ▾</button>
+                <button class="sugcard"><span class="sq">How do I find my receipt?</span><span class="sa">Your receipt ID is on the confirmation screen right after you vote…</span></button>
+                <button class="sugcard"><span class="sq">Verifying a vote</span><span class="sa">Paste the hash from your receipt at /verify to confirm your vote…</span></button>
+              </div>
+            </div>
+
+            <div class="thread">
+              <div class="msg voter">
+                <div class="bubble">Hi, how do I check that my vote was actually counted?</div>
+                <div class="msgtime">14:28</div>
+              </div>
+              <div class="msg auto">
+                <div class="msglabel">Auto reply</div>
+                <div class="bubble">Thanks for reaching out! A member of the team will be with you shortly.</div>
+                <div class="msgtime">14:28</div>
+              </div>
+              <div class="msg staff">
+                <div class="msglabel">You</div>
+                <div class="bubble">Hi Chidi! You can verify it yourself — grab the hash on your receipt and paste it at the verify page. Want the link?</div>
+                <div class="msgtime">14:30</div>
+              </div>
+              <p class="typingline">Chidi is typing…</p>
+            </div>
+
+            <div class="inputbar">
+              <div class="inputrow">
+                <button class="iconbtn canned" title="Canned replies"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></button>
+                <textarea class="replyin" rows="1" placeholder="Type your reply…  (Enter to send, Shift+Enter for a new line)"></textarea>
+                <button class="iconbtn send" title="Send reply"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></svg></button>
+              </div>
+              <div class="convacts">
+                <button class="actbtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg> Release</button>
+                <button class="actbtn resolve"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Resolve</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN + EMPTY + TRANSCRIPT -->
+    <div class="variant"><span class="cap">2 · Staff login (dark rings family)</span>
+      <div class="loginscreen">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="logincard">
+          <div class="lc"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/><path d="M21 16v2a4 4 0 0 1-4 4h-5"/></svg></div>
+          <h2>Support Console</h2>
+          <div class="lsub">Sign in to answer live voter chats</div>
+          <div class="lfield"><label>Email</label><input class="lin foc" value="you@org.com" readonly /></div>
+          <div class="lfield"><label>Password</label><input class="lin" type="password" value="secret123" readonly /></div>
+          <button class="lbtn">Log in</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="variant"><span class="cap">3 · Empty queue · transcript modal</span>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="console" style="height:auto">
+          <div class="topbar">
+            <div class="crest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/><path d="M21 16v2a4 4 0 0 1-4 4h-5"/></svg></div>
+            <div><div class="tt">Support Console</div><div class="ts">Kabir Marzooq</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center">
+            <div class="ei" style="width:56px;height:56px;border-radius:50%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;color:var(--gray-400);margin-bottom:12px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+            <p style="font-size:14px;font-weight:600;color:var(--gray-900)">All clear — no active conversations</p>
+            <p style="font-size:12px;color:var(--gray-600);margin-top:4px">New chats appear here in real time as voters escalate.</p>
+          </div>
+        </div>
+
+        <div class="tmodal">
+          <div class="tmhead">
+            <h3>Conversation transcript</h3>
+            <button class="outbtn" style="color:var(--gray-400)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+          <div class="tmsub">Chidi Nnamdi · Student Union 2026</div>
+          <div class="tmbody">
+            <div class="tmline"><b>Voter:</b> Hi, how do I check my vote counted? <span style="color:var(--gray-400);font-size:11px">14:28</span></div>
+            <div class="tmline"><b class="who-staff">Kabir:</b> Grab the hash on your receipt and paste it at the verify page. <span style="color:var(--gray-400);font-size:11px">14:30</span></div>
+            <div class="tmline"><b>Voter:</b> Found it, thank you! <span style="color:var(--gray-400);font-size:11px">14:31</span></div>
+          </div>
+          <div class="tmfoot"><button class="printbtn">Print</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

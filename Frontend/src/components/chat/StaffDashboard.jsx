@@ -28,13 +28,14 @@ import {
   getCannedReplies,
   getChatTranscript,
 } from "../../api";
+import AuthBackground from "../layout/AuthBackground";
 import MobileNoticeBanner from "../ui/MobileNoticeBanner";
 
-// Status badge palette for the election picker.
+// Status badge palette for the election picker (sits in the dark top bar).
 const STATUS_BADGE = {
-  ACTIVE: "bg-green-500/20 text-green-400",
-  ENDED: "bg-slate-600/30 text-slate-400",
-  NOT_STARTED: "bg-amber-500/20 text-amber-400",
+  ACTIVE: "bg-green-500/15 text-green-400 border border-green-500/25",
+  ENDED: "bg-slate-700 text-slate-300",
+  NOT_STARTED: "bg-amber-500/15 text-amber-400 border border-amber-500/25",
 };
 
 /**
@@ -124,46 +125,50 @@ function StaffLogin({ onLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <AuthBackground variant="dark">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl"
+        className="w-full max-w-[360px] bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 sm:px-7"
       >
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-900/40">
-            <Headset className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-black text-white">Support Console</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Sign in to answer live voter chats
-          </p>
+        <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white shadow-[0_4px_12px_rgba(37,99,235,0.35)]">
+          <Headset className="w-7 h-7" />
+        </div>
+        <h1 className="text-[22px] leading-7 font-semibold text-white text-center mt-4">
+          Support Console
+        </h1>
+        <p className="text-[13px] leading-5 text-slate-400 text-center mt-1">
+          Sign in to answer live voter chats
+        </p>
+
+        <div className="mt-5">
+          <label className="block text-[13px] leading-5 font-medium text-slate-300 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
+            autoFocus
+            className="w-full min-h-[48px] text-sm text-white bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
+            placeholder="you@org.com"
+          />
         </div>
 
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-          Email
-        </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoFocus
-          className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 mb-4 placeholder:text-slate-600 transition-colors"
-          placeholder="you@org.com"
-        />
-
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-          Password
-        </label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600 transition-colors"
-          placeholder="••••••••"
-        />
+        <div className="mt-4">
+          <label className="block text-[13px] leading-5 font-medium text-slate-300 mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setError(""); }}
+            className="w-full min-h-[48px] text-sm text-white bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
+            placeholder="••••••••"
+          />
+        </div>
 
         {error && (
-          <p className="text-red-400 text-sm bg-red-950/30 border border-red-800/40 rounded-xl py-2 px-3 mt-4">
+          <p className="text-[11px] leading-4 font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg py-2 px-3 mt-4">
             {error}
           </p>
         )}
@@ -171,12 +176,12 @@ function StaffLogin({ onLoggedIn }) {
         <button
           type="submit"
           disabled={!email.trim() || !password || loading}
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-2xl transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log in"}
         </button>
       </form>
-    </div>
+    </AuthBackground>
   );
 }
 
@@ -193,10 +198,6 @@ function Dashboard({ onLogout }) {
     new URLSearchParams(window.location.search).get("electionId") || "";
 
   const [electionId, setElectionId] = useState(initialElection);
-  const [electionInput, setElectionInput] = useState(initialElection);
-  const [knownElections, setKnownElections] = useState(
-    initialElection ? [initialElection] : []
-  );
   const [elections, setElections] = useState([]); // full list from GET /chat/elections
 
   const [queue, setQueue] = useState([]);
@@ -260,12 +261,6 @@ function Dashboard({ onLogout }) {
     });
 
     socket.on("chat:escalated", (p) => {
-      // Track the election this escalation belongs to.
-      if (p.electionId) {
-        setKnownElections((prev) =>
-          prev.includes(p.electionId) ? prev : [...prev, p.electionId]
-        );
-      }
       // Only surface escalations for the election currently being viewed.
       if (electionId && p.electionId && p.electionId !== electionId) return;
 
@@ -344,10 +339,6 @@ function Dashboard({ onLogout }) {
           const act = list.find((e) => e.status === "ACTIVE");
           const pick = act?.id || list[0].id; // active first, else most recent
           setElectionId(pick);
-          setElectionInput(pick);
-          setKnownElections((prev) =>
-            prev.includes(pick) ? prev : [...prev, pick]
-          );
         }
       })
       .catch((err) => console.error("Failed to load staff elections:", err));
@@ -361,9 +352,7 @@ function Dashboard({ onLogout }) {
   const selectElection = useCallback((eid) => {
     if (!eid) return;
     setElectionId(eid);
-    setElectionInput(eid);
     setSelectedId(null);
-    setKnownElections((prev) => (prev.includes(eid) ? prev : [...prev, eid]));
   }, []);
 
   // ── Load queue when an election is chosen ───────────────────────────────────
@@ -510,20 +499,20 @@ function Dashboard({ onLogout }) {
   const waitingCount = queue.filter((c) => c.status === "escalated").length;
 
   return (
-    <div className="h-screen bg-slate-950 flex flex-col text-white overflow-hidden">
-      {/* Top bar */}
-      <header className="flex items-center justify-between px-5 py-3 border-b border-slate-800 shrink-0 bg-slate-900/40">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-            <Headset className="w-5 h-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="font-black text-base leading-tight">Support Console</h1>
-            <p className="text-[11px] text-slate-500 truncate">{staffName}</p>
-          </div>
+    <div className="h-screen bg-slate-50 flex flex-col text-slate-800 overflow-hidden">
+      {/* Top bar (dark) */}
+      <header className="flex items-center gap-3 px-5 py-2.5 bg-slate-900 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
+          <Headset className="w-5 h-5" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-[14px] leading-4 font-semibold text-white">
+            Support Console
+          </h1>
+          <p className="text-[11px] text-slate-400 truncate">{staffName}</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2">
           {/* Election picker */}
           {elections.length > 0 ? (
             <div className="flex items-center gap-2">
@@ -531,20 +520,21 @@ function Dashboard({ onLogout }) {
                 <select
                   value={electionId}
                   onChange={(e) => selectElection(e.target.value)}
-                  className="appearance-none bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-xs font-bold outline-none focus:border-blue-500 cursor-pointer max-w-[220px] truncate"
+                  title="Choose the election to support"
+                  className="appearance-none bg-slate-400/10 border border-slate-700 text-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold outline-none focus:border-blue-500 cursor-pointer max-w-[220px] truncate"
                 >
                   {!electionId && <option value="">Select an election…</option>}
                   {elections.map((el) => (
-                    <option key={el.id} value={el.id}>
+                    <option key={el.id} value={el.id} className="text-slate-900">
                       {el.name}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
               {selectedElection && (
                 <span
-                  className={`text-[9px] font-black uppercase px-2 py-1 rounded ${
+                  className={`text-[9px] font-semibold uppercase tracking-[0.06em] px-2 py-1 rounded-full ${
                     STATUS_BADGE[selectedElection.status] ||
                     "bg-slate-700 text-slate-300"
                   }`}
@@ -554,13 +544,13 @@ function Dashboard({ onLogout }) {
               )}
             </div>
           ) : (
-            <span className="text-xs text-slate-500">No elections assigned</span>
+            <span className="text-xs text-slate-400">No elections assigned</span>
           )}
 
           <button
             onClick={onLogout}
             title="Log out"
-            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-400/10 cursor-pointer transition-all"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -573,21 +563,21 @@ function Dashboard({ onLogout }) {
 
       <div className="flex-1 flex min-h-0">
         {/* ── Left: queue ──────────────────────────────────────────────────── */}
-        <aside className="w-[340px] border-r border-slate-800 flex flex-col shrink-0 bg-slate-900/20">
-          <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <aside className="w-[320px] border-r border-slate-200 flex flex-col shrink-0 bg-white">
+          <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-black uppercase tracking-widest text-slate-300">
-                Live Queue
+              <MessageSquare className="w-4 h-4 text-slate-400" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                Live queue
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               {waitingCount > 0 && (
-                <span className="text-[10px] font-black bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full">
                   {waitingCount} waiting
                 </span>
               )}
-              <span className="text-[10px] font-bold bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
                 {queue.length}
               </span>
             </div>
@@ -596,23 +586,30 @@ function Dashboard({ onLogout }) {
           <div className="flex-1 overflow-y-auto">
             {!electionId && (
               <div className="text-center px-6 mt-12">
-                <Inbox className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-                <p className="text-xs text-slate-500">
+                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <Inbox className="w-5 h-5" />
+                </div>
+                <p className="text-xs text-slate-600">
                   Choose an election above to load its live queue.
                 </p>
               </div>
             )}
             {electionId && loadingQueue && (
               <div className="flex justify-center mt-12">
-                <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
+                <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
               </div>
             )}
             {electionId && !loadingQueue && queue.length === 0 && (
               <div className="text-center px-6 mt-12">
-                <Inbox className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-                <p className="text-xs text-slate-500">
-                  All clear — no active conversations. New chats appear here in
-                  real time.
+                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <Inbox className="w-5 h-5" />
+                </div>
+                <p className="text-[13px] font-semibold text-slate-900">
+                  All clear
+                </p>
+                <p className="text-xs text-slate-600 mt-1">
+                  No active conversations. New chats appear here in real time as
+                  voters escalate.
                 </p>
               </div>
             )}
@@ -625,61 +622,61 @@ function Dashboard({ onLogout }) {
                 <button
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
-                  className={`w-full text-left px-4 py-3 border-b border-slate-800/70 transition-all cursor-pointer relative ${
-                    isSel ? "bg-slate-800" : "hover:bg-slate-800/40"
-                  } ${isFresh ? "animate-[vbFade_0.6s_ease-out]" : ""}`}
+                  className={`w-full text-left px-4 py-3 border-b border-slate-100 transition-colors cursor-pointer relative ${
+                    isSel ? "bg-blue-50" : "hover:bg-slate-50"
+                  } ${isFresh ? "vb-fade-in" : ""}`}
                 >
                   {c.is_urgent && (
-                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                    <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-600" />
                   )}
                   <div className="flex items-start gap-3">
                     <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
                         c.is_urgent
-                          ? "bg-red-500/20 text-red-300"
-                          : "bg-slate-700 text-slate-300"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {initials(c.voter_name)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-sm truncate">
+                        <span className="text-[13px] font-semibold text-slate-900 truncate">
                           {c.voter_name}
                         </span>
-                        <span className="text-[10px] text-slate-500 shrink-0">
+                        <span className="text-[10px] text-slate-400 shrink-0">
                           {timeAgo(c.last_message_at)}
                         </span>
                       </div>
                       {c.voter_matric && (
-                        <span className="text-[10px] text-slate-500 font-mono">
+                        <span className="text-[10px] text-slate-400 font-mono">
                           {c.voter_matric}
                         </span>
                       )}
-                      <p className="text-xs text-slate-400 truncate mt-0.5">
+                      <p className="text-xs text-slate-600 truncate mt-0.5">
                         {voterTyping === c.id ? (
-                          <span className="text-blue-400 italic">typing…</span>
+                          <span className="text-blue-600 italic">typing…</span>
                         ) : (
                           c.last_message || "—"
                         )}
                       </p>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         {c.is_urgent && (
-                          <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-semibold uppercase tracking-[0.04em] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
                             Urgent
                           </span>
                         )}
                         <span
-                          className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                          className={`text-[9px] font-semibold uppercase tracking-[0.04em] px-1.5 py-0.5 rounded-full ${
                             c.status === "claimed"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-amber-500/20 text-amber-400"
+                              ? "bg-green-50 text-green-600"
+                              : "bg-amber-50 text-amber-800"
                           }`}
                         >
                           {c.status === "claimed" ? "Claimed" : "Waiting"}
                         </span>
                         {claimed ? (
-                          <span className="text-[10px] text-slate-500 truncate">
+                          <span className="text-[10px] text-slate-400 truncate">
                             {c.assigned_to || "claimed"}
                           </span>
                         ) : (
@@ -688,7 +685,7 @@ function Dashboard({ onLogout }) {
                               e.stopPropagation();
                               handleClaim(c.id);
                             }}
-                            className="ml-auto text-[10px] font-bold bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                            className="ml-auto text-[10px] font-semibold bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-md cursor-pointer transition-colors"
                           >
                             Claim
                           </span>
@@ -702,19 +699,19 @@ function Dashboard({ onLogout }) {
           </div>
 
           {/* Online staff */}
-          <div className="border-t border-slate-800 px-4 py-3 shrink-0 bg-slate-900/40">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1.5">
+          <div className="border-t border-slate-100 px-4 py-3 shrink-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-600 mb-2 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
               Online ({online.length})
             </p>
             <div className="space-y-1 max-h-24 overflow-y-auto">
               {online.length === 0 && (
-                <p className="text-xs text-slate-600">No one else online</p>
+                <p className="text-xs text-slate-400">No one else online</p>
               )}
               {online.map((s) => (
                 <div key={s.staffId} className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                  <span className="text-xs text-slate-300 truncate">
+                  <span className="text-xs text-slate-800 truncate">
                     {s.staffName}
                   </span>
                 </div>
@@ -724,40 +721,44 @@ function Dashboard({ onLogout }) {
         </aside>
 
         {/* ── Right: conversation ──────────────────────────────────────────── */}
-        <section className="flex-1 flex flex-col min-w-0">
+        <section className="flex-1 flex flex-col min-w-0 bg-slate-50">
           {!selected ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-600 gap-3">
-              <MessageSquare className="w-12 h-12 text-slate-800" />
-              <p className="text-sm">Select a conversation from the queue.</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <p className="text-[13px] text-slate-600">
+                Select a conversation from the queue.
+              </p>
             </div>
           ) : (
             <>
               {/* Conversation header */}
-              <div className="px-5 py-3 border-b border-slate-800 shrink-0 bg-slate-900/30">
+              <div className="px-5 py-3 border-b border-slate-200 shrink-0 bg-white">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${
                         selected.is_urgent
-                          ? "bg-red-500/20 text-red-300"
-                          : "bg-slate-700 text-slate-300"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {initials(selected.voter_name)}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h2 className="font-bold truncate">
+                        <h2 className="text-sm font-semibold text-slate-900 truncate">
                           {selected.voter_name}
                         </h2>
                         {selected.is_urgent && (
-                          <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-red-500/20 text-red-400 px-2 py-0.5 rounded">
+                          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase bg-red-50 text-red-600 px-2 py-0.5 rounded-full">
                             <AlertTriangle className="w-3 h-3" /> Urgent
                           </span>
                         )}
                       </div>
                       {selected.voter_matric && (
-                        <span className="text-xs text-slate-500 font-mono">
+                        <span className="text-[11px] text-slate-400 font-mono">
                           {selected.voter_matric}
                         </span>
                       )}
@@ -766,7 +767,7 @@ function Dashboard({ onLogout }) {
                   <button
                     onClick={openTranscript}
                     title="View full transcript"
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg cursor-pointer shrink-0 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-300 hover:border-slate-400 hover:text-slate-800 min-h-[36px] px-3 rounded-lg cursor-pointer shrink-0 transition-all"
                   >
                     <FileText className="w-3.5 h-3.5" /> Transcript
                   </button>
@@ -777,7 +778,7 @@ function Dashboard({ onLogout }) {
                   <div className="mt-3">
                     <button
                       onClick={() => setShowSuggestions((v) => !v)}
-                      className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400 cursor-pointer"
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 cursor-pointer"
                     >
                       <Lightbulb className="w-3.5 h-3.5" />
                       Suggested answers ({suggestionsMap[selected.id].length})
@@ -794,12 +795,12 @@ function Dashboard({ onLogout }) {
                             key={i}
                             onClick={() => setReply(s.answer)}
                             title="Click to paste into your reply"
-                            className="block w-full text-left text-xs bg-slate-800/70 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 cursor-pointer transition-colors"
+                            className="block w-full text-left text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg px-3 py-2 cursor-pointer transition-colors"
                           >
-                            <span className="text-slate-300 font-bold">
+                            <span className="text-slate-900 font-semibold">
                               {s.question}
                             </span>
-                            <span className="text-slate-500 block truncate">
+                            <span className="text-slate-600 block truncate mt-0.5">
                               {s.answer}
                             </span>
                           </button>
@@ -813,7 +814,7 @@ function Dashboard({ onLogout }) {
               {/* Thread */}
               <div
                 ref={threadScroll}
-                className="flex-1 overflow-y-auto px-5 py-4 space-y-3"
+                className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3"
               >
                 {thread.map((m, i) => {
                   const isStaff = m.sender_type === "staff";
@@ -821,46 +822,48 @@ function Dashboard({ onLogout }) {
                   const label = isStaff
                     ? m.staff_name || "Support Team"
                     : isAuto
-                    ? "Auto Reply"
+                    ? "Auto reply"
                     : null;
                   return (
                     <div
                       key={i}
-                      className={`flex flex-col ${
-                        isStaff ? "items-end" : "items-start"
+                      className={`flex flex-col max-w-[72%] ${
+                        isStaff ? "self-end items-end" : "self-start items-start"
                       }`}
                     >
                       {label && (
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1 px-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-slate-400 mb-1 px-1">
                           {label}
                         </span>
                       )}
                       <div
-                        className={`max-w-[70%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed break-words ${
+                        className={`text-[13px] leading-5 px-3.5 py-2 rounded-xl break-words ${
                           isStaff
                             ? "bg-blue-600 text-white rounded-br-sm"
                             : isAuto
-                            ? "bg-slate-800 text-slate-300 border border-slate-700 rounded-bl-sm"
-                            : "bg-slate-700 text-slate-100 rounded-bl-sm"
+                            ? "bg-slate-100 text-slate-600 rounded-bl-sm"
+                            : "bg-white border border-slate-200 text-slate-800 rounded-bl-sm"
                         }`}
                       >
                         {m.content}
                       </div>
-                      <span className="text-[10px] text-slate-600 mt-1 px-1">
+                      <span className="text-[10px] text-slate-400 mt-1 px-1">
                         {formatTime(m.created_at)}
                       </span>
                     </div>
                   );
                 })}
                 {voterTyping === selected.id && (
-                  <p className="text-xs text-blue-400 italic">voter is typing…</p>
+                  <p className="text-xs text-blue-600 italic">
+                    {selected.voter_name} is typing…
+                  </p>
                 )}
               </div>
 
               {/* Input bar */}
-              <div className="border-t border-slate-800 p-3 shrink-0 relative bg-slate-900/30">
+              <div className="border-t border-slate-200 p-3 shrink-0 relative bg-white">
                 {showCanned && (
-                  <div className="absolute bottom-full left-3 mb-2 w-72 max-h-60 overflow-y-auto bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2 z-10">
+                  <div className="absolute bottom-full left-3 mb-2 w-72 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 z-10">
                     {canned.length === 0 ? (
                       <p className="text-xs text-slate-500 p-2">
                         No canned replies for this election.
@@ -873,12 +876,12 @@ function Dashboard({ onLogout }) {
                             setReply(r.body);
                             setShowCanned(false);
                           }}
-                          className="block w-full text-left px-3 py-2 rounded-lg hover:bg-slate-700 cursor-pointer"
+                          className="block w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer"
                         >
-                          <span className="text-xs font-bold text-slate-200 block">
+                          <span className="text-xs font-semibold text-slate-900 block">
                             {r.label}
                           </span>
-                          <span className="text-[11px] text-slate-500 block truncate">
+                          <span className="text-[11px] text-slate-600 block truncate">
                             {r.body}
                           </span>
                         </button>
@@ -891,7 +894,7 @@ function Dashboard({ onLogout }) {
                   <button
                     onClick={openCanned}
                     title="Canned replies"
-                    className="w-10 h-10 shrink-0 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 flex items-center justify-center cursor-pointer transition-colors"
+                    className="w-10 h-10 shrink-0 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center cursor-pointer transition-colors"
                   >
                     <Zap className="w-5 h-5" />
                   </button>
@@ -909,13 +912,13 @@ function Dashboard({ onLogout }) {
                       }
                     }}
                     placeholder="Type your reply…  (Enter to send, Shift+Enter for a new line)"
-                    className="flex-1 resize-none max-h-24 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+                    className="flex-1 resize-none max-h-24 min-h-[40px] bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-[13px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
                   />
                   <button
                     onClick={handleSend}
                     disabled={!reply.trim() || sending}
                     title="Send reply"
-                    className="w-10 h-10 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center cursor-pointer disabled:opacity-40 transition-colors"
+                    className="w-10 h-10 shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white flex items-center justify-center cursor-pointer transition-all"
                   >
                     {sending ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -928,13 +931,15 @@ function Dashboard({ onLogout }) {
                 <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={handleRelease}
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                    title="Return this chat to the waiting queue"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-300 hover:border-slate-400 hover:text-slate-800 min-h-[32px] px-3 rounded-lg cursor-pointer transition-all"
                   >
                     <Hand className="w-3.5 h-3.5" /> Release
                   </button>
                   <button
                     onClick={handleResolve}
-                    className="flex items-center gap-1.5 text-xs font-bold text-green-400 hover:text-green-300 bg-green-600/15 hover:bg-green-600/25 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                    title="Mark this chat resolved and close it"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 hover:bg-green-100 min-h-[32px] px-3 rounded-lg cursor-pointer transition-all"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
                   </button>
@@ -947,43 +952,60 @@ function Dashboard({ onLogout }) {
 
       {/* Transcript modal */}
       {transcript && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white text-slate-900 rounded-2xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200">
-              <h3 className="font-black">Conversation transcript</h3>
+        <div
+          onClick={() => setTranscript(null)}
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 vb-fade"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white text-slate-900 border border-slate-200 rounded-2xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden shadow-[0_20px_40px_-12px_rgb(0_0_0/0.25)] vb-modal-pop"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="text-[15px] font-semibold text-slate-900">
+                Conversation transcript
+              </h3>
               <button
                 onClick={() => setTranscript(null)}
-                className="text-slate-500 hover:text-slate-900 cursor-pointer"
+                title="Close transcript"
+                className="w-9 h-9 rounded-lg bg-white border border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="px-5 py-3 text-xs text-slate-500 border-b border-slate-100">
+            <div className="px-5 py-2.5 text-[11px] text-slate-600 border-b border-slate-100">
               {transcript.conversation?.voter_name} ·{" "}
               {transcript.conversation?.election_name}
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
-              {(transcript.messages || []).map((m, i) => (
-                <div key={i} className="text-sm">
-                  <span className="font-bold">
-                    {m.sender_type === "staff"
-                      ? m.staff_name || "Staff"
-                      : m.sender_type === "auto"
-                      ? "Auto"
-                      : "Voter"}
-                    :
-                  </span>{" "}
-                  <span>{m.content}</span>
-                  <span className="text-[10px] text-slate-400 ml-2">
-                    {formatTime(m.created_at)}
-                  </span>
-                </div>
-              ))}
+              {(transcript.messages || []).map((m, i) => {
+                const isStaff = m.sender_type === "staff";
+                return (
+                  <div key={i} className="text-[13px] leading-5">
+                    <b
+                      className={`font-semibold ${
+                        isStaff ? "text-blue-700" : "text-slate-900"
+                      }`}
+                    >
+                      {isStaff
+                        ? m.staff_name || "Staff"
+                        : m.sender_type === "auto"
+                        ? "Auto"
+                        : "Voter"}
+                      :
+                    </b>{" "}
+                    <span className="text-slate-700">{m.content}</span>
+                    <span className="text-[10px] text-slate-400 ml-2">
+                      {formatTime(m.created_at)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="px-5 py-3 border-t border-slate-200 flex justify-end">
+            <div className="px-5 py-3 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => window.print()}
-                className="bg-slate-900 text-white text-sm font-bold px-4 py-2 rounded-lg cursor-pointer"
+                title="Print this transcript"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold min-h-[40px] px-4 rounded-lg cursor-pointer transition-all"
               >
                 Print
               </button>
@@ -991,13 +1013,6 @@ function Dashboard({ onLogout }) {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes vbFade {
-          from { opacity: 0; transform: translateX(-12px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
     </div>
   );
 }
