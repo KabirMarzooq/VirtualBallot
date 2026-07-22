@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BarChart3, Trophy, ArrowLeft, Clock } from "lucide-react";
+import { BarChart3, ArrowLeft, Clock } from "lucide-react";
 import { fetchOpenResults, fetchOpenElection } from "../api";
 import VBLoader from "../components/ui/VBLoader";
 import { formatTimeLeft } from "../utils";
@@ -62,7 +62,7 @@ export default function OpenResultsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <VBLoader size="lg" label="Loading results..." />
       </div>
     );
@@ -70,25 +70,28 @@ export default function OpenResultsPage() {
 
   if (!data?.published) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <BarChart3 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <h2 className="text-xl font-black text-white mb-2">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-sm w-full text-center">
+          <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <h2 className="text-[17px] leading-6 font-semibold text-slate-900">
             Results not yet published
           </h2>
-          <p className="text-slate-400">
-            The organisers haven't released the results yet. Check back soon.
+          <p className="text-[13px] leading-5 text-slate-600 mt-1">
+            The organisers haven't released the results yet. This page checks
+            again automatically every 30 seconds.
           </p>
-          <div className="mt-6 bg-amber-950/30 border border-amber-700/40 rounded-xl px-4 py-3 mb-4">
-            <p className="text-xs text-amber-300 font-bold leading-relaxed">
-              ⚠ Results aren't live yet. Keep this page open — if you leave, you
-              may not be able to return to watch the live count once they're
-              published.
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-5 text-left">
+            <p className="text-[12px] leading-[18px] font-medium text-amber-800">
+              ⚠ Keep this page open — if you leave, you may not be able to
+              return to watch the live count once results are published.
             </p>
           </div>
           <button
             onClick={() => navigate("/")}
-            className="text-slate-500 font-bold text-sm hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-2 mx-auto"
+            title="Leave to the Virtual Ballot home"
+            className="inline-flex items-center gap-2 min-h-[44px] px-4 mt-4 text-[13px] font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" /> Leave to home
           </button>
@@ -107,43 +110,45 @@ export default function OpenResultsPage() {
   }));
   const positions = [...new Set(candidates.map((c) => c.position))];
   const totalVotes = data.stats?.totalVotes ?? 0;
+  const isActive = status === "ACTIVE";
 
   return (
-    <div className="min-h-screen bg-slate-950 py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4 text-slate-800">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           {branding.logoUrl ? (
             <img
               src={branding.logoUrl}
               alt="logo"
-              className="w-16 h-16 rounded-2xl object-cover mx-auto mb-3 border-4 border-slate-800"
+              className="w-14 h-14 rounded-2xl object-cover mx-auto shadow-sm"
             />
           ) : (
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <BarChart3 className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto text-white">
+              <BarChart3 className="w-7 h-7" />
             </div>
           )}
           {branding.institutionName && (
-            <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-1">
+            <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-[0.15em] mt-3">
               {branding.institutionName}
             </p>
           )}
-          <h1 className="text-3xl font-black text-white">
+          <h1 className="text-[24px] leading-8 font-semibold text-slate-900 mt-0.5">
             {branding.electionName || "Results"}
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-[13px] text-slate-600 mt-1">
             {totalVotes} total vote{totalVotes !== 1 ? "s" : ""} cast
           </p>
           {timeLeft && timeLeft !== "Ended" && (
-            <div className="inline-flex items-center gap-1.5 mt-3 bg-amber-600/20 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-600/30">
-              <Clock className="w-3.5 h-3.5" /> {timeLeft} remaining
+            <div className="inline-flex items-center gap-1.5 mt-3 bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-semibold px-3 py-1.5 rounded-full">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="font-mono">{timeLeft}</span> remaining
             </div>
           )}
         </div>
 
         {/* Per-position results */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {positions.map((pos) => {
             const pcs = candidates
               .filter((c) => c.position === pos)
@@ -157,71 +162,60 @@ export default function OpenResultsPage() {
             return (
               <div
                 key={pos}
-                className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden"
+                className="bg-white border border-slate-200 rounded-xl overflow-hidden"
               >
-                <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
                     {pos}
                   </p>
-                  <span className="text-xs font-mono text-slate-500">
-                    {tot} votes
+                  <span className="font-mono text-[11px] text-slate-600">
+                    {tot} vote{tot !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-4">
                   {pcs.map((c, i) => {
                     const pct =
                       tot === 0 ? 0 : Math.round((c.votes / tot) * 100);
-                    const isWinner = !tied && i === 0 && tot > 0;
+                    const isLead = !tied && i === 0 && tot > 0;
                     const isTiedTop = tied && c.votes === topVotes;
                     return (
-                      <div
-                        key={c.id}
-                        className={`p-3 rounded-2xl border ${
-                          isWinner
-                            ? "bg-blue-950/40 border-blue-700/30"
-                            : isTiedTop
-                            ? "bg-amber-900/20 border-amber-700/30"
-                            : "bg-slate-800/50 border-slate-700"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 mb-2">
+                      <div key={c.id} className="mb-3 last:mb-0">
+                        <div className="flex items-center gap-2.5 mb-2">
                           <img
                             src={c.image}
                             alt={c.name}
-                            className="w-10 h-10 rounded-xl object-cover bg-slate-700 shrink-0"
+                            className="w-9 h-9 rounded-lg object-cover bg-slate-200 shrink-0"
                           />
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="font-black text-white truncate">
-                              {c.name}
-                            </span>
-                            {isWinner && (
-                              <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase shrink-0">
-                                Winner
+                          <span className="flex-1 min-w-0 text-[13px] font-semibold text-slate-900 flex items-center gap-2">
+                            <span className="truncate">{c.name}</span>
+                            {isLead && (
+                              <span className="text-[9px] font-semibold uppercase tracking-[0.06em] bg-blue-600 text-white px-2 py-0.5 rounded-full shrink-0">
+                                {isActive ? "Leading" : "Winner"}
                               </span>
                             )}
                             {isTiedTop && (
-                              <span className="text-[9px] font-black bg-amber-600 text-white px-2 py-0.5 rounded-full uppercase shrink-0">
+                              <span className="text-[9px] font-semibold uppercase tracking-[0.06em] bg-amber-600 text-white px-2 py-0.5 rounded-full shrink-0">
                                 Tied
                               </span>
                             )}
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-lg font-black text-white">
+                          </span>
+                          <span className="text-right shrink-0">
+                            <span className="block text-lg leading-[22px] font-semibold text-slate-900 tabular-nums">
                               {pct}%
                             </span>
-                            <p className="text-[10px] text-slate-500">
-                              {c.votes} votes
-                            </p>
-                          </div>
+                            <span className="block text-[11px] text-slate-600">
+                              {c.votes} vote{c.votes !== 1 ? "s" : ""}
+                            </span>
+                          </span>
                         </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden ml-[42px]">
                           <div
-                            className={`h-2 rounded-full transition-all ${
-                              isWinner
-                                ? "bg-blue-500"
+                            className={`h-full rounded-full transition-all duration-700 ${
+                              isLead
+                                ? "bg-blue-600"
                                 : isTiedTop
-                                ? "bg-amber-500"
-                                : "bg-slate-500"
+                                ? "bg-amber-600"
+                                : "bg-slate-400"
                             }`}
                             style={{ width: `${pct}%` }}
                           />
@@ -236,21 +230,24 @@ export default function OpenResultsPage() {
         </div>
 
         {lastUpdated && (
-          <p className="text-center text-xs text-slate-600 mt-6">
+          <p className="text-center text-[11px] text-slate-400 mt-5">
             Updated{" "}
             {lastUpdated.toLocaleTimeString("en-GB", {
               hour: "2-digit",
               minute: "2-digit",
             })}{" "}
-            · refreshes automatically
+            · refreshes automatically every 30 seconds
           </p>
         )}
-        <button
-          onClick={() => navigate("/")}
-          className="mx-auto mt-4 text-slate-500 font-bold text-sm hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to home
-        </button>
+        <div className="flex justify-center mt-3">
+          <button
+            onClick={() => navigate("/")}
+            title="Back to the Virtual Ballot home"
+            className="inline-flex items-center gap-2 min-h-[44px] px-4 text-[13px] font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to home
+          </button>
+        </div>
       </div>
     </div>
   );

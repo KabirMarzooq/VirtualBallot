@@ -1,17 +1,37 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  CheckCircle,
-  ArrowRight,
+  Check,
   Vote,
   Clock,
-  Mail,
+  Lock,
+  AlertTriangle,
+  BarChart3,
   ShieldCheck,
 } from "lucide-react";
 import { fetchOpenElection, requestOpenOtp, castOpenVote } from "../api";
 import { getDeviceFingerprint, isValidEmail } from "../utils";
-import { ACCENT_MAP } from "../constants";
 import VBLoader from "../components/ui/VBLoader";
+
+function StateCard({ icon, iconClass, title, children }) {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-sm w-full text-center">
+        <div
+          className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 ${iconClass}`}
+        >
+          {icon}
+        </div>
+        <h2 className="text-[17px] leading-6 font-semibold text-slate-900">
+          {title}
+        </h2>
+        <div className="text-[13px] leading-5 text-slate-600 mt-1">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function OpenBallotPage() {
   const { slug } = useParams();
@@ -101,7 +121,7 @@ export default function OpenBallotPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <VBLoader size="lg" label="Loading ballot..." />
       </div>
     );
@@ -110,75 +130,85 @@ export default function OpenBallotPage() {
   // Error / unavailable states
   if (error && !election) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <h2 className="text-xl font-black text-white mb-2">Unavailable</h2>
-          <p className="text-slate-400">{error}</p>
-        </div>
-      </div>
+      <StateCard
+        icon={<AlertTriangle className="w-6 h-6" />}
+        iconClass="bg-amber-50 border border-amber-200 text-amber-600"
+        title="Unavailable"
+      >
+        {error}
+      </StateCard>
     );
   }
 
   if (election.status === "NOT_STARTED") {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <Clock className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-black text-white mb-2">
-            Voting hasn't started
-          </h2>
-          <p className="text-slate-400">
-            Check back when {branding.electionName || "the election"} opens.
-          </p>
-        </div>
-      </div>
+      <StateCard
+        icon={<Clock className="w-6 h-6" />}
+        iconClass="bg-amber-50 border border-amber-200 text-amber-600"
+        title="Voting hasn't started"
+      >
+        Check back when {branding.electionName || "the election"} opens.
+      </StateCard>
     );
   }
 
   if (election.status === "ENDED") {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <h2 className="text-xl font-black text-white mb-2">
-            Voting has closed
-          </h2>
-          <p className="text-slate-400">
-            Thank you for your interest. {branding.electionName} has ended.
-          </p>
-        </div>
-      </div>
+      <StateCard
+        icon={<Lock className="w-6 h-6" />}
+        iconClass="bg-slate-100 text-slate-400"
+        title="Voting has closed"
+      >
+        Thank you for your interest. {branding.electionName} has ended.
+      </StateCard>
     );
   }
 
   // Success
   if (done) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-md text-center">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/30">
-            <CheckCircle className="w-10 h-10 text-green-400" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-md p-8 sm:px-7 max-w-sm w-full text-center">
+          <div className="w-[72px] h-[72px] bg-green-50 border-[1.5px] border-green-200 rounded-full flex items-center justify-center mx-auto text-green-600">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M20 6 9 17l-5-5"
+                className="vb-draw"
+                style={{ strokeDasharray: 24, strokeDashoffset: 24 }}
+              />
+            </svg>
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">
-            Vote recorded!
+          <h2 className="text-[22px] leading-7 font-semibold text-slate-900 mt-4">
+            Vote recorded
           </h2>
-          <p className="text-slate-400 mb-6">
-            Thank you for voting in {branding.electionName}.
+          <p className="text-[13px] leading-5 text-slate-600 mt-1">
+            Thanks for voting in {branding.electionName}.
           </p>
-          <div className="bg-slate-800 rounded-2xl p-4 mb-6">
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">
+          <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 mt-5 text-left">
+            <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.1em]">
               Receipt
             </p>
-            <p className="font-mono font-black text-green-400 text-lg">
+            <p className="font-mono text-[15px] font-semibold text-slate-900 break-all mt-1">
               {receiptId}
             </p>
           </div>
           <button
             onClick={() => navigate(`/open/${slug}/results`)}
-            className="text-blue-400 font-bold text-sm hover:text-blue-300 cursor-pointer transition-colors"
+            title="Watch the live results"
+            className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            View Results →
+            <BarChart3 className="w-4 h-4" /> View results
           </button>
-          <p className="text-xs text-slate-600 mt-3">
+          <p className="text-[11px] text-slate-400 mt-3">
             You can close this page now.
           </p>
         </div>
@@ -186,84 +216,108 @@ export default function OpenBallotPage() {
     );
   }
 
+  // Why the vote button is disabled, in words
+  const missing = positions.filter((p) => !ballot[p]);
+  const gateParts = [];
+  if (missing.length)
+    gateParts.push(
+      `pick a candidate for ${missing.join(", ")}`
+    );
+  if (election.fraudTier === "EMAIL") {
+    if (!otpSent) gateParts.push("verify your email below");
+    else if (otp.length < 6) gateParts.push("finish entering your 6-digit code");
+  }
+
   // Main ballot
   return (
-    <div className="min-h-screen bg-slate-950 py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4 text-slate-800">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           {branding.logoUrl ? (
             <img
               src={branding.logoUrl}
               alt="logo"
-              className="w-20 h-20 rounded-3xl object-cover mx-auto mb-4 border-4 border-slate-800"
+              className="w-16 h-16 rounded-2xl object-cover mx-auto shadow-sm"
             />
           ) : (
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-black text-white">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto">
+              <span className="text-[22px] font-bold text-white">
                 {branding.institutionName?.slice(0, 2).toUpperCase() || "VB"}
               </span>
             </div>
           )}
           {branding.institutionName && (
-            <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-1">
+            <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-[0.15em] mt-3.5">
               {branding.institutionName}
             </p>
           )}
-          <h1 className="text-3xl font-black text-white">
+          <h1 className="text-[26px] leading-8 font-semibold text-slate-900 mt-0.5">
             {branding.electionName || "Cast Your Vote"}
           </h1>
-          <div className="inline-flex items-center gap-1.5 mt-3 bg-blue-600/20 text-blue-300 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-600/30">
+          <div className="inline-flex items-center gap-1.5 mt-3 bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-semibold px-3 py-1.5 rounded-full">
             <Vote className="w-3.5 h-3.5" /> Open public voting
           </div>
         </div>
 
         {/* Positions */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {positions.map((pos) => {
             const posCandidates = candidates.filter((c) => c.position === pos);
+            const chosen = !!ballot[pos];
             return (
               <div
                 key={pos}
-                className="bg-slate-900 border border-slate-800 rounded-3xl p-5"
+                className="bg-white border border-slate-200 rounded-xl p-4"
               >
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                  {pos}
-                </p>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
+                    {pos}
+                  </p>
+                  {chosen && (
+                    <span className="text-[10px] font-semibold text-green-600">
+                      ✓ Selected
+                    </span>
+                  )}
+                </div>
+                <div className="grid sm:grid-cols-2 gap-2">
                   {posCandidates.map((c) => {
                     const selected = ballot[pos] === c.id;
-                    const accent =
-                      ACCENT_MAP[c.color] ??
-                      ACCENT_MAP["from-blue-400 to-blue-600"];
                     return (
                       <button
                         key={c.id}
                         onClick={() => select(pos, c.id)}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                        title={`Vote for ${c.name}`}
+                        className={`relative flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer ${
                           selected
-                            ? `bg-slate-800 ${accent.ring} ring-2 border-transparent`
-                            : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
+                            ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600"
+                            : "bg-white border-slate-300 hover:border-blue-500 hover:shadow-sm"
                         }`}
                       >
+                        {selected && (
+                          <span className="absolute top-2 right-2 w-[18px] h-[18px] rounded-full bg-blue-600 text-white flex items-center justify-center vb-pop">
+                            <Check className="w-2.5 h-2.5" strokeWidth={3.2} />
+                          </span>
+                        )}
                         <img
                           src={c.image_url}
                           alt={c.name}
-                          className="w-12 h-12 rounded-xl object-cover bg-slate-700 shrink-0"
+                          className="w-11 h-11 rounded-xl object-cover bg-slate-200 shrink-0"
                         />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-white truncate">
+                        <span className="flex-1 min-w-0">
+                          <span
+                            className={`block text-[13px] font-semibold truncate ${
+                              selected ? "text-blue-700" : "text-slate-900"
+                            }`}
+                          >
                             {c.name}
-                          </p>
+                          </span>
                           {c.manifesto && (
-                            <p className="text-xs text-slate-500 truncate">
+                            <span className="block text-[11px] text-slate-600 truncate mt-0.5">
                               {c.manifesto}
-                            </p>
+                            </span>
                           )}
-                        </div>
-                        {selected && (
-                          <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                        )}
+                        </span>
                       </button>
                     );
                   })}
@@ -275,51 +329,60 @@ export default function OpenBallotPage() {
 
         {/* EMAIL tier verification */}
         {election.fraudTier === "EMAIL" && (
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mt-6 space-y-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-teal-400" />
-              <p className="text-xs font-black text-slate-300 uppercase tracking-widest">
-                Verify to vote
-              </p>
-            </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-4 mt-4">
+            <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Verify to
+              vote — one vote per email
+            </p>
             <div className="flex gap-2">
               <input
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(""); }}
                 placeholder="your@email.com"
                 disabled={otpSent}
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-teal-500 disabled:opacity-60 placeholder:text-slate-600"
+                className="flex-1 min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-600 transition-all"
               />
               <button
                 onClick={handleRequestOtp}
                 disabled={!email.trim() || otpSending || otpSent}
-                className="bg-teal-700 hover:bg-teal-600 text-white font-bold px-4 py-3 rounded-xl text-sm transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+                title="Email me a verification code"
+                className={`min-h-[44px] px-3.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shrink-0 ${
+                  otpSent
+                    ? "bg-green-50 text-green-600 border border-green-200 cursor-default"
+                    : "bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white"
+                }`}
               >
                 {otpSending ? (
                   <VBLoader size="sm" />
                 ) : otpSent ? (
-                  "Sent ✓"
+                  "✓ Sent"
                 ) : (
                   "Send code"
                 )}
               </button>
             </div>
             {otpSent && (
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                maxLength={6}
-                placeholder="Enter 6-digit code"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-center font-mono text-xl tracking-widest outline-none focus:border-teal-500 placeholder:text-slate-600"
-              />
+              <>
+                <input
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  maxLength={6}
+                  placeholder="••••••"
+                  className="w-full min-h-[48px] mt-2 font-mono text-lg font-semibold text-center tracking-[0.4em] indent-[0.4em] text-slate-900 bg-white border border-slate-300 rounded-lg outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
+                />
+                <p className="text-[11px] leading-4 text-slate-400 mt-2">
+                  We emailed a 6-digit code to {email.trim()} — it may take a
+                  minute.
+                </p>
+              </>
             )}
           </div>
         )}
 
         {error && (
-          <p className="text-red-400 text-sm text-center mt-4 bg-red-950/30 border border-red-800/40 rounded-xl py-2.5 px-4">
-            {error}
-          </p>
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 mt-4 text-center">
+            <p className="text-xs font-medium text-red-600">{error}</p>
+          </div>
         )}
 
         {/* Submit */}
@@ -330,19 +393,14 @@ export default function OpenBallotPage() {
             submitting ||
             (election.fraudTier === "EMAIL" && (!otpSent || otp.length < 6))
           }
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+          title="Cast your vote"
+          className="w-full mt-5 min-h-[52px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
-          {submitting ? (
-            <VBLoader size="sm" />
-          ) : (
-            <>
-              Cast My Vote <ArrowRight className="w-5 h-5" />
-            </>
-          )}
+          {submitting ? <VBLoader size="sm" /> : <>Cast my vote →</>}
         </button>
-        {!allChosen && (
-          <p className="text-center text-xs text-slate-600 mt-2">
-            Select a candidate for every position to continue.
+        {gateParts.length > 0 && !submitting && (
+          <p className="text-center text-[11px] leading-4 text-slate-600 mt-2">
+            Before you can vote: {gateParts.join(" and ")}.
           </p>
         )}
       </div>
