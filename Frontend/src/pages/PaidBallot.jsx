@@ -1,12 +1,40 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CheckCircle, Vote, Clock, Info, Loader2 } from "lucide-react";
+import {
+  Check,
+  Vote,
+  Clock,
+  Lock,
+  Info,
+  AlertTriangle,
+  BarChart3,
+  ShieldCheck,
+} from "lucide-react";
 import { fetchOpenElection, initializePaidVote, verifyPaidVote } from "../api";
-import { ACCENT_MAP } from "../constants";
 import VBLoader from "../components/ui/VBLoader";
 import { isValidEmail } from "../utils";
 
 const naira = (kobo) => "₦" + (kobo / 100).toLocaleString("en-NG");
+
+function StateCard({ icon, iconClass, title, children }) {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-sm w-full text-center">
+        <div
+          className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 ${iconClass}`}
+        >
+          {icon}
+        </div>
+        <h2 className="text-[17px] leading-6 font-semibold text-slate-900">
+          {title}
+        </h2>
+        <div className="text-[13px] leading-5 text-slate-600 mt-1">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PaidBallotPage() {
   const { slug } = useParams();
@@ -80,8 +108,6 @@ export default function PaidBallotPage() {
     }
   }, []);
 
-  const positions = [...new Set(candidates.map((c) => c.position))];
-
   // Pricing
   const isBundle = election?.pricingModel === "BUNDLE";
   const bundles = election?.voteBundles || [];
@@ -123,126 +149,150 @@ export default function PaidBallotPage() {
     }
   };
 
-  if (loading || verifying) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <VBLoader
-          size="lg"
-          label={verifying ? "Confirming your payment..." : "Loading..."}
-        />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <VBLoader size="lg" label="Loading..." />
       </div>
+    );
+  }
+
+  if (verifying) {
+    return (
+      <StateCard
+        icon={<VBLoader size="md" />}
+        iconClass="bg-blue-50 text-blue-600"
+        title="Confirming your payment…"
+      >
+        Hang tight while we check with Paystack. This only takes a moment.
+      </StateCard>
     );
   }
 
   if (error && !election) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <h2 className="text-xl font-black text-white mb-2">Unavailable</h2>
-          <p className="text-slate-400">{error}</p>
-        </div>
-      </div>
+      <StateCard
+        icon={<AlertTriangle className="w-6 h-6" />}
+        iconClass="bg-amber-50 border border-amber-200 text-amber-600"
+        title="Unavailable"
+      >
+        {error}
+      </StateCard>
     );
   }
 
   if (election.voteType !== "PAID") {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <h2 className="text-xl font-black text-white mb-2">
-            Not a paid election
-          </h2>
-          <p className="text-slate-400">
-            This election doesn't use paid voting.
-          </p>
-        </div>
-      </div>
+      <StateCard
+        icon={<Info className="w-6 h-6" />}
+        iconClass="bg-slate-100 text-slate-400"
+        title="Not a paid election"
+      >
+        This election doesn't use paid voting.
+      </StateCard>
     );
   }
 
   if (election.status === "NOT_STARTED") {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <Clock className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-black text-white mb-2">
-            Voting hasn't started
-          </h2>
-          <p className="text-slate-400">
-            Check back when {branding.electionName} opens.
-          </p>
-        </div>
-      </div>
+      <StateCard
+        icon={<Clock className="w-6 h-6" />}
+        iconClass="bg-amber-50 border border-amber-200 text-amber-600"
+        title="Voting hasn't started"
+      >
+        Check back when {branding.electionName} opens.
+      </StateCard>
     );
   }
   if (election.status === "ENDED") {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center">
-          <h2 className="text-xl font-black text-white mb-2">
-            Voting has closed
-          </h2>
-          <p className="text-slate-400">{branding.electionName} has ended.</p>
-        </div>
-      </div>
+      <StateCard
+        icon={<Lock className="w-6 h-6" />}
+        iconClass="bg-slate-100 text-slate-400"
+        title="Voting has closed"
+      >
+        {branding.electionName} has ended.
+      </StateCard>
     );
   }
 
   if (done) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-md text-center">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/30">
-            <CheckCircle className="w-10 h-10 text-green-400" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-md p-8 sm:px-7 max-w-sm w-full text-center">
+          <div className="w-[72px] h-[72px] bg-green-50 border-[1.5px] border-green-200 rounded-full flex items-center justify-center mx-auto text-green-600">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M20 6 9 17l-5-5"
+                className="vb-draw"
+                style={{ strokeDasharray: 24, strokeDashoffset: 24 }}
+              />
+            </svg>
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">
-            Payment confirmed!
+          <h2 className="text-[22px] leading-7 font-semibold text-slate-900 mt-4">
+            Payment confirmed
           </h2>
-          <p className="text-slate-400 mb-6">
-            {doneVotes} vote{doneVotes !== 1 ? "s" : ""} recorded. A receipt has
-            been emailed to you.
+          <p className="text-[13px] leading-5 text-slate-600 mt-1">
+            {doneVotes} vote{doneVotes !== 1 ? "s" : ""} recorded
+            {chosen?.name ? ` for ${chosen.name}` : ""}. A receipt has been
+            emailed to you.
           </p>
+
           {verificationHash && (
-            <div className="mb-6 bg-slate-800/60 border border-slate-700 rounded-xl p-4 text-left">
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2">
-                Verify your vote
+            <div className="bg-white border border-slate-200 rounded-xl p-4 mt-5 text-left">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-green-600 uppercase tracking-[0.08em]">
+                <ShieldCheck className="w-3 h-3" strokeWidth={2.4} /> Verify
+                your vote
               </p>
-              <p className="font-mono text-[11px] text-green-400 break-all mb-3">
+              <p className="font-mono text-[11px] leading-4 text-slate-600 break-all bg-slate-50 rounded-lg px-3 py-2 mt-2.5">
                 {verificationHash}
               </p>
-
               <a
                 href={`/verify/${slug}?hash=${encodeURIComponent(
                   verificationHash
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-bold bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded-lg cursor-pointer inline-block"
+                title="Open the public vote verifier"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold min-h-[36px] px-3 mt-3 rounded-lg border border-green-200 bg-green-50 text-green-600 hover:bg-green-100 transition-all cursor-pointer"
               >
                 Verify my vote →
               </a>
             </div>
           )}
+
           <button
             onClick={() => navigate(`/open/${slug}/results`)}
-            className="text-blue-400 font-bold text-sm hover:text-blue-300 cursor-pointer transition-colors"
+            title="Watch the live results"
+            className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            View Results →
+            <BarChart3 className="w-4 h-4" /> View results
           </button>
-          <button
-            onClick={() => navigate("/")}
-            className="block mx-auto mt-3 text-xs text-slate-600 hover:text-slate-400 cursor-pointer transition-colors"
-          >
-            Back to home
-          </button>
+          <p className="text-[11px] text-slate-400 mt-3">
+            You can close this page — a receipt is on its way to your inbox.
+          </p>
         </div>
       </div>
     );
   }
 
+  // Gate hint for the disabled pay button
+  const gateParts = [];
+  if (!chosen) gateParts.push("choose a candidate");
+  if (!email.trim()) gateParts.push("enter your email for the receipt");
+
   // Main paid ballot
   return (
-    <div className="min-h-screen bg-slate-950 py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4 text-slate-800">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
@@ -250,180 +300,193 @@ export default function PaidBallotPage() {
             <img
               src={branding.logoUrl}
               alt="logo"
-              className="w-20 h-20 rounded-3xl object-cover mx-auto mb-4 border-4 border-slate-800"
+              className="w-16 h-16 rounded-2xl object-cover mx-auto shadow-sm"
             />
           ) : (
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-black text-white">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto">
+              <span className="text-[22px] font-bold text-white">
                 {branding.institutionName?.slice(0, 2).toUpperCase() || "VB"}
               </span>
             </div>
           )}
           {branding.institutionName && (
-            <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-1">
+            <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-[0.15em] mt-3.5">
               {branding.institutionName}
             </p>
           )}
-          <h1 className="text-3xl font-black text-white">
+          <h1 className="text-[26px] leading-8 font-semibold text-slate-900 mt-0.5">
             {branding.electionName}
           </h1>
-          <div className="inline-flex items-center gap-1.5 mt-3 bg-amber-600/20 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-600/30">
+          <div className="inline-flex items-center gap-1.5 mt-3 bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-semibold px-3 py-1.5 rounded-full">
             <Vote className="w-3.5 h-3.5" /> Paid voting
           </div>
         </div>
 
-        {/* Pick candidate */}
-        <div className="space-y-6">
-          {positions.map((pos) => {
-            const posCandidates = candidates.filter((c) => c.position === pos);
-            return (
-              <div
-                key={pos}
-                className="bg-slate-900 border border-slate-800 rounded-3xl p-5"
-              >
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                  {pos}
-                </p>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {posCandidates.map((c) => {
-                    const selected = chosen?.id === c.id;
-                    const accent =
-                      ACCENT_MAP[c.color] ??
-                      ACCENT_MAP["from-blue-400 to-blue-600"];
-                    return (
-                      <button
-                        key={c.id}
-                        onClick={() =>
-                          setChosen({ id: c.id, name: c.name, position: pos })
-                        }
-                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                          selected
-                            ? `bg-slate-800 ${accent.ring} ring-2 border-transparent`
-                            : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
-                        }`}
-                      >
-                        <img
-                          src={c.image_url}
-                          alt={c.name}
-                          className="w-12 h-12 rounded-xl object-cover bg-slate-700 shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-white truncate">
-                            {c.name}
-                          </p>
-                          {c.manifesto && (
-                            <p className="text-xs text-slate-500 truncate">
-                              {c.manifesto}
-                            </p>
-                          )}
-                        </div>
-                        {selected && (
-                          <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+        {/* Pick candidate — one candidate globally */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-3">
+            Choose your candidate
+          </p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {candidates.map((c) => {
+              const selected = chosen?.id === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() =>
+                    setChosen({ id: c.id, name: c.name, position: c.position })
+                  }
+                  title={`Back ${c.name}`}
+                  className={`relative flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer ${
+                    selected
+                      ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600"
+                      : "bg-white border-slate-300 hover:border-blue-500 hover:shadow-sm"
+                  }`}
+                >
+                  {selected && (
+                    <span className="absolute top-2 right-2 w-[18px] h-[18px] rounded-full bg-blue-600 text-white flex items-center justify-center vb-pop">
+                      <Check className="w-2.5 h-2.5" strokeWidth={3.2} />
+                    </span>
+                  )}
+                  <img
+                    src={c.image_url}
+                    alt={c.name}
+                    className="w-11 h-11 rounded-xl object-cover bg-slate-200 shrink-0"
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span
+                      className={`block text-[13px] font-semibold truncate ${
+                        selected ? "text-blue-700" : "text-slate-900"
+                      }`}
+                    >
+                      {c.name}
+                    </span>
+                    <span className="block text-[11px] text-slate-600 truncate mt-0.5">
+                      {c.position}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2.5">
+            Pick one contestant to back — paid votes all go to a single
+            candidate.
+          </p>
         </div>
 
         {/* Vote quantity / bundles */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mt-6 space-y-4">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mt-4">
+          <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-3">
             {isBundle ? "Choose a bundle" : "How many votes?"}
           </p>
 
           {isBundle ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {bundles.map((b, i) => (
-                <button
-                  key={i}
-                  onClick={() => setBundleIdx(i)}
-                  className={`p-4 rounded-2xl border-2 text-center transition-all cursor-pointer ${
-                    bundleIdx === i
-                      ? "bg-blue-950/40 border-blue-500"
-                      : "bg-slate-800 border-slate-700 hover:border-slate-600"
-                  }`}
-                >
-                  <p className="text-2xl font-black text-white">{b.votes}</p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-                    votes
-                  </p>
-                  <p className="text-sm font-bold text-blue-400 mt-1">
-                    {naira(b.amount)}
-                  </p>
-                  {b.label && (
-                    <p className="text-[10px] text-amber-400 mt-0.5">
-                      {b.label}
+            <div className="grid grid-cols-3 gap-2">
+              {bundles.map((b, i) => {
+                const on = bundleIdx === i;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setBundleIdx(i)}
+                    title={`${b.votes} votes for ${naira(b.amount)}`}
+                    className={`relative rounded-xl border px-2.5 py-3.5 text-center transition-all cursor-pointer ${
+                      on
+                        ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600"
+                        : "bg-white border-slate-300 hover:border-blue-500"
+                    }`}
+                  >
+                    {on && (
+                      <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                        <Check className="w-2 h-2" strokeWidth={3.2} />
+                      </span>
+                    )}
+                    <p
+                      className={`text-[22px] leading-6 font-semibold tabular-nums ${
+                        on ? "text-blue-700" : "text-slate-900"
+                      }`}
+                    >
+                      {b.votes}
                     </p>
-                  )}
-                </button>
-              ))}
+                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.06em]">
+                      vote{b.votes !== 1 ? "s" : ""}
+                    </p>
+                    <p className="text-sm font-semibold text-blue-700 mt-1">
+                      {naira(b.amount)}
+                    </p>
+                    {b.label && (
+                      <p className="text-[10px] text-slate-600 mt-0.5 truncate">
+                        {b.label}
+                      </p>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 text-white font-black text-xl cursor-pointer hover:bg-slate-700"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min="1"
-                value={qty}
-                onChange={(e) =>
-                  setQty(Math.max(1, parseInt(e.target.value) || 1))
-                }
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-center text-xl font-black outline-none focus:border-blue-500"
-              />
-              <button
-                onClick={() => setQty((q) => q + 1)}
-                className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 text-white font-black text-xl cursor-pointer hover:bg-slate-700"
-              >
-                +
-              </button>
-            </div>
-          )}
-
-          {!isBundle && (
-            <p className="text-sm text-slate-400">
-              {naira(election.pricePerVote)} per vote
-            </p>
+            <>
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  title="One fewer vote"
+                  className="w-11 h-11 rounded-lg bg-white border border-slate-300 text-slate-700 text-xl font-semibold hover:border-slate-400 hover:bg-slate-50 shrink-0 transition-all cursor-pointer"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  value={qty}
+                  onChange={(e) =>
+                    setQty(Math.max(1, parseInt(e.target.value) || 1))
+                  }
+                  className="flex-1 min-h-[44px] bg-white border border-slate-300 rounded-lg text-center text-lg font-semibold text-slate-900 tabular-nums outline-none focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
+                />
+                <button
+                  onClick={() => setQty((q) => q + 1)}
+                  title="One more vote"
+                  className="w-11 h-11 rounded-lg bg-white border border-slate-300 text-slate-700 text-xl font-semibold hover:border-slate-400 hover:bg-slate-50 shrink-0 transition-all cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+              <p className="text-xs text-slate-600 mt-2.5">
+                {naira(election.pricePerVote)} per vote
+              </p>
+            </>
           )}
         </div>
 
         {/* Email */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mt-6">
-          <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mt-4">
+          <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-2">
             Email for receipt
           </label>
           <input
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
             placeholder="your@email.com"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+            className="w-full min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
           />
         </div>
 
         {/* Summary + disclaimer */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mt-6 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-[13px] text-slate-600">
               {voteCount} vote{voteCount !== 1 ? "s" : ""} for{" "}
               {chosen?.name || "—"}
             </span>
-            <span className="text-white font-bold">{naira(baseKobo)}</span>
+            <span className="font-mono text-base font-semibold text-slate-900">
+              {naira(baseKobo)}
+            </span>
           </div>
-          <div className="flex items-start gap-2 bg-slate-800/60 rounded-xl p-3">
-            <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+          <div className="flex gap-2.5 bg-slate-50 border border-slate-200 rounded-lg p-3 mt-3">
+            <Info className="w-4 h-4 text-slate-400 shrink-0 mt-px" />
+            <p className="text-[11px] leading-4 text-slate-600">
               A small Paystack processing fee is added at checkout. That fee
-              goes to Paystack, not Virtual Ballot —
-              <span className="text-slate-300 font-bold">
-                {" "}
+              goes to Paystack, not Virtual Ballot —{" "}
+              <span className="font-semibold text-slate-800">
                 Virtual Ballot is free to use.
               </span>{" "}
               Your full payment for votes goes to{" "}
@@ -433,22 +496,24 @@ export default function PaidBallotPage() {
         </div>
 
         {error && (
-          <p className="text-red-400 text-sm text-center mt-4 bg-red-950/30 border border-red-800/40 rounded-xl py-2.5 px-4">
-            {error}
-          </p>
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 mt-4 text-center">
+            <p className="text-xs font-medium text-red-600">{error}</p>
+          </div>
         )}
 
         <button
           onClick={handlePay}
           disabled={submitting || !chosen || !email.trim() || voteCount < 1}
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+          title="Pay and cast your votes"
+          className="w-full mt-5 min-h-[52px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
-          {submitting ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            `Pay ${naira(baseKobo)} →`
-          )}
+          {submitting ? <VBLoader size="sm" /> : `Pay ${naira(baseKobo)} →`}
         </button>
+        {gateParts.length > 0 && !submitting && (
+          <p className="text-center text-[11px] leading-4 text-slate-600 mt-2">
+            Before you can pay: {gateParts.join(" and ")}.
+          </p>
+        )}
       </div>
     </div>
   );
