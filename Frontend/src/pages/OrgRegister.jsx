@@ -352,6 +352,24 @@ export default function OrgRegisterPage() {
                 {loading ? <VBLoader size="sm" /> : "Create organization account →"}
               </button>
 
+              <p className="text-[11px] leading-4 text-slate-400 text-center mt-2.5">
+                By creating an account, you agree to our{" "}
+                <button
+                  onClick={() => navigate("/terms")}
+                  className="text-blue-600 font-semibold hover:text-blue-700 cursor-pointer"
+                >
+                  Terms of Use
+                </button>{" "}
+                and{" "}
+                <button
+                  onClick={() => navigate("/privacy")}
+                  className="text-blue-600 font-semibold hover:text-blue-700 cursor-pointer"
+                >
+                  Privacy Policy
+                </button>
+                .
+              </p>
+
               <button
                 onClick={() => { setStep(1); setError(""); }}
                 title="Go back to organization details"

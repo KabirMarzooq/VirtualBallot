@@ -34,6 +34,7 @@ const PaidBallotPage = lazy(() => import("./pages/PaidBallot"));
 const VerifyVotePage = lazy(() => import("./pages/VerifyVote"));
 const StaffDashboardPage = lazy(() => import("./components/chat/StaffDashboard"));
 const RepReviewPage = lazy(() => import("./pages/RepReview"));
+const LegalPage = lazy(() => import("./pages/Legal"));
 
 // ── Route guard — redirects unauthenticated users at the router level ─────────
 function ProtectedRoute({ children, role }) {
@@ -62,7 +63,7 @@ function ProtectedRoute({ children, role }) {
 // ── Page-level suspense fallback ──────────────────────────────────────────────
 function PageFallback() {
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <VBLoader size="lg" label="Loading..." />
     </div>
   );
@@ -107,6 +108,10 @@ function AppRoutes() {
             }
           />
           <Route path="/verify/:slug" element={<VerifyVotePage />} />
+
+          {/* ── Legal ──────────────────────────────────────────────────────── */}
+          <Route path="/terms" element={<LegalPage doc="terms" />} />
+          <Route path="/privacy" element={<LegalPage doc="privacy" />} />
 
           {/* ── Candidate rep roster review (public, no slug in URL) ─────────── */}
           <Route path="/roster-review" element={<RepReviewPage />} />

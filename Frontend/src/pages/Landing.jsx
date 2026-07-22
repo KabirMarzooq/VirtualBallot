@@ -440,7 +440,20 @@ export default function LandingPage() {
             </div>
             Virtual Ballot
           </div>
-          <p>Built for transparent, secure elections.</p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/terms")}
+              className="hover:text-slate-900 font-medium transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
+            <button
+              onClick={() => navigate("/privacy")}
+              className="hover:text-slate-900 font-medium transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
+          </div>
           <p>
             Built by{" "}
             <a
