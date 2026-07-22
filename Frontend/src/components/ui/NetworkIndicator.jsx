@@ -26,21 +26,13 @@ export default function NetworkIndicator() {
   return (
     <div className="fixed bottom-4 right-4 z-[999] pointer-events-none">
       {!online ? (
-        <div
-          className="flex items-center gap-2 bg-red-950/95 border border-red-700/50
-          text-red-300 text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl
-          backdrop-blur-sm animate-pulse"
-        >
-          <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+        <div className="flex items-center gap-2 bg-white border border-red-200 text-red-700 text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
           <WifiOff className="w-3.5 h-3.5" />
           No signal — check your connection
         </div>
       ) : (
-        <div
-          className="flex items-center gap-2 bg-green-950/95 border border-green-700/50
-          text-green-300 text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl
-          backdrop-blur-sm"
-        >
+        <div className="flex items-center gap-2 bg-white border border-green-200 text-green-700 text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg">
           <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
           <Wifi className="w-3.5 h-3.5" />
           Back online

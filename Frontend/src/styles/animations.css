@@ -58,6 +58,13 @@
 }
 .vb-slide-up { animation: vb-slide-up 0.2s ease-out; }
 
+/* Branded loader — pulsing fingerprint */
+@keyframes vb-fp {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1); }
+}
+.vb-fp { animation: vb-fp 1.8s ease-in-out infinite; }
+
 /* Skeleton shimmer */
 @keyframes vb-shimmer {
   to { background-position: -200% 0; }

@@ -15,30 +15,21 @@ export default function VBLoader({ size = "md", label = "", overlay = false }) {
 
   const content = (
     <div className="flex flex-col items-center gap-3">
-      <Fingerprint
-        className={`${sizeClass} text-blue-500`}
-        style={{ animation: "vbFp 1.8s ease-in-out infinite" }}
-      />
+      <Fingerprint className={`${sizeClass} text-blue-500 vb-fp`} />
       {label && (
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.1em]">
           {label}
         </p>
       )}
-      <style>{`
-        @keyframes vbFp {
-          0%, 100% { opacity: 0.2; transform: scale(0.85); }
-          50%       { opacity: 1;   transform: scale(1);    }
-        }
-      `}</style>
     </div>
   );
 
   if (overlay) {
     return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl px-10 py-8 shadow-2xl flex flex-col items-center gap-4">
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl px-10 py-8 shadow-lg flex flex-col items-center gap-4">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-black text-sm">VB</span>
+            <span className="text-white font-bold text-sm">VB</span>
           </div>
           {content}
         </div>
