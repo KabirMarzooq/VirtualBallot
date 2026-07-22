@@ -270,92 +270,94 @@ export default function VoterChat({ socket }) {
         <button
           onClick={openChat}
           title="Open support chat"
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-2xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-[0_8px_24px_-6px_rgba(37,99,235,0.5)] flex items-center justify-center transition-all cursor-pointer"
         >
           <MessageCircle className="w-6 h-6" />
           {unread && (
-            <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-slate-950 animate-pulse" />
+            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
           )}
         </button>
       )}
 
       {/* Chat panel */}
       {open && (
-        <div
-          className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-3rem)] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[slideUp_0.2s_ease-out]"
-          style={{ animationName: "vbSlideUp" }}
-        >
+        <div className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-3rem)] bg-white border border-slate-200 rounded-2xl shadow-[0_20px_40px_-12px_rgb(0_0_0/0.2)] flex flex-col overflow-hidden vb-slide-up">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-slate-900 shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    connected ? "bg-green-500" : "bg-slate-600"
+                    connected ? "bg-green-500" : "bg-slate-300"
                   }`}
                 />
-                <h3 className="font-bold text-white text-sm">Support Chat</h3>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Support Chat
+                </h3>
               </div>
-              <p className="text-xs text-slate-500 truncate">
-                {isGuest ? "Chatting as Guest" : electionName}
+              <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                {isGuest ? "Chatting as guest" : electionName}
               </p>
             </div>
             <button
               onClick={() => setOpen(false)}
               title="Close chat"
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Messages */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
+            className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 bg-slate-50"
           >
             {!canChat && (
-              <p className="text-center text-xs text-slate-500 mt-6">
+              <p className="text-center text-xs leading-[18px] text-slate-400 mt-4 px-3">
                 Live support is available during an active voting session.
               </p>
             )}
             {canChat && messages.length === 0 && (
-              <p className="text-center text-xs text-slate-500 mt-6">
-                Send a message and our team (or our instant answers) will help
+              <p className="text-center text-xs leading-[18px] text-slate-400 mt-4 px-3">
+                Send a message and our team — or our instant answers — will help
                 you out.
               </p>
             )}
 
             {messages.map((m, i) => {
               const isVoter = m.sender_type === "voter";
+              const isAuto = m.sender_type === "auto";
               const label =
                 m.sender_type === "staff"
-                  ? "Support Team"
-                  : m.sender_type === "auto"
-                  ? "Auto Reply"
+                  ? "Support team"
+                  : isAuto
+                  ? "Auto reply"
                   : null;
               return (
                 <div
                   key={`${msgKey(m)}-${i}`}
-                  className={`flex flex-col ${
-                    isVoter ? "items-end" : "items-start"
+                  className={`flex flex-col max-w-[80%] ${
+                    isVoter ? "self-end items-end" : "self-start items-start"
                   }`}
                 >
                   {label && (
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1 px-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-slate-400 mb-1 px-1">
                       {label}
                     </span>
                   )}
                   <div
-                    className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed break-words ${
+                    className={`text-[13px] leading-5 px-3.5 py-2 rounded-xl break-words ${
                       isVoter
                         ? "bg-blue-600 text-white rounded-br-sm"
-                        : "bg-slate-700 text-slate-100 rounded-bl-sm"
+                        : isAuto
+                        ? "bg-slate-100 text-slate-600 rounded-bl-sm"
+                        : "bg-white border border-slate-200 text-slate-800 rounded-bl-sm"
                     }`}
                   >
                     {m.content}
                   </div>
-                  <span className="text-[10px] text-slate-600 mt-1 px-1">
+                  <span className="text-[10px] text-slate-400 mt-1 px-1">
                     {formatTime(m.created_at)}
                   </span>
                 </div>
@@ -363,32 +365,30 @@ export default function VoterChat({ socket }) {
             })}
 
             {staffTyping && (
-              <div className="flex items-start">
-                <div className="bg-slate-700 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
-                </div>
+              <div className="self-start bg-white border border-slate-200 px-4 py-3 rounded-xl rounded-bl-sm flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
               </div>
             )}
           </div>
 
           {/* Resolved banner */}
           {resolved && (
-            <div className="px-4 py-2 bg-green-600/15 border-t border-green-600/30 text-green-300 text-xs font-bold text-center shrink-0">
-              This conversation has been resolved
+            <div className="px-4 py-2 bg-green-50 border-t border-green-200 text-green-600 text-xs font-semibold text-center shrink-0">
+              ✓ This conversation has been resolved
             </div>
           )}
 
           {/* Connecting state */}
           {canChat && !connected && !resolved && (
-            <div className="px-4 py-1.5 bg-slate-800/60 text-slate-400 text-[11px] text-center shrink-0">
+            <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-100 text-slate-400 text-[11px] text-center shrink-0">
               connecting…
             </div>
           )}
 
           {/* Input bar */}
-          <div className="border-t border-slate-700 p-3 flex items-end gap-2 shrink-0 bg-slate-900">
+          <div className="border-t border-slate-100 p-3 flex items-end gap-2 shrink-0 bg-white">
             <textarea
               rows={1}
               value={input}
@@ -405,27 +405,19 @@ export default function VoterChat({ socket }) {
                   ? "Type a message…"
                   : "Unavailable"
               }
-              className="flex-1 resize-none max-h-20 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500 placeholder:text-slate-600 disabled:opacity-50"
+              className="flex-1 resize-none max-h-20 min-h-[40px] bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-[13px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400 transition-all"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || sendBlocked || resolved || !canChat}
               title="Send message"
-              className="w-10 h-10 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-10 h-10 shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer"
             >
               <SendHorizonal className="w-5 h-5" />
             </button>
           </div>
         </div>
       )}
-
-      {/* Local keyframes for the slide-up entrance */}
-      <style>{`
-        @keyframes vbSlideUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </>
   );
 }
