@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ShieldCheck, ScrollText, ArrowLeft } from "lucide-react";
 
 const EFFECTIVE = "22 July 2026";
-const CONTACT = "legal@virtualballot.app";
-const PRIVACY_CONTACT = "privacy@virtualballot.app";
+const CONTACT = "support@virtualballot.app";
+const PRIVACY_CONTACT = "support@virtualballot.app";
 
 // ── Terms of Use ──────────────────────────────────────────────────────────────
 const TERMS = {
