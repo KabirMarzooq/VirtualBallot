@@ -5,10 +5,27 @@ import {
   ShieldX,
   Search,
   CheckCircle,
-  XCircle,
-  Loader2,
+  SearchX,
+  AlertTriangle,
 } from "lucide-react";
+import AuthBackground from "../components/layout/AuthBackground";
+import VBLoader from "../components/ui/VBLoader";
 import { verifyVoteHash } from "../api";
+
+function Row({ label, value, mono }) {
+  return (
+    <div className="flex justify-between gap-4 py-1.5 border-b border-slate-900/5 last:border-0">
+      <span className="text-xs text-slate-600">{label}</span>
+      <span
+        className={`text-xs font-semibold text-slate-900 text-right ${
+          mono ? "font-mono" : ""
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
 
 export default function VerifyVotePage() {
   const { slug } = useParams();
@@ -41,100 +58,135 @@ export default function VerifyVotePage() {
     // eslint-disable-next-line
   }, []);
 
+  const tampered = result?.found && !result.chainIntact;
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-green-600/20 border border-green-600/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
-            <ShieldCheck className="w-8 h-8 text-green-400" />
+    <AuthBackground>
+      <div className="w-full max-w-[440px] text-slate-800 py-6">
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7">
+          {/* Crest */}
+          <div
+            className={`w-14 h-14 rounded-xl flex items-center justify-center mx-auto text-white ${
+              tampered ? "bg-red-600" : "bg-blue-600"
+            }`}
+          >
+            {tampered ? (
+              <ShieldX className="w-6 h-6" />
+            ) : (
+              <ShieldCheck className="w-6 h-6" />
+            )}
           </div>
-          <h1 className="text-2xl font-black text-white">Verify Your Vote</h1>
-          <p className="text-slate-400 text-sm mt-2 max-w-sm mx-auto">
+          <h1 className="text-[22px] leading-7 font-semibold text-slate-900 text-center mt-4">
+            Verify your vote
+          </h1>
+          <p className="text-[13px] leading-5 text-slate-600 text-center mt-1.5">
             Paste the cryptographic fingerprint from your receipt to confirm
             your vote is recorded in the ledger and was never altered.
           </p>
-        </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-            Vote fingerprint (hash)
-          </label>
-          <textarea
-            value={hash}
-            onChange={(e) => setHash(e.target.value)}
-            placeholder="Paste your vote hash here…"
-            rows={3}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono text-xs outline-none focus:border-green-500 resize-none break-all"
-          />
+          {/* Hash input */}
+          <div className="mt-5">
+            <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
+              Vote fingerprint (hash)
+            </label>
+            <textarea
+              value={hash}
+              onChange={(e) => setHash(e.target.value)}
+              placeholder="Paste your vote hash here…"
+              rows={3}
+              className="w-full font-mono text-[11px] leading-4 text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 py-3 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 resize-none break-all transition-all"
+            />
+            <p className="text-[11px] leading-4 text-slate-400 mt-1.5">
+              It's the long code under “Cryptographic proof” on your receipt.
+            </p>
+          </div>
+
           <button
             onClick={() => check()}
             disabled={!hash.trim() || loading}
-            className="w-full mt-3 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            title="Check this hash against the vote ledger"
+            className="w-full mt-4 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <VBLoader size="sm" />
             ) : (
               <>
-                <Search className="w-4 h-4" /> Verify
+                <Search className="w-4 h-4" />
+                {result ? "Verify again" : "Verify"}
               </>
             )}
           </button>
 
           {error && (
-            <p className="text-red-400 text-sm font-bold text-center mt-4">
+            <p className="text-[11px] leading-4 font-medium text-red-600 text-center mt-3">
               {error}
             </p>
           )}
 
           {/* Result */}
           {result && !loading && (
-            <div className="mt-6">
+            <div className="mt-4">
               {result.found ? (
-                <div className="bg-green-950/40 border border-green-700/40 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                    <p className="font-black text-green-300">Vote Verified</p>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <Row label="Election" value={result.electionName} />
-                    <Row label="Position" value={result.position} />
-                    <Row label="Recorded as vote #" value={result.sequence} />
-                    <Row
-                      label="Recorded at"
-                      value={new Date(result.recordedAt).toLocaleString()}
-                    />
-                    <Row
-                      label="Chain status"
-                      value={
-                        result.chainIntact ? (
-                          <span className="text-green-400 font-bold">
-                            ✓ Intact ({result.chainLength} votes)
-                          </span>
-                        ) : (
-                          <span className="text-red-400 font-bold">
-                            ✗ Tampering detected
-                          </span>
-                        )
-                      }
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-                    Your vote exists in the ledger at position {result.sequence}
-                    , and the entire chain{" "}
+                <div
+                  className={`rounded-xl p-4 border ${
+                    result.chainIntact
+                      ? "bg-green-50 border-green-200"
+                      : "bg-red-50 border-red-200"
+                  }`}
+                >
+                  <p
+                    className={`flex items-center gap-2 text-sm font-semibold mb-3 ${
+                      result.chainIntact ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {result.chainIntact ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" /> Vote verified
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-4 h-4" /> Tampering
+                        detected
+                      </>
+                    )}
+                  </p>
+                  <Row label="Election" value={result.electionName} />
+                  <Row label="Position" value={result.position} />
+                  <Row label="Recorded as vote #" value={result.sequence} mono />
+                  <Row
+                    label="Recorded at"
+                    value={new Date(result.recordedAt).toLocaleString()}
+                    mono
+                  />
+                  <Row
+                    label="Chain status"
+                    value={
+                      result.chainIntact ? (
+                        <span className="text-green-600">
+                          ✓ Intact ({result.chainLength} votes)
+                        </span>
+                      ) : (
+                        <span className="text-red-600">✗ Broken</span>
+                      )
+                    }
+                  />
+                  <p className="text-[11px] leading-4 text-slate-600 mt-3 pt-3 border-t border-slate-900/5">
+                    Your vote exists in the ledger at position{" "}
+                    {result.sequence}, and the entire chain{" "}
                     {result.chainIntact
                       ? "verifies cleanly — no vote has been altered."
-                      : "shows signs of alteration. Contact the election commission."}
+                      : "does not verify cleanly — one or more votes show signs of alteration. Contact your election commission immediately."}
                   </p>
                 </div>
               ) : (
-                <div className="bg-red-950/40 border border-red-700/40 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <XCircle className="w-5 h-5 text-red-400" />
-                    <p className="font-black text-red-300">Not Found</p>
-                  </div>
-                  <p className="text-sm text-slate-400">
-                    This hash isn't in the ledger. Check that you pasted it
-                    exactly as it appears on your receipt.
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-amber-800 mb-1.5">
+                    <SearchX className="w-4 h-4" /> Not found in the ledger
+                  </p>
+                  <p className="text-xs leading-[18px] text-slate-600">
+                    This hash isn't in the ledger. The most common cause is a
+                    missing character — check that you pasted it exactly as it
+                    appears on your receipt, then try again.
                   </p>
                 </div>
               )}
@@ -142,22 +194,17 @@ export default function VerifyVotePage() {
           )}
         </div>
 
-        <button
-          onClick={() => navigate("/")}
-          className="text-slate-600 hover:text-slate-400 text-xs font-bold mx-auto block mt-6 cursor-pointer transition-colors"
-        >
-          ← Virtual Ballot Home
-        </button>
+        {/* Foot link */}
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => navigate("/")}
+            title="Back to Virtual Ballot home"
+            className="min-h-[44px] px-3 text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+          >
+            ← Virtual Ballot Home
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function Row({ label, value }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-white font-medium text-right">{value}</span>
-    </div>
+    </AuthBackground>
   );
 }

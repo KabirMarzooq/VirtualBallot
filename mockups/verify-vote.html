@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Verify Vote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
+  --warning-light:#FFFBEB; --warning-border:#FDE68A; --warning-ink:#92400E;
+  --danger-light:#FEF2F2; --danger:#DC2626; --danger-border:#FECACA;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05); --shadow-lg:0 10px 15px -3px rgb(0 0 0/.08),0 4px 6px -4px rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1480px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:32px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+.screen{width:480px;max-width:100%;min-height:520px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-xl);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--blue-200) 1px,transparent 1px);background-size:28px 28px;opacity:.35;pointer-events:none}
+.screen::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,var(--blue-50) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.ring{position:absolute;border-radius:50%;border:1px solid var(--blue-200);top:50%;left:50%;animation:ring-expand 4s ease-out infinite;pointer-events:none}
+.r1{width:220px;height:220px}.r2{width:380px;height:380px;animation-delay:1.3s}.r3{width:540px;height:540px;animation-delay:2.6s}
+@keyframes ring-expand{0%{opacity:.5;transform:translate(-50%,-50%) scale(.85)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+
+.inner{position:relative;z-index:1;width:100%;max-width:420px}
+.card{background:var(--white);border:1px solid var(--blue-200);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);padding:32px 28px}
+
+.crest{width:56px;height:56px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#fff}
+.h-title{font-size:22px;line-height:28px;font-weight:600;color:var(--gray-900);text-align:center;margin-top:16px}
+.h-sub{font-size:13px;line-height:20px;color:var(--gray-600);text-align:center;margin-top:6px}
+
+.field{margin-top:20px}
+.field label{display:block;font-size:13px;line-height:20px;font-weight:500;color:var(--gray-600);margin-bottom:8px}
+textarea.hashin{width:100%;font-family:var(--font-mono);font-size:11px;line-height:16px;color:var(--gray-900);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);padding:12px 14px;outline:none;resize:none;word-break:break-all;transition:var(--transition-fast)}
+textarea.hashin::placeholder{color:var(--gray-400)}
+textarea.hashin:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px var(--blue-100)}
+.hint{font-size:11px;line-height:16px;color:var(--gray-400);margin-top:6px}
+
+.btn{width:100%;margin-top:16px;font-size:14px;font-weight:600;min-height:48px;border-radius:var(--radius);border:none;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:var(--transition-fast)}
+.btn-primary{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:not-allowed}
+
+/* Result panels */
+.panel{border-radius:var(--radius-lg);padding:16px;margin-top:16px}
+.panel .phead{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin-bottom:12px}
+.panel.ok{background:var(--success-light);border:1px solid var(--success-border)}
+.panel.ok .phead{color:var(--success)}
+.panel.warn{background:var(--warning-light);border:1px solid var(--warning-border)}
+.panel.warn .phead{color:var(--warning-ink);margin-bottom:4px}
+.panel.bad{background:var(--danger-light);border:1px solid var(--danger-border)}
+.panel.bad .phead{color:var(--danger);margin-bottom:4px}
+.panel p.body{font-size:12px;line-height:18px;color:var(--gray-600)}
+.row{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid rgba(15,23,42,.05)}
+.row:last-of-type{border-bottom:none}
+.row .k{font-size:12px;color:var(--gray-600)}
+.row .v{font-size:12px;font-weight:600;color:var(--gray-900);text-align:right}
+.row .v.mono{font-family:var(--font-mono)}
+.chain-ok{color:var(--success);font-weight:600}
+.chain-bad{color:var(--danger);font-weight:600}
+.pnote{font-size:11px;line-height:16px;color:var(--gray-600);margin-top:12px;padding-top:12px;border-top:1px solid rgba(15,23,42,.06)}
+
+.homelink{display:block;text-align:center;margin-top:16px;font-size:11px;font-weight:600;color:var(--gray-400)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Verify Vote — Public Receipt Verifier</h1>
+  <p class="sub">Voter-facing, so it joins the light rings family · verify action is blue (green stays a result, not a button) · not-found is amber (usually a paste error), red reserved for actual chain tampering · detail rows get mono values</p>
+
+  <div class="grid">
+
+    <!-- 1: Form -->
+    <div class="variant"><span class="cap">1 · Ready to verify</span>
+      <div class="screen">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card">
+          <div class="crest"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <div class="h-title">Verify your vote</div>
+          <div class="h-sub">Paste the cryptographic fingerprint from your receipt to confirm your vote is recorded in the ledger and was never altered.</div>
+
+          <div class="field">
+            <label>Vote fingerprint (hash)</label>
+            <textarea class="hashin" rows="3" placeholder="Paste your vote hash here…"></textarea>
+            <div class="hint">It's the long code under “Cryptographic proof” on your receipt.</div>
+          </div>
+
+          <button class="btn btn-primary" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Verify
+          </button>
+        </div>
+        <div class="homelink">← Virtual Ballot Home</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: Verified, chain intact -->
+    <div class="variant"><span class="cap">2 · Verified — chain intact</span>
+      <div class="screen">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card">
+          <div class="crest"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <div class="h-title">Verify your vote</div>
+
+          <div class="field">
+            <label>Vote fingerprint (hash)</label>
+            <textarea class="hashin" rows="2" readonly>a91c4e7b02d8f6a3195c0e84b7d2f0613e5a8c92d4b1f7e0a6c3d985e2b40f17</textarea>
+          </div>
+          <button class="btn btn-primary">Verify again</button>
+
+          <div class="panel ok">
+            <div class="phead">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              Vote verified
+            </div>
+            <div class="row"><span class="k">Election</span><span class="v">Student Union 2026</span></div>
+            <div class="row"><span class="k">Position</span><span class="v">President</span></div>
+            <div class="row"><span class="k">Recorded as vote #</span><span class="v mono">147</span></div>
+            <div class="row"><span class="k">Recorded at</span><span class="v mono">22/07/2026, 14:31:41</span></div>
+            <div class="row"><span class="k">Chain status</span><span class="v chain-ok">✓ Intact (203 votes)</span></div>
+            <p class="pnote">Your vote exists in the ledger at position 147, and the entire chain verifies cleanly — no vote has been altered.</p>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- 3: Not found (amber) -->
+    <div class="variant"><span class="cap">3 · Not found — amber, likely a paste error</span>
+      <div class="screen" style="min-height:440px">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card">
+          <div class="crest"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <div class="h-title">Verify your vote</div>
+
+          <div class="field">
+            <label>Vote fingerprint (hash)</label>
+            <textarea class="hashin" rows="2" readonly>a91c4e7b02d8f6a3195c0e84b7d2f0613e5a8c92d4b1f7e0a6c3d985e2b40f1</textarea>
+          </div>
+          <button class="btn btn-primary">Verify again</button>
+
+          <div class="panel warn">
+            <div class="phead">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v3"/><path d="M11 14h.01"/></svg>
+              Not found in the ledger
+            </div>
+            <p class="body">This hash isn't in the ledger. The most common cause is a missing character — check that you pasted it exactly as it appears on your receipt, then try again.</p>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- 4: Tampering detected (red) -->
+    <div class="variant"><span class="cap">4 · Found, but chain tampering detected — red</span>
+      <div class="screen" style="min-height:480px">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <div class="inner"><div class="card">
+          <div class="crest" style="background:var(--danger)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m14.5 9.5-5 5"/><path d="m9.5 9.5 5 5"/></svg></div>
+          <div class="h-title">Verify your vote</div>
+
+          <div class="panel bad">
+            <div class="phead">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              Tampering detected
+            </div>
+            <p class="body" style="margin-top:8px">Your vote was found at position 147, but the ledger chain does not verify cleanly — one or more votes show signs of alteration. Contact your election commission immediately.</p>
+            <div class="row" style="margin-top:8px"><span class="k">Chain status</span><span class="v chain-bad">✗ Broken</span></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
