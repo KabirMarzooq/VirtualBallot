@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VB Mockup — Compare Candidates Modal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B; --gray-900:#0F172A;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --transition-fast:all .12s ease;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800);padding:48px 16px 120px}
+.sheet{max-width:1560px;margin:0 auto}
+.sheet h1{font-size:28px;line-height:36px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.grid{display:flex;flex-wrap:wrap;gap:40px;margin-top:32px;align-items:flex-start}
+.variant>.cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--blue-600);margin-bottom:12px;display:block}
+
+/* stage simulating the ballot behind */
+.stage{width:720px;max-width:100%;border:1px solid var(--gray-200);border-radius:var(--radius-xl);background:var(--gray-50);position:relative;overflow:hidden;padding:24px;min-height:520px}
+.fakebar{height:12px;border-radius:6px;background:var(--gray-200);margin-bottom:12px;width:40%}
+.fakecard{height:64px;border-radius:12px;background:var(--white);border:1px solid var(--gray-200);margin-bottom:12px}
+.stage.mobile{width:390px}
+
+.overlay{position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .15s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+.modal{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xl);box-shadow:0 20px 40px -12px rgb(0 0 0/.25);width:100%;max-width:600px;overflow:hidden;animation:pop .18s cubic-bezier(.34,1.4,.64,1)}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--gray-100)}
+.mhead .ht{display:flex;align-items:center;gap:10px;min-width:0}
+.mhead .ht svg{color:var(--blue-600);flex-shrink:0}
+.mhead h2{font-size:15px;font-weight:600;color:var(--gray-900)}
+.mhead .hp{font-size:11px;color:var(--gray-600)}
+.hactions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.switchsel{font-size:12px;font-weight:600;color:var(--gray-600);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius);min-height:36px;padding:0 12px;cursor:pointer;outline:none;max-width:150px}
+.closebtn{width:36px;height:36px;border-radius:var(--radius);background:var(--white);border:1px solid var(--gray-300);color:var(--gray-600);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition-fast)}
+.closebtn:hover{border-color:var(--gray-400);color:var(--gray-800)}
+
+.panels{display:flex;align-items:stretch;gap:12px;padding:20px}
+.panels.stack{flex-direction:column}
+.panel{flex:1;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;transition:var(--transition-fast)}
+.panel.on{border-color:var(--blue-600);box-shadow:0 0 0 1px var(--blue-600),0 4px 12px -2px rgba(37,99,235,.15)}
+.phead{padding:20px 16px 14px;text-align:center;position:relative;border-bottom:1px solid var(--gray-100)}
+.panel.on .phead{background:var(--blue-50)}
+.avatar{width:72px;height:72px;border-radius:var(--radius-xl);background:var(--gray-200);margin:0 auto;object-fit:cover}
+.panel.on .avatar{box-shadow:0 0 0 3px var(--white),0 0 0 5px var(--blue-200)}
+.selmark{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--blue-600);color:#fff;display:flex;align-items:center;justify-content:center;animation:tickpop .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tickpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.pname{font-size:16px;line-height:22px;font-weight:600;color:var(--gray-900);margin-top:12px}
+.ppos{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);margin-top:2px}
+.curbadge{display:inline-block;margin-top:8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--blue-700);background:var(--white);border:1px solid var(--blue-200);padding:3px 10px;border-radius:999px}
+
+.pbody{flex:1;padding:14px 16px}
+.mlabel{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.mlabel .bar{width:3px;height:14px;border-radius:2px;background:var(--blue-600)}
+.mtext{font-size:13px;line-height:20px;color:var(--gray-600)}
+.mnone{font-size:12px;font-style:italic;color:var(--gray-400);text-align:center;margin-top:12px}
+
+.pact{padding:12px 16px 16px}
+.btn{width:100%;min-height:44px;font-size:13px;font-weight:600;border-radius:var(--radius);border:none;cursor:pointer;transition:var(--transition-fast)}
+.btn-blue{background:var(--blue-600);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-blue:hover{background:var(--blue-700)}
+.btn-keep{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-300)}
+.btn-keep:hover{border-color:var(--gray-400);color:var(--gray-800)}
+
+.vs{display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vs span{width:32px;height:32px;border-radius:50%;background:var(--gray-100);border:1px solid var(--gray-200);color:var(--gray-400);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:center}
+.panels.stack .vs span{transform:rotate(90deg)}
+
+.mfoot{padding:0 20px 16px;text-align:center}
+.mfoot p{font-size:11px;color:var(--gray-400)}
+.escnote{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:10px;color:rgba(255,255,255,.5)}
+.escnote kbd{font-family:var(--font-mono);font-size:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Compare Candidates Modal</h1>
+  <p class="sub">Side-by-side comparison from the closed ballot · per-candidate ACCENT_MAP colours retired (its last consumer — the constant can now be deleted) · selection unified on blue, differentiation carried by content not hue · Escape + backdrop close per the modal spec</p>
+
+  <div class="grid">
+
+    <!-- 1: Two candidates, left selected, 3rd available -->
+    <div class="variant"><span class="cap">1 · Left selected · third candidate available to swap in</span>
+      <div class="stage">
+        <div class="fakebar"></div><div class="fakecard"></div><div class="fakecard"></div>
+        <div class="overlay">
+          <div class="modal">
+            <div class="mhead">
+              <div class="ht">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><path d="M12 2v20"/></svg>
+                <div style="min-width:0"><h2>Compare candidates</h2><div class="hp">President</div></div>
+              </div>
+              <div class="hactions">
+                <select class="switchsel"><option>vs Daniel</option><option>vs Grace</option></select>
+                <button class="closebtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+              </div>
+            </div>
+
+            <div class="panels">
+              <div class="panel on">
+                <div class="phead">
+                  <span class="selmark"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <span class="avatar"></span>
+                  <div class="pname">Amina Yusuf</div>
+                  <div class="ppos">President</div>
+                  <span class="curbadge">Your current selection</span>
+                </div>
+                <div class="pbody">
+                  <div class="mlabel"><span class="bar"></span> Manifesto</div>
+                  <p class="mtext">Every student deserves a union that shows up. I'll publish budgets quarterly and open committee seats to first-years.</p>
+                </div>
+                <div class="pact"><button class="btn btn-keep">Keep this choice</button></div>
+              </div>
+
+              <div class="vs"><span>vs</span></div>
+
+              <div class="panel">
+                <div class="phead">
+                  <span class="avatar"></span>
+                  <div class="pname">Daniel Okafor</div>
+                  <div class="ppos">President</div>
+                </div>
+                <div class="pbody">
+                  <div class="mlabel"><span class="bar"></span> Manifesto</div>
+                  <p class="mtext">Transparency first: open budgets, monthly town halls, and a student fund every faculty can draw from.</p>
+                </div>
+                <div class="pact"><button class="btn btn-blue">Vote for Daniel</button></div>
+              </div>
+            </div>
+
+            <div class="mfoot"><p>Tap a candidate's button to select them and return to the ballot.</p></div>
+          </div>
+          <div class="escnote"><kbd>Esc</kbd> or click outside to close</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: Neither selected, one has no manifesto, only two candidates (no switch) -->
+    <div class="variant"><span class="cap">2 · Nothing selected yet · right candidate has no manifesto · only two candidates (no swap)</span>
+      <div class="stage">
+        <div class="fakebar"></div><div class="fakecard"></div><div class="fakecard"></div>
+        <div class="overlay">
+          <div class="modal">
+            <div class="mhead">
+              <div class="ht">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><path d="M12 2v20"/></svg>
+                <div style="min-width:0"><h2>Compare candidates</h2><div class="hp">Treasurer</div></div>
+              </div>
+              <div class="hactions">
+                <button class="closebtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+              </div>
+            </div>
+
+            <div class="panels">
+              <div class="panel">
+                <div class="phead">
+                  <span class="avatar"></span>
+                  <div class="pname">Kunle Bello</div>
+                  <div class="ppos">Treasurer</div>
+                </div>
+                <div class="pbody">
+                  <div class="mlabel"><span class="bar"></span> Manifesto</div>
+                  <p class="mtext">Every naira accounted for — I'll publish a live ledger of union spending, updated weekly.</p>
+                </div>
+                <div class="pact"><button class="btn btn-blue">Vote for Kunle</button></div>
+              </div>
+
+              <div class="vs"><span>vs</span></div>
+
+              <div class="panel">
+                <div class="phead">
+                  <span class="avatar"></span>
+                  <div class="pname">Ngozi Eze</div>
+                  <div class="ppos">Treasurer</div>
+                </div>
+                <div class="pbody">
+                  <p class="mnone">No manifesto provided</p>
+                </div>
+                <div class="pact"><button class="btn btn-blue">Vote for Ngozi</button></div>
+              </div>
+            </div>
+
+            <div class="mfoot"><p>Tap a candidate's button to select them and return to the ballot.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: Mobile stacked -->
+    <div class="variant"><span class="cap">3 · Mobile 390px — panels stack, “vs” rotates</span>
+      <div class="stage mobile">
+        <div class="fakebar"></div><div class="fakecard"></div>
+        <div class="overlay">
+          <div class="modal">
+            <div class="mhead">
+              <div class="ht">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><path d="M12 2v20"/></svg>
+                <div style="min-width:0"><h2 style="font-size:14px">Compare</h2><div class="hp">President</div></div>
+              </div>
+              <button class="closebtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+            </div>
+            <div class="panels stack">
+              <div class="panel on">
+                <div class="phead">
+                  <span class="selmark"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <span class="avatar" style="width:56px;height:56px"></span>
+                  <div class="pname" style="font-size:15px">Amina Yusuf</div>
+                  <span class="curbadge">Your current selection</span>
+                </div>
+                <div class="pbody"><p class="mtext">Every student deserves a union that shows up.</p></div>
+                <div class="pact"><button class="btn btn-keep">Keep this choice</button></div>
+              </div>
+              <div class="vs"><span>vs</span></div>
+              <div class="panel">
+                <div class="phead">
+                  <span class="avatar" style="width:56px;height:56px"></span>
+                  <div class="pname" style="font-size:15px">Daniel Okafor</div>
+                </div>
+                <div class="pbody"><p class="mtext">Transparency first: open budgets and monthly town halls.</p></div>
+                <div class="pact"><button class="btn btn-blue">Vote for Daniel</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

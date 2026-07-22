@@ -1,77 +1,73 @@
-import { X, SplitSquareHorizontal, CheckCircle } from "lucide-react";
-import { ACCENT_MAP } from "../../constants";
+import { useEffect } from "react";
+import { X, SplitSquareHorizontal, Check } from "lucide-react";
 
 function CandidatePanel({ candidate, ballot, onSelect, pos, onClose }) {
   const isSelected = ballot[pos] === candidate.id;
-  const accent =
-    ACCENT_MAP[candidate.color] ?? ACCENT_MAP["from-blue-400 to-blue-600"];
 
   return (
     <div
-      className={`flex-1 flex flex-col rounded-4xl transition-all duration-300 overflow-hidden ${
+      className={`flex-1 flex flex-col rounded-xl overflow-hidden border transition-all ${
         isSelected
-          ? `bg-white ring-4 ${accent.ring} shadow-xl`
-          : "bg-slate-50 border border-slate-100"
+          ? "border-blue-600 ring-1 ring-blue-600 shadow-md"
+          : "border-slate-200"
       }`}
     >
-      {/* Coloured header */}
-      <div className={`${accent.bg} px-6 pt-6 pb-8 relative`}>
+      {/* Header */}
+      <div
+        className={`relative px-4 pt-5 pb-3.5 text-center border-b border-slate-100 ${
+          isSelected ? "bg-blue-50" : "bg-white"
+        }`}
+      >
         {isSelected && (
-          <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1">
-            <CheckCircle className="w-5 h-5 text-white fill-white" />
-          </div>
+          <span className="absolute top-3 right-3 w-[22px] h-[22px] rounded-full bg-blue-600 text-white flex items-center justify-center vb-pop">
+            <Check className="w-3 h-3" strokeWidth={3} />
+          </span>
         )}
         <img
           src={candidate.image}
           alt={candidate.name}
-          className="w-20 h-20 rounded-2xl object-cover bg-white/20 shadow-xl mx-auto border-4 border-white/30"
+          className={`w-[72px] h-[72px] rounded-2xl object-cover bg-slate-200 mx-auto ${
+            isSelected ? "ring-4 ring-blue-100" : ""
+          }`}
         />
-      </div>
-
-      {/* Name */}
-      <div className="px-5 pt-4 pb-3 text-center border-b border-slate-100">
-        <h3 className="text-lg font-black text-slate-900 leading-tight">
+        <h3 className="text-base leading-[22px] font-semibold text-slate-900 mt-3">
           {candidate.name}
         </h3>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.08em] mt-0.5">
           {candidate.position}
         </p>
         {isSelected && (
-          <span
-            className={`inline-block mt-2 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${accent.light} ${accent.text} border`}
-          >
+          <span className="inline-block mt-2 text-[9px] font-semibold uppercase tracking-[0.06em] text-blue-700 bg-white border border-blue-200 px-2.5 py-[3px] rounded-full">
             Your current selection
           </span>
         )}
       </div>
 
       {/* Manifesto */}
-      <div className="flex-1 px-5 py-4">
+      <div className="flex-1 px-4 py-3.5">
         {candidate.manifesto?.trim() ? (
           <>
-            <div className="flex items-center gap-2 mb-3">
-              <div className={`w-1.5 h-5 rounded-full ${accent.bar}`} />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Manifesto
-              </p>
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.08em] mb-2">
+              <span className="w-[3px] h-3.5 rounded-sm bg-blue-600" /> Manifesto
+            </p>
+            <p className="text-[13px] leading-5 text-slate-600">
               {candidate.manifesto}
             </p>
           </>
         ) : (
-          <p className="text-xs text-slate-300 italic text-center mt-4">
+          <p className="text-xs italic text-slate-400 text-center mt-3">
             No manifesto provided
           </p>
         )}
       </div>
 
       {/* Action */}
-      <div className="px-5 pb-5 pt-2">
+      <div className="px-4 pb-4 pt-2">
         {isSelected ? (
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-bold text-sm border-2 border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors"
+            title="Keep this candidate selected"
+            className="w-full min-h-[44px] rounded-lg text-[13px] font-semibold text-slate-600 bg-white border border-slate-300 hover:border-slate-400 hover:text-slate-800 transition-all cursor-pointer"
           >
             Keep this choice
           </button>
@@ -81,7 +77,8 @@ function CandidatePanel({ candidate, ballot, onSelect, pos, onClose }) {
               onSelect(pos, candidate.id);
               onClose();
             }}
-            className={`w-full py-3 rounded-xl font-bold text-sm text-white transition-colors ${accent.btn}`}
+            title={`Select ${candidate.name}`}
+            className="w-full min-h-[44px] rounded-lg text-[13px] font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all cursor-pointer"
           >
             Vote for {candidate.name.split(" ")[0]}
           </button>
@@ -101,34 +98,45 @@ export default function CompareModal({
   onSelect,
   onClose,
 }) {
+  // Escape closes — always the safe path (never changes the selection)
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4 overflow-y-auto"
-      style={{ background: "rgba(15,23,42,0.75)", backdropFilter: "blur(8px)" }}
+      onClick={onClose}
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm vb-fade"
     >
-      <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Compare candidates for ${pos}`}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white border border-slate-200 rounded-2xl w-full max-w-[600px] shadow-[0_20px_40px_-12px_rgb(0_0_0/0.25)] overflow-hidden vb-modal-pop"
+      >
         {/* Header */}
-        {/* Header */}
-        <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-slate-100 gap-3 flex-wrap">
-          <div className="flex items-center gap-2 min-w-0">
-            <SplitSquareHorizontal className="w-5 h-5 text-slate-400 shrink-0" />
+        <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-4 border-b border-slate-100">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <SplitSquareHorizontal className="w-[18px] h-[18px] text-blue-600 shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-base font-black text-slate-800 leading-tight">
+              <h2 className="text-[15px] font-semibold text-slate-900 leading-tight">
                 Compare candidates
               </h2>
-              <p className="text-xs text-slate-400 font-medium">{pos}</p>
+              <p className="text-[11px] text-slate-600">{pos}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* Switch second candidate — only shown when there's a 3rd+ candidate */}
+            {/* Switch second candidate — only when there's a 3rd+ candidate */}
             {otherCandidates.length > 0 && (
               <select
                 value={candidateB.id}
                 onChange={(e) => onSwitchB(e.target.value)}
-                className="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200
-                  rounded-full px-3 py-2 outline-none cursor-pointer border border-slate-200
-                  max-w-[140px] truncate"
+                title="Compare against a different candidate"
+                className="text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg min-h-[36px] px-3 outline-none cursor-pointer max-w-[150px] truncate hover:border-slate-400 transition-all"
               >
                 <option value={candidateB.id}>
                   vs {candidateB.name.split(" ")[0]}
@@ -145,16 +153,16 @@ export default function CompareModal({
 
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors shrink-0"
+              title="Close comparison"
+              className="w-9 h-9 rounded-lg bg-white border border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0"
             >
-              <X className="w-4 h-4 text-slate-500" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Panels */}
-        {/* Panels */}
-        <div className="flex flex-col md:flex-row items-stretch p-5 gap-4">
+        <div className="flex flex-col md:flex-row items-stretch gap-3 p-5">
           <CandidatePanel
             candidate={candidateA}
             ballot={ballot}
@@ -163,11 +171,9 @@ export default function CompareModal({
             onClose={onClose}
           />
           <div className="flex items-center justify-center shrink-0">
-            <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider rotate-90 md:rotate-0">
-                vs
-              </span>
-            </div>
+            <span className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-400 text-[10px] font-semibold uppercase tracking-[0.06em] flex items-center justify-center rotate-90 md:rotate-0">
+              vs
+            </span>
           </div>
           <CandidatePanel
             candidate={candidateB}
@@ -178,8 +184,8 @@ export default function CompareModal({
           />
         </div>
 
-        <div className="px-7 pb-5 text-center">
-          <p className="text-xs text-slate-400">
+        <div className="px-5 pb-4 text-center">
+          <p className="text-[11px] text-slate-400">
             Tap a candidate's button to select them and return to the ballot.
           </p>
         </div>

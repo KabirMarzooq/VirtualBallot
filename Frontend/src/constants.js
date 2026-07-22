@@ -65,22 +65,3 @@ export const EVENT_META = {
 
 export const getMeta = (t) => EVENT_META[t] ?? EVENT_META.system
 
-// ─── Admin Tabs ───────────────────────────────────────────────────────────────
-
-export const CANDIDATE_COLORS = [
-    "from-blue-400 to-blue-600",
-    "from-indigo-400 to-indigo-600",
-    "from-teal-400 to-teal-600",
-    "from-orange-400 to-orange-600",
-    "from-purple-400 to-purple-600",
-    "from-pink-400 to-pink-600",
-]
-
-export const ACCENT_MAP = {
-    "from-blue-400 to-blue-600": { bg: "bg-blue-600", ring: "ring-blue-500/30", btn: "bg-blue-600 hover:bg-blue-700", light: "bg-blue-50 border-blue-100", text: "text-blue-700", bar: "bg-blue-500" },
-    "from-indigo-400 to-indigo-600": { bg: "bg-indigo-600", ring: "ring-indigo-500/30", btn: "bg-indigo-600 hover:bg-indigo-700", light: "bg-indigo-50 border-indigo-100", text: "text-indigo-700", bar: "bg-indigo-500" },
-    "from-teal-400 to-teal-600": { bg: "bg-teal-600", ring: "ring-teal-500/30", btn: "bg-teal-600 hover:bg-teal-700", light: "bg-teal-50 border-teal-100", text: "text-teal-700", bar: "bg-teal-500" },
-    "from-orange-400 to-orange-600": { bg: "bg-orange-600", ring: "ring-orange-500/30", btn: "bg-orange-600 hover:bg-orange-700", light: "bg-orange-50 border-orange-100", text: "text-orange-700", bar: "bg-orange-500" },
-    "from-purple-400 to-purple-600": { bg: "bg-purple-600", ring: "ring-purple-500/30", btn: "bg-purple-600 hover:bg-purple-700", light: "bg-purple-50 border-purple-100", text: "text-purple-700", bar: "bg-purple-500" },
-    "from-pink-400 to-pink-600": { bg: "bg-pink-600", ring: "ring-pink-500/30", btn: "bg-pink-600 hover:bg-pink-700", light: "bg-pink-50 border-pink-100", text: "text-pink-700", bar: "bg-pink-500" },
-}
