@@ -7,6 +7,7 @@ import { getPositions, getTurnout } from "../utils";
 import VBLoader from "../components/ui/VBLoader";
 import VotePulse from "../components/results/VotePulse";
 import { useSlug } from "../context/SlugContext";
+import PageBackground from "../components/layout/PageBackground";
 
 function downloadCategoryPDF(position, displayCandidates, branding, turnout) {
   const pcs = displayCandidates
@@ -179,7 +180,7 @@ export default function ResultsPage() {
   const isLive = electionConfig.status === "ACTIVE" && isPublished;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <PageBackground variant="ribbon" contentClassName="min-h-screen text-slate-800">
       <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
         {/* Stale-connection banner */}
         {isStale && lastUpdated && (
@@ -517,6 +518,6 @@ export default function ResultsPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageBackground>
   );
 }

@@ -6,6 +6,7 @@ import { OBSERVER_TABS } from "../components/observer/ObserverTabs";
 import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import { getTurnout } from "../utils";
 import { fetchObserverOverview, ORG_SLUG } from "../api";
+import PageBackground from "../components/layout/PageBackground";
 
 export default function ObserverPage() {
   const {
@@ -153,7 +154,7 @@ export default function ObserverPage() {
       ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <PageBackground variant="spotlight" contentClassName="min-h-screen">
       {/* ── Dark observer header ─────────────────────────────────────────── */}
       <div className="bg-slate-900">
         <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3 flex-wrap">
@@ -291,6 +292,6 @@ export default function ObserverPage() {
         {/* Tab content */}
         {ActiveComponent && <ActiveComponent />}
       </div>
-    </div>
+    </PageBackground>
   );
 }

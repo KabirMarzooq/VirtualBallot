@@ -9,6 +9,7 @@ import GlobalModal from "./components/ui/GlobalModal";
 import NetworkIndicator from "./components/ui/NetworkIndicator";
 import VBLoader from "./components/ui/VBLoader";
 import VoterChat from "./components/chat/VoterChat";
+import PageBackground from "./components/layout/PageBackground";
 
 // ── Lazy-load every page for code splitting ───────────────────────────────────
 const LandingPage = lazy(() => import("./pages/Landing"));
@@ -63,9 +64,12 @@ function ProtectedRoute({ children, role }) {
 // ── Page-level suspense fallback ──────────────────────────────────────────────
 function PageFallback() {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <PageBackground
+      variant="aurora"
+      contentClassName="min-h-screen flex items-center justify-center"
+    >
       <VBLoader size="lg" label="Loading..." />
-    </div>
+    </PageBackground>
   );
 }
 

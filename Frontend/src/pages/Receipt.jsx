@@ -6,6 +6,7 @@ import ProgressBar from "../components/ui/ProgressBar";
 import { useSlug } from "../context/SlugContext";
 import { emailReceipt } from "../api";
 import VBLoader from "../components/ui/VBLoader";
+import PageBackground from "../components/layout/PageBackground";
 
 export default function ReceiptPage() {
   const {
@@ -54,7 +55,10 @@ export default function ReceiptPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
+    <PageBackground
+      variant="aurora"
+      contentClassName="min-h-screen flex items-center justify-center p-4 text-slate-800"
+    >
       <div className="w-full max-w-[400px]">
         <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-8 sm:px-7 text-center">
           <ProgressBar step={4} />
@@ -193,6 +197,6 @@ export default function ReceiptPage() {
           </button>
         </div>
       </div>
-    </div>
+    </PageBackground>
   );
 }

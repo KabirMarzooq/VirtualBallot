@@ -16,7 +16,7 @@ import {
   MessageCircleQuestion,
 } from "lucide-react";
 // Reuses the auth pages' ring animation for the hero motif
-import "../styles/auth-background.css";
+import PageBackground from "../components/layout/PageBackground";
 
 const FEATURES = [
   {
@@ -73,7 +73,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white text-slate-800">
+    <PageBackground variant="ribbon" className="text-slate-800">
       {/* ── Navbar ── */}
       <nav className="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-sm border-b border-slate-100">
         <div className="max-w-6xl mx-auto flex justify-between items-center px-6 py-3">
@@ -104,31 +104,24 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section className="relative pt-36 pb-20 px-6 text-center overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-35 pointer-events-none"
-          style={dotGrid()}
-        />
+        {/* Page-wide dot grid comes from PageBackground; the hero adds its own
+            glow and a ring cluster as a focal point. */}
         <div
           className="absolute w-[640px] h-[640px] rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           style={{
             background: "radial-gradient(circle, #EFF6FF 0%, transparent 70%)",
           }}
         />
-        <span
-          className="auth-ring"
-          style={{ width: 300, height: 300 }}
-          aria-hidden="true"
-        />
-        <span
-          className="auth-ring"
-          style={{ width: 520, height: 520, animationDelay: "1.3s" }}
-          aria-hidden="true"
-        />
-        <span
-          className="auth-ring"
-          style={{ width: 740, height: 740, animationDelay: "2.6s" }}
-          aria-hidden="true"
-        />
+        <div className="vb-rings" aria-hidden="true">
+          <div className="vb-emitter vb-emitter-1">
+            <span className="vb-ring" />
+            <span className="vb-ring" />
+          </div>
+          <div className="vb-emitter vb-emitter-2">
+            <span className="vb-ring" />
+            <span className="vb-ring" />
+          </div>
+        </div>
 
         <div className="relative max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-semibold px-3.5 py-1.5 rounded-full mb-6 uppercase tracking-[0.1em]">
@@ -477,6 +470,6 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
-    </div>
+    </PageBackground>
   );
 }

@@ -100,34 +100,47 @@ function InvoiceModal({ inv, branding, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-lg bg-slate-900 rounded-3xl border border-slate-700 my-6">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
-          <div>
-            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+    <div
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto vb-fade"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Vote invoice"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-[0_20px_40px_-12px_rgb(0_0_0/0.25)] my-6 vb-modal-pop"
+      >
+        <div className="flex items-start justify-between gap-3 px-6 py-5 border-b border-slate-200">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-[0.1em]">
               {inv.election_name}
             </p>
-            <h2 className="text-white font-black text-lg">Vote Invoice</h2>
-            <p className="text-slate-500 text-xs font-mono mt-0.5">
+            <h2 className="text-base leading-6 font-semibold text-slate-900 mt-0.5">
+              Vote Invoice
+            </h2>
+            <p className="font-mono text-[11px] text-slate-400 mt-0.5 truncate">
               {inv.reference}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleDownload}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-xl cursor-pointer"
+              title="Open a printable copy of this invoice"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold min-h-[36px] px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" /> Download
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-xl cursor-pointer"
+              title="Close"
+              className="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
-        <div className="p-6 space-y-3">
+        <div className="p-6">
           {[
             ["Status", inv.status],
             ["Date", fmtDate(inv.created_at)],
@@ -139,15 +152,19 @@ function InvoiceModal({ inv, branding, onClose }) {
           ].map(([k, v]) => (
             <div
               key={k}
-              className="flex justify-between text-sm py-2 border-b border-slate-800"
+              className="flex justify-between gap-4 text-[13px] leading-5 py-2.5 border-b border-slate-100"
             >
-              <span className="text-slate-400">{k}</span>
-              <span className="text-white font-bold">{v}</span>
+              <span className="text-slate-600">{k}</span>
+              <span className="font-semibold text-slate-900 text-right">
+                {v}
+              </span>
             </div>
           ))}
-          <div className="flex justify-between pt-3">
-            <span className="text-white font-black">Total paid</span>
-            <span className="text-green-400 font-black text-lg">
+          <div className="flex justify-between items-center pt-4">
+            <span className="text-[13px] font-semibold text-slate-900">
+              Total paid
+            </span>
+            <span className="font-mono text-lg font-semibold text-green-600">
               {naira(inv.amount_kobo + inv.fee_kobo)}
             </span>
           </div>
@@ -181,11 +198,11 @@ export default function InvoiceTab() {
 
   const statusIcon = (s) =>
     s === "SUCCESS" ? (
-      <CheckCircle className="w-4 h-4 text-green-400" />
+      <CheckCircle className="w-4 h-4 text-green-600" />
     ) : s === "PENDING" ? (
-      <Clock className="w-4 h-4 text-amber-400" />
+      <Clock className="w-4 h-4 text-amber-600" />
     ) : (
-      <XCircle className="w-4 h-4 text-red-400" />
+      <XCircle className="w-4 h-4 text-red-600" />
     );
 
   if (loading)
@@ -196,7 +213,7 @@ export default function InvoiceTab() {
     );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Summary */}
       {summary && (
         <div className="grid grid-cols-3 gap-3">
@@ -205,32 +222,32 @@ export default function InvoiceTab() {
               icon: TrendingUp,
               label: "Revenue",
               value: naira(summary.revenueKobo),
-              color: "text-green-400",
+              color: "text-green-600",
             },
             {
               icon: Vote,
               label: "Votes Sold",
               value: summary.votesSold,
-              color: "text-blue-400",
+              color: "text-blue-600",
             },
             {
               icon: Receipt,
               label: "Transactions",
               value: summary.paidCount,
-              color: "text-white",
+              color: "text-slate-900",
             },
           ].map((s) => (
             <div
               key={s.label}
-              className="bg-slate-800 rounded-2xl p-5 border border-slate-700"
+              className="bg-white border border-slate-200 rounded-xl p-5"
             >
               <div className="flex items-center gap-1.5 mb-2">
-                <s.icon className="w-3.5 h-3.5 text-slate-500" />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <s.icon className="w-3.5 h-3.5 text-slate-400" />
+                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
                   {s.label}
                 </p>
               </div>
-              <p className={`text-2xl font-black font-mono ${s.color}`}>
+              <p className={`text-2xl font-semibold font-mono ${s.color}`}>
                 {s.value}
               </p>
             </div>
@@ -240,52 +257,55 @@ export default function InvoiceTab() {
 
       {/* List */}
       {invoices.length === 0 ? (
-        <div className="bg-slate-800 border border-dashed border-slate-600 rounded-2xl p-12 text-center">
-          <Receipt className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-white font-black mb-2">No transactions yet</h3>
-          <p className="text-slate-400 text-sm max-w-sm mx-auto">
+        <div className="bg-white border border-slate-200 rounded-xl py-14 text-center">
+          <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <Receipt className="w-6 h-6" />
+          </div>
+          <p className="text-[15px] font-semibold text-slate-900">
+            No transactions yet
+          </p>
+          <p className="text-xs leading-[18px] text-slate-600 mt-1 max-w-sm mx-auto">
             Paid vote transactions for your organization will appear here.
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           {invoices.map((inv) => (
             <div
               key={inv.id}
-              className="bg-slate-800 border border-slate-700 rounded-2xl hover:border-slate-600 transition-colors"
+              className="flex items-center gap-4 px-5 py-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
             >
-              <div className="flex items-center gap-4 px-5 py-4">
-                <div className="shrink-0">{statusIcon(inv.status)}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-white truncate">
-                    {inv.candidate_name}{" "}
-                    <span className="text-slate-500 font-normal">
-                      · {inv.votes_purchased} vote
-                      {inv.votes_purchased !== 1 ? "s" : ""}
-                    </span>
-                  </p>
-                  <p className="text-xs text-slate-500 truncate">
-                    {inv.voter_email} · {inv.reference}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-mono font-bold text-green-400">
-                    {naira(inv.amount_kobo)}
-                  </p>
-                  <p className="text-[10px] text-slate-500">
-                    {new Date(inv.created_at).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                    })}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelected(inv)}
-                  className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer shrink-0"
-                >
-                  View
-                </button>
+              <div className="shrink-0">{statusIcon(inv.status)}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-slate-900 truncate">
+                  {inv.candidate_name}{" "}
+                  <span className="text-slate-600 font-normal">
+                    · {inv.votes_purchased} vote
+                    {inv.votes_purchased !== 1 ? "s" : ""}
+                  </span>
+                </p>
+                <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                  {inv.voter_email} · {inv.reference}
+                </p>
               </div>
+              <div className="text-right shrink-0">
+                <p className="font-mono text-[13px] font-semibold text-green-600">
+                  {naira(inv.amount_kobo)}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {new Date(inv.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelected(inv)}
+                title="View the full invoice"
+                className="text-xs font-semibold min-h-[36px] px-3.5 rounded-lg bg-white border border-slate-300 text-slate-600 hover:border-slate-400 hover:text-slate-800 transition-all cursor-pointer shrink-0"
+              >
+                View
+              </button>
             </div>
           ))}
         </div>

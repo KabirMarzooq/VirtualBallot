@@ -7,6 +7,7 @@ import CompareModal from "../components/ballot/CompareModal";
 import ConfirmModal from "../components/ballot/ConfirmModal";
 import { getPositions } from "../utils";
 import { useSlug } from "../context/SlugContext";
+import PageBackground from "../components/layout/PageBackground";
 
 function Avatar({ candidate, className = "w-[52px] h-[52px] text-base" }) {
   const initials = candidate.name
@@ -69,7 +70,10 @@ export default function BallotPage() {
 
   if (electionConfig.status === "ENDED") {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3 text-slate-800 p-4">
+      <PageBackground
+        variant="aurora"
+        contentClassName="min-h-screen flex flex-col items-center justify-center gap-3 text-slate-800 p-4"
+      >
         <p className="text-xl font-semibold text-slate-900">Voting is now closed.</p>
         <p className="text-[13px] text-slate-600">Results will be published by the commission.</p>
         <button
@@ -79,7 +83,7 @@ export default function BallotPage() {
         >
           ← Back to login
         </button>
-      </div>
+      </PageBackground>
     );
   }
 
@@ -143,7 +147,7 @@ export default function BallotPage() {
 
       {showConfirmModal && <ConfirmModal />}
 
-      <div className="min-h-screen bg-slate-50 text-slate-800">
+      <PageBackground variant="ribbon" contentClassName="min-h-screen text-slate-800">
         {/* Sticky header */}
         <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
           <div className="max-w-[720px] mx-auto px-5 py-3 flex items-center justify-between gap-3">
@@ -321,7 +325,7 @@ export default function BallotPage() {
             </div>
           </div>
         </div>
-      </div>
+      </PageBackground>
     </>
   );
 }
