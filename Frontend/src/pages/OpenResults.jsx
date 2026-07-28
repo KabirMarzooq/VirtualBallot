@@ -4,6 +4,7 @@ import { BarChart3, ArrowLeft, Clock } from "lucide-react";
 import { fetchOpenResults, fetchOpenElection } from "../api";
 import VBLoader from "../components/ui/VBLoader";
 import { formatTimeLeft } from "../utils";
+import PageBackground from "../components/layout/PageBackground";
 
 export default function OpenResultsPage() {
   const { slug } = useParams();
@@ -62,15 +63,21 @@ export default function OpenResultsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <PageBackground
+        variant="aurora"
+        contentClassName="min-h-screen flex items-center justify-center"
+      >
         <VBLoader size="lg" label="Loading results..." />
-      </div>
+      </PageBackground>
     );
   }
 
   if (!data?.published) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <PageBackground
+        variant="aurora"
+        contentClassName="min-h-screen flex items-center justify-center p-4"
+      >
         <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-sm w-full text-center">
           <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
             <BarChart3 className="w-6 h-6" />
@@ -96,7 +103,7 @@ export default function OpenResultsPage() {
             <ArrowLeft className="w-4 h-4" /> Leave to home
           </button>
         </div>
-      </div>
+      </PageBackground>
     );
   }
 
@@ -113,7 +120,10 @@ export default function OpenResultsPage() {
   const isActive = status === "ACTIVE";
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 text-slate-800">
+    <PageBackground
+      variant="ribbon"
+      contentClassName="min-h-screen py-8 px-4 text-slate-800"
+    >
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
@@ -249,6 +259,6 @@ export default function OpenResultsPage() {
           </button>
         </div>
       </div>
-    </div>
+    </PageBackground>
   );
 }

@@ -27,6 +27,7 @@ import InvoiceTab from "../components/admin/InvoiceTab";
 import StaffTab from "../components/admin/StaffTab";
 import MobileNoticeBanner from "../components/ui/MobileNoticeBanner";
 import { fetchAdminOverview, createNewElection } from "../api";
+import PageBackground from "../components/layout/PageBackground";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, desc: "Live picture of your election" },
@@ -289,7 +290,10 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <PageBackground
+      variant="spotlight"
+      contentClassName="min-h-screen flex flex-col lg:flex-row"
+    >
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
       <aside className="hidden lg:flex w-[232px] bg-slate-900 flex-col shrink-0 sticky top-0 h-screen">
         {/* Brand */}
@@ -479,6 +483,6 @@ export default function AdminPage() {
           </div>
         </main>
       </div>
-    </div>
+    </PageBackground>
   );
 }

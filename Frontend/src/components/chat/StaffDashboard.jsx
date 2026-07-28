@@ -29,6 +29,7 @@ import {
   getChatTranscript,
 } from "../../api";
 import AuthBackground from "../layout/AuthBackground";
+import PageBackground from "../layout/PageBackground";
 import MobileNoticeBanner from "../ui/MobileNoticeBanner";
 
 // Status badge palette for the election picker (sits in the dark top bar).
@@ -499,7 +500,10 @@ function Dashboard({ onLogout }) {
   const waitingCount = queue.filter((c) => c.status === "escalated").length;
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col text-slate-800 overflow-hidden">
+    <PageBackground
+      variant="spotlight"
+      contentClassName="h-screen flex flex-col text-slate-800 overflow-hidden"
+    >
       {/* Top bar (dark) */}
       <header className="flex items-center gap-3 px-5 py-2.5 bg-slate-900 shrink-0">
         <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
@@ -1013,7 +1017,7 @@ function Dashboard({ onLogout }) {
           </div>
         </div>
       )}
-    </div>
+    </PageBackground>
   );
 }
 

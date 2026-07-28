@@ -26,6 +26,7 @@ import {
   reactivateOrg,
   verifyElectionChain,
 } from "../api";
+import PageBackground from "../components/layout/PageBackground";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -237,7 +238,10 @@ export default function SuperAdminPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <PageBackground
+      variant="spotlight"
+      contentClassName="min-h-screen text-slate-800"
+    >
       {/* Header (dark) */}
       <div className="bg-slate-900">
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3">
@@ -1039,6 +1043,6 @@ export default function SuperAdminPage() {
           </>
         )}
       </div>
-    </div>
+    </PageBackground>
   );
 }

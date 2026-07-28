@@ -13,12 +13,16 @@ import {
 import { fetchOpenElection, initializePaidVote, verifyPaidVote } from "../api";
 import VBLoader from "../components/ui/VBLoader";
 import { isValidEmail } from "../utils";
+import PageBackground from "../components/layout/PageBackground";
 
 const naira = (kobo) => "₦" + (kobo / 100).toLocaleString("en-NG");
 
 function StateCard({ icon, iconClass, title, children }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <PageBackground
+      variant="aurora"
+      contentClassName="min-h-screen flex items-center justify-center p-4"
+    >
       <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-sm w-full text-center">
         <div
           className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 ${iconClass}`}
@@ -32,7 +36,7 @@ function StateCard({ icon, iconClass, title, children }) {
           {children}
         </div>
       </div>
-    </div>
+    </PageBackground>
   );
 }
 
@@ -151,9 +155,12 @@ export default function PaidBallotPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <PageBackground
+        variant="aurora"
+        contentClassName="min-h-screen flex items-center justify-center"
+      >
         <VBLoader size="lg" label="Loading..." />
-      </div>
+      </PageBackground>
     );
   }
 
@@ -218,7 +225,10 @@ export default function PaidBallotPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <PageBackground
+        variant="aurora"
+        contentClassName="min-h-screen flex items-center justify-center p-4"
+      >
         <div className="bg-white border border-blue-200 rounded-2xl shadow-md p-8 sm:px-7 max-w-sm w-full text-center">
           <div className="w-[72px] h-[72px] bg-green-50 border-[1.5px] border-green-200 rounded-full flex items-center justify-center mx-auto text-green-600">
             <svg
@@ -281,7 +291,7 @@ export default function PaidBallotPage() {
             You can close this page — a receipt is on its way to your inbox.
           </p>
         </div>
-      </div>
+      </PageBackground>
     );
   }
 
@@ -292,7 +302,10 @@ export default function PaidBallotPage() {
 
   // Main paid ballot
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 text-slate-800">
+    <PageBackground
+      variant="ribbon"
+      contentClassName="min-h-screen py-8 px-4 text-slate-800"
+    >
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
@@ -515,6 +528,6 @@ export default function PaidBallotPage() {
           </p>
         )}
       </div>
-    </div>
+    </PageBackground>
   );
 }
