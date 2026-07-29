@@ -6,8 +6,25 @@ html,
 body,
 #root {
   max-width: 100%;
-  overflow-x: hidden;
 }
+
+/* NOTE — there is deliberately no global `overflow-x` guard here.
+   This file previously set `overflow-x: hidden` on html, body AND #root.
+   `overflow-x: hidden` alongside a visible `overflow-y` forces `overflow-y`
+   to compute to `auto`, which turns the element into a scroll container.
+   Every `position: sticky` descendant then resolves against that container
+   instead of the viewport and — because it grows with its content and never
+   scrolls itself — silently stops sticking. That is what pinned the admin
+   sidebar, the ballot and legal page headers, and the results index to the
+   page scroll.
+
+   Measured: any variant that genuinely clips (hidden on html, body, or
+   #root) breaks sticky; any variant that preserves sticky (clip, or body
+   alone) does not actually clip. The two cannot both hold, so the guard is
+   gone and horizontal overflow is handled where it originates — wide tables
+   each sit in their own `overflow-x-auto` container with a min-width. If a
+   page ever scrolls sideways, that is a layout bug to fix at the source,
+   not to hide here. */
 
 * {
   box-sizing: border-box;
