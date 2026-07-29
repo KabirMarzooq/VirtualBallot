@@ -270,7 +270,7 @@ export default function VoterChat({ socket }) {
         <button
           onClick={openChat}
           title="Open support chat"
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-[0_8px_24px_-6px_rgba(37,99,235,0.5)] flex items-center justify-center transition-all cursor-pointer"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-[0_8px_24px_-6px_rgba(31,70,54,0.5)] flex items-center justify-center transition-all cursor-pointer"
         >
           <MessageCircle className="w-6 h-6" />
           {unread && (

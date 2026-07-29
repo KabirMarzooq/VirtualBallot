@@ -165,6 +165,8 @@ export function LedgerTab() {
         </p>
       </div>
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+        <div className="min-w-[560px]">
         <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
           <span className="col-span-1">#</span>
           <span className="col-span-5">Voter (masked)</span>
@@ -206,6 +208,8 @@ export function LedgerTab() {
             ))
           )}
         </div>
+        </div>
+        </div>
         <div className="px-4 py-2 border-t border-slate-100 text-[11px] text-slate-400 flex justify-between">
           <span>
             {ledger.length} vote{ledger.length !== 1 ? "s" : ""} recorded
@@ -231,6 +235,8 @@ export function AuditStreamTab() {
         </p>
       </div>
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+        <div className="min-w-[640px]">
         <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
           <span className="col-span-1">#</span>
           <span className="col-span-2">Type</span>
@@ -281,6 +287,8 @@ export function AuditStreamTab() {
               );
             })
           )}
+        </div>
+        </div>
         </div>
         <div className="px-4 py-2 border-t border-slate-100 text-[11px] text-slate-400 flex justify-between items-center">
           <span>{activityLog.length} events in log</span>

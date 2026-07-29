@@ -175,7 +175,12 @@ export default function OrgRegisterPage() {
                       : wrapNeutral
                   }`}
                 >
-                  <span className="font-mono text-xs text-slate-400 whitespace-nowrap shrink-0">
+                  {/* Truncates rather than squeezing the input off-screen on
+                      narrow viewports or long hostnames. */}
+                  <span
+                    title={`${window.location.host}/vote/`}
+                    className="font-mono text-xs text-slate-400 whitespace-nowrap truncate min-w-0 max-w-[45%]"
+                  >
                     {window.location.host}/vote/
                   </span>
                   <input

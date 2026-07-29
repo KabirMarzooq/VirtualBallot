@@ -65,7 +65,7 @@ const STEPS = [
 ];
 
 const dotGrid = (size = "28px") => ({
-  backgroundImage: "radial-gradient(circle, #BFDBFE 1px, transparent 1px)",
+  backgroundImage: "radial-gradient(circle, #8FB3A0 1px, transparent 1px)",
   backgroundSize: `${size} ${size}`,
 });
 
@@ -109,7 +109,7 @@ export default function LandingPage() {
         <div
           className="absolute w-[640px] h-[640px] rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           style={{
-            background: "radial-gradient(circle, #EFF6FF 0%, transparent 70%)",
+            background: "radial-gradient(circle, #F2F7F3 0%, transparent 70%)",
           }}
         />
         <div className="vb-rings" aria-hidden="true">

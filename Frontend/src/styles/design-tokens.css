@@ -1,32 +1,66 @@
 /* ════════════════════════════════════════════════════════════════════════
    VIRTUAL BALLOT — DESIGN TOKENS
-   Single source of truth for the blue/white UI system.
-   The gray scale intentionally matches Tailwind's `slate`, and blue/success/
-   warning/danger match Tailwind's blue-600/green-600/amber-600/red-600, so
-   Tailwind utilities map 1:1 onto these tokens. Use Tailwind classes where
-   they map cleanly; use these variables for anything Tailwind can't express.
+   Single source of truth for the Oxford Green UI system.
+
+   The variable names below keep their original `--blue-*` / `--gray-*`
+   spelling so nothing downstream had to change, but the VALUES are now
+   Oxford Green and warm sage-grey. The same remap is applied to Tailwind's
+   `blue` and `slate` ramps in tailwind.config.js, so utilities and these
+   variables stay 1:1.
+
+   ⚠️  `--blue-*` is green. `--oxford-*` and `--sage-*` are correctly-named
+   aliases — prefer those in new code.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Brand */
-  --blue-50:  #EFF6FF;
-  --blue-100: #DBEAFE;
-  --blue-200: #BFDBFE;
-  --blue-500: #3B82F6;
-  --blue-600: #2563EB;   /* primary action */
-  --blue-700: #1D4ED8;   /* primary action hover */
+  /* Brand — Oxford Green */
+  --oxford-50:  #F2F7F3;
+  --oxford-100: #DFEBE3;
+  --oxford-200: #C2D6C9;
+  --oxford-300: #8FB3A0;
+  --oxford-400: #5C8A70;
+  --oxford-500: #37634E;
+  --oxford-600: #1F4636;   /* primary action */
+  --oxford-700: #163227;   /* primary action hover */
+  --oxford-900: #0D1F18;
 
-  /* Surfaces (Tailwind slate) */
+  /* Legacy names — same values, kept so existing rules keep working */
+  --blue-50:  var(--oxford-50);
+  --blue-100: var(--oxford-100);
+  --blue-200: var(--oxford-200);
+  --blue-300: var(--oxford-300);
+  --blue-500: var(--oxford-500);
+  --blue-600: var(--oxford-600);
+  --blue-700: var(--oxford-700);
+
+  /* Accent — muted brass, used sparingly (crest, active markers) */
+  --brass-100: #F3EAD1;
+  --brass-200: #E6D5A8;
+  --brass-500: #B08D3F;
+  --brass-600: #96762F;
+
+  /* Surfaces — warm sage-grey */
   --white:    #FFFFFF;
-  --gray-50:  #F8FAFC;   /* page background */
-  --gray-100: #F1F5F9;   /* secondary surface */
-  --gray-200: #E2E8F0;   /* borders */
-  --gray-300: #CBD5E1;   /* strong border */
-  --gray-400: #94A3B8;   /* muted text (meta only — not body copy) */
-  --gray-600: #475569;   /* secondary text */
-  --gray-800: #1E293B;   /* primary text */
-  --gray-900: #0F172A;   /* heading text */
+  --sage-50:  #F7F8F6;
+  --sage-100: #EDEFEB;
+  --sage-200: #DFE2DC;
+  --sage-300: #C4C9C0;
+  --sage-400: #8A928A;
+  --sage-600: #565E57;
+  --sage-800: #2A312B;
+  --sage-900: #161B17;
 
-  /* Semantic */
+  --gray-50:  var(--sage-50);   /* page background */
+  --gray-100: var(--sage-100);  /* secondary surface */
+  --gray-200: var(--sage-200);  /* borders */
+  --gray-300: var(--sage-300);  /* strong border */
+  --gray-400: var(--sage-400);  /* muted text (meta only) */
+  --gray-600: var(--sage-600);  /* secondary text */
+  --gray-800: var(--sage-800);  /* primary text */
+  --gray-900: var(--sage-900);  /* heading text */
+
+  /* Semantic — unchanged in meaning. Success green is deliberately much
+     lighter and more saturated than the Oxford chrome so the two read
+     as different things. */
   --success-light: #F0FDF4;
   --success:       #16A34A;
   --warning-light: #FFFBEB;

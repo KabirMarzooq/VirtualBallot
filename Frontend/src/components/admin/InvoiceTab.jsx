@@ -31,23 +31,23 @@ function InvoiceModal({ inv, branding, onClose }) {
       inv.reference
     }</title>
     <style>
-      body{font-family:Georgia,serif;margin:0;padding:40px;background:#f8fafc}
+      body{font-family:Georgia,serif;margin:0;padding:40px;background:#F7F8F6}
       .page{max-width:680px;margin:0 auto;background:white;padding:48px;border-radius:8px}
-      .head{border-bottom:4px double #1e293b;padding-bottom:20px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-start}
+      .head{border-bottom:4px double #2A312B;padding-bottom:20px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-start}
       h1{font-size:24px;font-weight:900;margin:0;text-transform:uppercase;letter-spacing:.05em}
       .status{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;font-family:Arial;text-transform:uppercase}
       .ok{background:#dcfce7;color:#16a34a}.pend{background:#fef3c7;color:#92400e}.fail{background:#fee2e2;color:#dc2626}
       table{width:100%;border-collapse:collapse;margin:24px 0}
-      td{padding:10px 0;font-family:Arial;font-size:14px;border-bottom:1px solid #f1f5f9}
-      .label{color:#64748b}.val{text-align:right;font-weight:700;color:#0f172a}
-      .total td{border-top:2px solid #1e293b;border-bottom:none;font-size:18px;font-weight:900;padding-top:16px}
-      .footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;font-family:monospace}
+      td{padding:10px 0;font-family:Arial;font-size:14px;border-bottom:1px solid #EDEFEB}
+      .label{color:#565E57}.val{text-align:right;font-weight:700;color:#161B17}
+      .total td{border-top:2px solid #2A312B;border-bottom:none;font-size:18px;font-weight:900;padding-top:16px}
+      .footer{margin-top:32px;padding-top:16px;border-top:1px solid #DFE2DC;font-size:10px;color:#8A928A;font-family:monospace}
     </style></head><body><div class="page">
     <div class="head">
       <div>
-        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#64748b;font-family:Arial;margin-bottom:6px">${org}</div>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#565E57;font-family:Arial;margin-bottom:6px">${org}</div>
         <h1>Vote Invoice</h1>
-        <div style="font-family:monospace;font-size:12px;color:#94a3b8;margin-top:6px">${
+        <div style="font-family:monospace;font-size:12px;color:#8A928A;margin-top:6px">${
           inv.reference
         }</div>
       </div>
@@ -85,7 +85,7 @@ function InvoiceModal({ inv, branding, onClose }) {
         inv.amount_kobo + inv.fee_kobo
       )}</td></tr>
     </table>
-    <p style="font-size:11px;color:#64748b;font-family:Arial">The vote amount of ${naira(
+    <p style="font-size:11px;color:#565E57;font-family:Arial">The vote amount of ${naira(
       inv.amount_kobo
     )} settles to ${org}. The processing fee is retained by Paystack. Virtual Ballot charges nothing.</p>
     <div class="footer">Virtual Ballot · Secure Election Platform · Generated ${new Date().toLocaleString(

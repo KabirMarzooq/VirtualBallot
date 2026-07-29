@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Virtual Ballot — Dashboard Palette Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --gray-50:#F8FAFC;--gray-100:#F1F5F9;--gray-200:#E2E8F0;--gray-300:#CBD5E1;
+  --gray-400:#94A3B8;--gray-600:#475569;--gray-800:#1E293B;--gray-900:#0F172A;
+  --warning-light:#FFFBEB;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-800);padding:32px 16px 96px}
+.sheet{max-width:1180px;margin:0 auto}
+.sheet h1{font-size:26px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.note{background:var(--warning-light);border:1px solid rgb(217 119 6/.3);border-radius:12px;padding:14px 16px;margin-top:18px;font-size:13px;line-height:20px;color:#92400E}
+.note b{font-weight:600}
+.opt{margin-top:38px}
+.opt-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.opt-head h2{font-size:19px;font-weight:600;color:var(--gray-900)}
+.tag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.tag.cur{background:var(--gray-200);color:var(--gray-600)}
+.tag.rec{background:#DCFCE7;color:#15803D}
+.opt p.why{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:7px;max-width:74ch}
+.swatches{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.sw{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:5px 10px 5px 6px;font-family:var(--font-mono);font-size:10px;color:var(--gray-600)}
+.sw i{width:18px;height:18px;border-radius:4px;display:block;border:1px solid rgb(0 0 0/.08)}
+
+/* ── Mini dashboard ── */
+.dash{margin-top:16px;border:1px solid var(--gray-200);border-radius:14px;overflow:hidden;display:grid;grid-template-columns:212px 1fr;box-shadow:0 4px 6px -1px rgb(0 0 0/.06);min-height:396px}
+@media (max-width:760px){.dash{grid-template-columns:1fr}}
+.side{padding:16px 13px;display:flex;flex-direction:column;gap:3px}
+.brand{display:flex;align-items:center;gap:9px;padding-bottom:14px}
+.crest{width:31px;height:31px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.brand b{font-size:13px;font-weight:600}
+.glabel{font-size:9px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;padding:12px 8px 5px}
+.nav{display:flex;align-items:center;gap:9px;padding:8px;border-radius:7px;font-size:12.5px;font-weight:500}
+.nav .ico{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.statusrow{display:flex;align-items:center;gap:7px;padding:9px 8px;border-radius:7px;font-size:11px;margin-bottom:4px}
+.statusrow .d{width:6px;height:6px;border-radius:50%}
+.main{display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;gap:12px}
+.topbar h3{font-size:14px;font-weight:600}
+.topbar .sub{font-size:11px;margin-top:1px}
+.btn{font-size:11.5px;font-weight:600;padding:7px 13px;border-radius:7px;border:1px solid transparent}
+.content{flex:1;padding:18px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{border-radius:10px;padding:12px}
+.tile .k{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.tile .n{font-family:var(--font-mono);font-size:20px;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+.panel{border-radius:10px;margin-top:12px;overflow:hidden}
+.panel .ph{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:8px 13px}
+.panel .pr{display:flex;justify-content:space-between;padding:9px 13px;font-size:12px}
+.panel .pr span:last-child{font-family:var(--font-mono);font-size:11px}
+
+/* ═══ A · CURRENT ═══ */
+.a .side{background:#0F172A}
+.a .crest{background:#2563EB;color:#fff}
+.a .brand b{color:#fff}
+.a .glabel{color:#64748B}
+.a .nav{color:#94A3B8}
+.a .nav .ico{background:#475569}
+.a .nav.on{background:#2563EB;color:#fff}
+.a .nav.on .ico{background:#fff}
+.a .statusrow{background:#1E293B;color:#94A3B8}
+.a .statusrow .d{background:#22C55E}
+.a .main{background:#F8FAFC}
+.a .topbar{background:#fff;border-bottom:1px solid #E2E8F0}
+.a .topbar h3{color:#0F172A}.a .topbar .sub{color:#64748B}
+.a .btn{background:#2563EB;color:#fff}
+.a .tile{background:#fff;border:1px solid #E2E8F0}
+.a .tile .k{color:#64748B}.a .tile .n{color:#0F172A}
+.a .panel{background:#fff;border:1px solid #E2E8F0}
+.a .panel .ph{background:#F8FAFC;color:#64748B;border-bottom:1px solid #F1F5F9}
+.a .panel .pr{color:#1E293B;border-bottom:1px solid #F1F5F9}
+.a .panel .pr span:last-child{color:#94A3B8}
+
+/* ═══ B · INK & CLAY ═══ */
+.b .side{background:#1C1917}
+.b .crest{background:#C2410C;color:#fff}
+.b .brand b{color:#FAFAF9}
+.b .glabel{color:#78716C}
+.b .nav{color:#A8A29E}
+.b .nav .ico{background:#57534E}
+.b .nav.on{background:#292524;color:#FAFAF9}
+.b .nav.on .ico{background:#C2410C}
+.b .statusrow{background:#292524;color:#A8A29E}
+.b .statusrow .d{background:#65A30D}
+.b .main{background:#FAFAF9}
+.b .topbar{background:#fff;border-bottom:1px solid #E7E5E4}
+.b .topbar h3{color:#1C1917}.b .topbar .sub{color:#78716C}
+.b .btn{background:#1C1917;color:#FAFAF9}
+.b .tile{background:#fff;border:1px solid #E7E5E4}
+.b .tile .k{color:#78716C}.b .tile .n{color:#1C1917}
+.b .panel{background:#fff;border:1px solid #E7E5E4}
+.b .panel .ph{background:#FAFAF9;color:#78716C;border-bottom:1px solid #F5F5F4}
+.b .panel .pr{color:#292524;border-bottom:1px solid #F5F5F4}
+.b .panel .pr span:last-child{color:#A8A29E}
+
+/* ═══ C · PAPER & INK ═══ */
+.c .side{background:#FFF;border-right:1px solid #E4E4E7}
+.c .crest{background:#18181B;color:#fff}
+.c .brand b{color:#18181B}
+.c .glabel{color:#A1A1AA}
+.c .nav{color:#52525B}
+.c .nav .ico{background:#D4D4D8}
+.c .nav.on{background:#F4F4F5;color:#18181B}
+.c .nav.on .ico{background:#18181B}
+.c .statusrow{background:#F4F4F5;color:#52525B}
+.c .statusrow .d{background:#16A34A}
+.c .main{background:#FAFAFA}
+.c .topbar{background:#fff;border-bottom:1px solid #E4E4E7}
+.c .topbar h3{color:#18181B}.c .topbar .sub{color:#71717A}
+.c .btn{background:#18181B;color:#fff}
+.c .tile{background:#fff;border:1px solid #E4E4E7}
+.c .tile .k{color:#71717A}.c .tile .n{color:#18181B}
+.c .panel{background:#fff;border:1px solid #E4E4E7}
+.c .panel .ph{background:#FAFAFA;color:#71717A;border-bottom:1px solid #F4F4F5}
+.c .panel .pr{color:#27272A;border-bottom:1px solid #F4F4F5}
+.c .panel .pr span:last-child{color:#A1A1AA}
+
+/* ═══ D · OXFORD GREEN ═══ */
+.d .side{background:#14261E}
+.d .crest{background:#B08D3F;color:#14261E}
+.d .brand b{color:#F7F7F5}
+.d .glabel{color:#6B8577}
+.d .nav{color:#9DB3A6}
+.d .nav .ico{background:#3D5748}
+.d .nav.on{background:#1E3A2C;color:#F7F7F5}
+.d .nav.on .ico{background:#B08D3F}
+.d .statusrow{background:#1E3A2C;color:#9DB3A6}
+.d .statusrow .d{background:#B08D3F}
+.d .main{background:#F7F7F5}
+.d .topbar{background:#fff;border-bottom:1px solid #E3E3DE}
+.d .topbar h3{color:#14261E}.d .topbar .sub{color:#5F6B63}
+.d .btn{background:#14261E;color:#F7F7F5}
+.d .tile{background:#fff;border:1px solid #E3E3DE}
+.d .tile .k{color:#5F6B63}.d .tile .n{color:#14261E}
+.d .panel{background:#fff;border:1px solid #E3E3DE}
+.d .panel .ph{background:#F7F7F5;color:#5F6B63;border-bottom:1px solid #EFEFEA}
+.d .panel .pr{color:#22332A;border-bottom:1px solid #EFEFEA}
+.d .panel .pr span:last-child{color:#8A968E}
+
+.spec{width:100%;border-collapse:collapse;margin-top:30px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden;background:#fff}
+.spec th{background:var(--gray-100);text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);padding:8px 14px;border-bottom:1px solid var(--gray-200)}
+.spec td{padding:9px 14px;font-size:12px;line-height:18px;border-bottom:1px solid var(--gray-100);vertical-align:top}
+.spec tr:last-child td{border-bottom:none}
+.spec td:first-child{font-weight:600;color:var(--gray-900);width:150px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Admin dashboard — palette options</h1>
+  <p class="sub">Same layout, same information, four different colour treatments.</p>
+
+  <div class="note">
+    <b>For approval — nothing implemented.</b> The thing reading as "vibe coded" is almost certainly
+    <b>A</b>: a near-black navy sidebar with a saturated <code>blue-600</code> active state. That exact pairing is
+    the default look of nearly every AI-generated admin template, which is why it feels generic even though nothing
+    is technically wrong with it. Each option below changes <em>only</em> the chrome — sidebar, accent and surface
+    tints. Layout, spacing and type stay identical, so whichever you pick is a token swap, not a rebuild.
+  </div>
+
+  <!-- A -->
+  <div class="opt a">
+    <div class="opt-head"><h2>A · Navy &amp; Blue</h2><span class="tag cur">Current</span></div>
+    <p class="why">What's live today. The sidebar and the accent are both blue, so the active nav item doesn't
+      separate from its background, and the whole console reads as one saturated block. This is the pairing to move away from.</p>
+    <div class="swatches">
+      <span class="sw"><i style="background:#0F172A"></i>#0F172A sidebar</span>
+      <span class="sw"><i style="background:#2563EB"></i>#2563EB accent</span>
+      <span class="sw"><i style="background:#F8FAFC"></i>#F8FAFC canvas</span>
+    </div>
+    <div class="dash">
+      <aside class="side">
+        <div class="brand"><span class="crest">VB</span><b>NUESA</b></div>
+        <div class="statusrow"><span class="d"></span>Active · 02:41:16</div>
+        <div class="glabel">Election</div>
+        <div class="nav on"><span class="ico"></span>Overview</div>
+        <div class="nav"><span class="ico"></span>Voters</div>
+        <div class="nav"><span class="ico"></span>Candidates</div>
+        <div class="glabel">Console</div>
+        <div class="nav"><span class="ico"></span>Audit log</div>
+      </aside>
+      <div class="main">
+        <div class="topbar"><div><h3>Overview</h3><div class="sub">Live picture of your election</div></div><span class="btn">End election</span></div>
+        <div class="content">
+          <div class="tiles">
+            <div class="tile"><div class="k">Registered</div><div class="n">1,204</div></div>
+            <div class="tile"><div class="k">Accredited</div><div class="n">968</div></div>
+            <div class="tile"><div class="k">Votes cast</div><div class="n">847</div></div>
+            <div class="tile"><div class="k">Turnout</div><div class="n">70%</div></div>
+          </div>
+          <div class="panel">
+            <div class="ph">Recent activity</div>
+            <div class="pr"><span>Receipt VB-51AB-E203 emailed to voter</span><span>14:02:11</span></div>
+            <div class="pr"><span>Ballot cast — President</span><span>14:02:09</span></div>
+            <div class="pr"><span>Roster locked by chair@eng.edu.ng</span><span>13:47:20</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="opt b">
+    <div class="opt-head"><h2>B · Ink &amp; Clay</h2></div>
+    <p class="why">Warm near-black sidebar with a terracotta accent. The warm neutrals immediately break the
+      cool-navy template look, and because the accent is used sparingly the data stays the loudest thing on screen.
+      Active nav is a raised warm charcoal rather than a colour fill, so it reads as depth instead of highlight.</p>
+    <div class="swatches">
+      <span class="sw"><i style="background:#1C1917"></i>#1C1917 sidebar</span>
+      <span class="sw"><i style="background:#C2410C"></i>#C2410C accent</span>
+      <span class="sw"><i style="background:#FAFAF9"></i>#FAFAF9 canvas</span>
+    </div>
+    <div class="dash">
+      <aside class="side">
+        <div class="brand"><span class="crest">VB</span><b>NUESA</b></div>
+        <div class="statusrow"><span class="d"></span>Active · 02:41:16</div>
+        <div class="glabel">Election</div>
+        <div class="nav on"><span class="ico"></span>Overview</div>
+        <div class="nav"><span class="ico"></span>Voters</div>
+        <div class="nav"><span class="ico"></span>Candidates</div>
+        <div class="glabel">Console</div>
+        <div class="nav"><span class="ico"></span>Audit log</div>
+      </aside>
+      <div class="main">
+        <div class="topbar"><div><h3>Overview</h3><div class="sub">Live picture of your election</div></div><span class="btn">End election</span></div>
+        <div class="content">
+          <div class="tiles">
+            <div class="tile"><div class="k">Registered</div><div class="n">1,204</div></div>
+            <div class="tile"><div class="k">Accredited</div><div class="n">968</div></div>
+            <div class="tile"><div class="k">Votes cast</div><div class="n">847</div></div>
+            <div class="tile"><div class="k">Turnout</div><div class="n">70%</div></div>
+          </div>
+          <div class="panel">
+            <div class="ph">Recent activity</div>
+            <div class="pr"><span>Receipt VB-51AB-E203 emailed to voter</span><span>14:02:11</span></div>
+            <div class="pr"><span>Ballot cast — President</span><span>14:02:09</span></div>
+            <div class="pr"><span>Roster locked by chair@eng.edu.ng</span><span>13:47:20</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="opt c">
+    <div class="opt-head"><h2>C · Paper &amp; Ink</h2><span class="tag rec">Recommended</span></div>
+    <p class="why">Drops the dark sidebar entirely. A white rail separated by a hairline, near-black type, and a
+      light grey active state — no accent colour in the chrome at all. This is the furthest from the AI-template
+      look, it makes the console feel like an instrument rather than a product landing page, and it lets the
+      semantic colours you already use (green approved, amber pending, red danger) carry real meaning because
+      nothing else is competing. It also solves a real problem: the dark rail currently forces a hard seam against
+      the light content, which is what makes the tabs look "stuck on".</p>
+    <div class="swatches">
+      <span class="sw"><i style="background:#FFFFFF"></i>#FFFFFF sidebar</span>
+      <span class="sw"><i style="background:#18181B"></i>#18181B ink</span>
+      <span class="sw"><i style="background:#FAFAFA"></i>#FAFAFA canvas</span>
+      <span class="sw"><i style="background:#E4E4E7"></i>#E4E4E7 rule</span>
+    </div>
+    <div class="dash">
+      <aside class="side">
+        <div class="brand"><span class="crest">VB</span><b>NUESA</b></div>
+        <div class="statusrow"><span class="d"></span>Active · 02:41:16</div>
+        <div class="glabel">Election</div>
+        <div class="nav on"><span class="ico"></span>Overview</div>
+        <div class="nav"><span class="ico"></span>Voters</div>
+        <div class="nav"><span class="ico"></span>Candidates</div>
+        <div class="glabel">Console</div>
+        <div class="nav"><span class="ico"></span>Audit log</div>
+      </aside>
+      <div class="main">
+        <div class="topbar"><div><h3>Overview</h3><div class="sub">Live picture of your election</div></div><span class="btn">End election</span></div>
+        <div class="content">
+          <div class="tiles">
+            <div class="tile"><div class="k">Registered</div><div class="n">1,204</div></div>
+            <div class="tile"><div class="k">Accredited</div><div class="n">968</div></div>
+            <div class="tile"><div class="k">Votes cast</div><div class="n">847</div></div>
+            <div class="tile"><div class="k">Turnout</div><div class="n">70%</div></div>
+          </div>
+          <div class="panel">
+            <div class="ph">Recent activity</div>
+            <div class="pr"><span>Receipt VB-51AB-E203 emailed to voter</span><span>14:02:11</span></div>
+            <div class="pr"><span>Ballot cast — President</span><span>14:02:09</span></div>
+            <div class="pr"><span>Roster locked by chair@eng.edu.ng</span><span>13:47:20</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="opt d">
+    <div class="opt-head"><h2>D · Oxford Green</h2></div>
+    <p class="why">Deep green with a muted brass accent — an institutional, electoral-commission register. The most
+      distinctive of the four and the best fit if you want the product to feel official rather than start-up. The
+      trade-off is that it is a strong opinion, and green already carries "approved" meaning elsewhere in the UI,
+      so the chrome and the status colours would need care not to collide.</p>
+    <div class="swatches">
+      <span class="sw"><i style="background:#14261E"></i>#14261E sidebar</span>
+      <span class="sw"><i style="background:#B08D3F"></i>#B08D3F accent</span>
+      <span class="sw"><i style="background:#F7F7F5"></i>#F7F7F5 canvas</span>
+    </div>
+    <div class="dash">
+      <aside class="side">
+        <div class="brand"><span class="crest">VB</span><b>NUESA</b></div>
+        <div class="statusrow"><span class="d"></span>Active · 02:41:16</div>
+        <div class="glabel">Election</div>
+        <div class="nav on"><span class="ico"></span>Overview</div>
+        <div class="nav"><span class="ico"></span>Voters</div>
+        <div class="nav"><span class="ico"></span>Candidates</div>
+        <div class="glabel">Console</div>
+        <div class="nav"><span class="ico"></span>Audit log</div>
+      </aside>
+      <div class="main">
+        <div class="topbar"><div><h3>Overview</h3><div class="sub">Live picture of your election</div></div><span class="btn">End election</span></div>
+        <div class="content">
+          <div class="tiles">
+            <div class="tile"><div class="k">Registered</div><div class="n">1,204</div></div>
+            <div class="tile"><div class="k">Accredited</div><div class="n">968</div></div>
+            <div class="tile"><div class="k">Votes cast</div><div class="n">847</div></div>
+            <div class="tile"><div class="k">Turnout</div><div class="n">70%</div></div>
+          </div>
+          <div class="panel">
+            <div class="ph">Recent activity</div>
+            <div class="pr"><span>Receipt VB-51AB-E203 emailed to voter</span><span>14:02:11</span></div>
+            <div class="pr"><span>Ballot cast — President</span><span>14:02:09</span></div>
+            <div class="pr"><span>Roster locked by chair@eng.edu.ng</span><span>13:47:20</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="spec">
+    <tr><th>Concern</th><th>Detail</th></tr>
+    <tr><td>Scope of change</td><td>Sidebar background, active-nav treatment, accent, canvas tint and border greys. Roughly 20 token values — no layout or spacing changes anywhere.</td></tr>
+    <tr><td>Blue elsewhere</td><td>B, C and D all reduce or remove blue from the <em>chrome</em>. Blue stays as the primary action colour on buttons and links across the rest of the product, so the auth screens and voter-facing pages are unaffected.</td></tr>
+    <tr><td>Status colours</td><td>Green/amber/red keep their current meanings in every option. D is the one to watch, since its chrome green sits near the "approved" green.</td></tr>
+    <tr><td>Contrast</td><td>Every sidebar/label pairing above clears 4.5:1 for body text and 3:1 for the muted group labels. C has the highest text contrast of the four.</td></tr>
+    <tr><td>If you pick one</td><td>I'd apply it to Admin, Observer, SuperAdmin and the staff console together, since they share the shell — doing one alone would look like a bug.</td></tr>
+  </table>
+</div>
+</body>
+</html>

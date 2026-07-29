@@ -19,6 +19,11 @@ import {
 import { useApp } from "../../context/AppContext";
 import { fetchElectionHistory } from "../../api";
 import VBLoader from "../ui/VBLoader";
+import {
+  shapePosition,
+  buildResultsDocument,
+  printDocument,
+} from "../../pages/Results";
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function ElectionDetailModal({ election, branding, onClose }) {
@@ -64,174 +69,34 @@ function ElectionDetailModal({ election, branding, onClose }) {
   );
 
   const handleDownload = () => {
-    const org = branding?.institutionName || "Organization";
-    const date = new Date().toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    const positionBlocks = Object.entries(byPosition)
-      .map(([pos, candidates]) => {
-        const total = candidates[0]?.total || 0;
-        const rows = candidates
-          .map(
-            (c, i) => `
-        <tr style="background:${i === 0 ? "#eff6ff" : "white"}">
-          <td style="padding:10px 16px;font-weight:${i === 0 ? "700" : "400"}">
-            ${i === 0 ? "🏆 " : `${i + 1}. `}${c.name}
-          </td>
-          <td style="padding:10px 16px;text-align:center;font-weight:700;color:${
-            i === 0 ? "#1d4ed8" : "#374151"
-          }">${c.votes}</td>
-          <td style="padding:10px 16px;text-align:center;font-weight:700">${
-            c.pct
-          }%</td>
-          <td style="padding:10px 16px">
-            <div style="background:#e2e8f0;border-radius:4px;height:8px">
-              <div style="background:${
-                i === 0 ? "#2563eb" : "#94a3b8"
-              };height:8px;width:${c.pct}%;border-radius:4px"></div>
-            </div>
-          </td>
-        </tr>`
-          )
-          .join("");
-
-        return `
-        <div style="margin-bottom:32px">
-          <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:#64748b;
-            font-family:Arial;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:12px">
-            ${pos} <span style="color:#94a3b8;font-weight:400">· ${total} votes</span>
-          </h3>
-          <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0">
-            <thead>
-              <tr style="background:#f1f5f9">
-                <th style="padding:8px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;text-align:left;font-family:Arial;color:#64748b;border-bottom:2px solid #e2e8f0">Candidate</th>
-                <th style="padding:8px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;text-align:center;font-family:Arial;color:#64748b;border-bottom:2px solid #e2e8f0">Votes</th>
-                <th style="padding:8px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;text-align:center;font-family:Arial;color:#64748b;border-bottom:2px solid #e2e8f0">Share</th>
-                <th style="padding:8px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-family:Arial;color:#64748b;border-bottom:2px solid #e2e8f0">Distribution</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
+    const blocks = Object.keys(byPosition).map((p) =>
+      shapePosition(p, election.candidates || [])
+    );
+    printDocument(
+      buildResultsDocument({
+        title: election.name,
+        subtitle: `${branding?.institutionName || "Organization"} · Official Election Report`,
+        meta: `${formatDate(election.startedAt)} · ${formatTime(
+          election.startedAt
+        )}–${formatTime(election.endsAt)} · duration ${formatDuration(
+          election.startedAt,
+          election.endsAt
+        )}`,
+        blocks,
+        stats: isRosterless
+          ? [
+              { label: "Total votes", value: totalVotesCast },
+              { label: "Candidates", value: (election.candidates || []).length },
+              { label: "Positions", value: Object.keys(byPosition).length },
+            ]
+          : [
+              { label: "Registered", value: election.totalVoters },
+              { label: "Accredited", value: election.accredited ?? 0 },
+              { label: "Votes cast", value: election.votesCast },
+              { label: "Turnout", value: `${election.turnout}%` },
+            ],
       })
-      .join("");
-
-    const winnersRows = election.winners
-      .map(
-        (w) => `
-      <tr>
-        <td style="padding:10px 16px;font-weight:700;font-family:Arial">${w.winner}</td>
-        <td style="padding:10px 16px;font-family:Arial;color:#64748b">${w.position}</td>
-        <td style="padding:10px 16px;text-align:center;font-weight:700;color:#16a34a;font-family:Arial">${w.votes}</td>
-        <td style="padding:10px 16px;text-align:center;font-weight:700;color:#1d4ed8;font-family:Arial">${w.pct}%</td>
-      </tr>`
-      )
-      .join("");
-
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-      <title>${election.name} — Official Report</title>
-      <style>
-        @media print { body { margin: 0; } .no-print { display: none; } }
-        body { font-family: Georgia, serif; margin: 0; padding: 40px; background: #f8fafc; }
-        .page { max-width: 780px; margin: 0 auto; background: white; padding: 56px; border-radius: 8px; }
-        .header { border-bottom: 4px double #1e293b; padding-bottom: 24px; margin-bottom: 32px; }
-        h1 { font-size: 28px; font-weight: 900; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .05em; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
-        .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; }
-        .stat-val { font-size: 28px; font-weight: 900; font-family: monospace; margin-bottom: 4px; }
-        .stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; font-family: Arial; }
-        .section-title { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em;
-          color: #1e293b; font-family: Arial; margin: 32px 0 16px; border-left: 4px solid #2563eb; padding-left: 12px; }
-        table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; }
-        th { background: #f1f5f9; padding: 10px 16px; font-size: 11px; text-transform: uppercase;
-          letter-spacing: .1em; text-align: left; font-family: Arial; color: #64748b; border-bottom: 2px solid #e2e8f0; }
-        td { border-bottom: 1px solid #f1f5f9; }
-        .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e2e8f0;
-          font-size: 10px; color: #94a3b8; font-family: monospace;
-          display: flex; justify-content: space-between; }
-        .turnout-bar { background: #e2e8f0; border-radius: 4px; height: 10px; margin-top: 8px; }
-        .turnout-fill { background: linear-gradient(90deg, #2563eb, #4338ca); height: 10px; border-radius: 4px; width: ${
-          election.turnout
-        }%; }
-      </style>
-      </head><body><div class="page">
-  
-      <div class="header">
-        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#64748b;font-family:Arial;margin-bottom:8px">
-          ${org} · Official Election Report
-        </div>
-        <h1>${election.name}</h1>
-        <div style="font-size:12px;color:#64748b;font-family:Arial;margin-top:8px;display:flex;gap:24px;flex-wrap:wrap">
-          <span>📅 ${formatDate(election.startedAt)}</span>
-          <span>⏱ Duration: ${formatDuration(
-            election.startedAt,
-            election.endsAt
-          )}</span>
-          <span>🕐 Started: ${formatTime(election.startedAt)}</span>
-          <span>🕐 Ended: ${formatTime(election.endsAt)}</span>
-        </div>
-      </div>
-  
-      ${
-        isRosterless
-          ? `
-        <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
-          <div class="stat-box"><div class="stat-val" style="color:#16a34a">${totalVotesCast}</div><div class="stat-lbl">Total Votes</div></div>
-          <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
-            (election.candidates || []).length
-          }</div><div class="stat-lbl">Candidates</div></div>
-        </div>
-        `
-          : `
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-val" style="color:#1e293b">${
-            election.totalVoters
-          }</div><div class="stat-lbl">Registered</div></div>
-          <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
-            election.accredited ?? 0
-          }</div><div class="stat-lbl">Accredited</div></div>
-          <div class="stat-box"><div class="stat-val" style="color:#16a34a">${
-            election.votesCast
-          }</div><div class="stat-lbl">Votes Cast</div></div>
-          <div class="stat-box"><div class="stat-val" style="color:#dc2626">${
-            election.didNotVote ?? election.totalVoters - election.votesCast
-          }</div><div class="stat-lbl">Did Not Vote</div></div>
-          <div class="stat-box"><div class="stat-val" style="color:#2563eb">${
-            election.turnout
-          }%</div><div class="stat-lbl">Turnout</div></div>
-        </div>
-        <div class="turnout-bar"><div class="turnout-fill"></div></div>
-        `
-      }
-  
-      <div class="section-title">Results by Position</div>
-      ${positionBlocks}
-  
-      <div class="section-title">Winners Summary</div>
-      <table>
-        <thead><tr>
-          <th>Winner</th><th>Position</th>
-          <th style="text-align:center">Votes</th><th style="text-align:center">Share</th>
-        </tr></thead>
-        <tbody>${winnersRows}</tbody>
-      </table>
-  
-      <div class="footer">
-        <span>Virtual Ballot · Secure Election Platform</span>
-        <span>Generated: ${date}</span>
-      </div>
-    </div></body></html>`;
-
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    setTimeout(() => w.print(), 400);
+    );
   };
 
   return (
@@ -587,7 +452,8 @@ function ElectionDetailModal({ election, branding, onClose }) {
                 Winners Summary
               </p>
               <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px]">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50">
                       <th className="text-left px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
@@ -662,6 +528,7 @@ function ElectionDetailModal({ election, branding, onClose }) {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
