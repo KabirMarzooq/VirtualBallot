@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Virtual Ballot — Results Page (proposal)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE;
+  --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
+  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0;
+  --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569;
+  --gray-800:#1E293B; --gray-900:#0F172A;
+  --success:#16A34A; --warning:#D97706; --warning-light:#FFFBEB; --danger:#DC2626;
+  --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-800);padding:32px 16px 96px}
+
+/* ── Sheet chrome ── */
+.sheet{max-width:1180px;margin:0 auto}
+.sheet h1{font-size:26px;font-weight:600;color:var(--gray-900)}
+.sheet .sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.note{background:var(--warning-light);border:1px solid rgb(217 119 6/.3);border-radius:12px;padding:14px 16px;margin-top:18px;font-size:13px;line-height:20px;color:#92400E}
+.note b{font-weight:600}
+.rail{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px;padding:14px 16px;background:var(--white);border:1px solid var(--gray-200);border-radius:12px}
+.rail .lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-600);margin-right:2px}
+.tgl{font-family:var(--font-sans);font-size:12px;font-weight:600;min-height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--gray-300);background:var(--white);color:var(--gray-600);cursor:pointer;transition:all .12s ease}
+.tgl.on{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+.sep{width:1px;height:22px;background:var(--gray-200);margin:0 4px}
+
+/* ── Device frames ── */
+.stage{display:grid;grid-template-columns:390px 1fr;gap:24px;margin-top:24px;align-items:start}
+@media (max-width:980px){.stage{grid-template-columns:1fr}}
+.frame{background:var(--white);border:1px solid var(--gray-200);border-radius:14px;overflow:hidden;box-shadow:0 4px 6px -1px rgb(0 0 0/.06)}
+.frame-cap{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);padding:9px 14px;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}
+.scroll{max-height:720px;overflow-y:auto}
+
+/* ════════════════════════════════════════════════════════════════════
+   THE RESULTS PAGE ITSELF
+   Structure is deliberately document-like: hairline rules and whitespace
+   instead of nested cards, numbers carrying the hierarchy instead of
+   colour, and one accent used only to mark the leader.
+   ════════════════════════════════════════════════════════════════════ */
+.vb{background:var(--white);padding:22px 18px 32px}
+.vb.wide{padding:30px 34px 44px}
+
+/* Masthead */
+.eyebrow{font-size:10px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--gray-400)}
+.mast{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:5px}
+.mast h2{font-size:25px;line-height:1.15;font-weight:600;letter-spacing:-.02em;color:var(--gray-900)}
+.vb.wide .mast h2{font-size:31px}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-600);border:1px solid var(--gray-300);border-radius:999px;padding:4px 10px;white-space:nowrap;flex-shrink:0}
+.status .dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:blip 2s ease-in-out infinite}
+.status.final{border-color:var(--gray-800);color:var(--gray-900)}
+.status.final .dot{background:var(--gray-900);animation:none}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.35}}
+.meta{font-size:12px;color:var(--gray-400);margin-top:7px}
+
+/* Tallies — plain numbers on a rule, not boxes */
+.tally{display:flex;gap:26px;flex-wrap:wrap;border-top:1px solid var(--gray-200);margin-top:16px;padding-top:14px}
+.tally .t .n{font-family:var(--font-mono);font-size:23px;font-weight:600;color:var(--gray-900);font-variant-numeric:tabular-nums;line-height:1.1}
+.tally .t .k{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-top:3px}
+.turnout{margin-top:14px}
+.turnout .bar{height:3px;background:var(--gray-200);border-radius:2px;overflow:hidden}
+.turnout .bar i{display:block;height:100%;background:var(--gray-900)}
+.turnout .cap{display:flex;justify-content:space-between;font-size:11px;color:var(--gray-400);margin-top:6px}
+
+/* ── Section rule ── */
+.srule{display:flex;align-items:center;gap:11px;margin-top:28px;margin-bottom:2px}
+.srule span{font-size:10px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--gray-900);white-space:nowrap}
+.srule::after{content:"";flex:1;height:1px;background:var(--gray-200)}
+.srule .hint{font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--gray-400)}
+
+/* ── LEADERBOARD INDEX ──────────────────────────────────────────────
+   Constant height per position no matter how many candidates run, so
+   20 positions stay as scannable as 4. This is the "who is winning"
+   answer, above any detail.                                          */
+.idx{border-top:1px solid var(--gray-200);margin-top:10px}
+.idx a{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;
+  padding:11px 2px;border-bottom:1px solid var(--gray-100);text-decoration:none;cursor:pointer}
+.idx a:hover{background:var(--gray-50)}
+.idx a > span:first-child{min-width:0}
+.idx .pos{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400)}
+.idx .who{display:block;font-size:14px;font-weight:600;color:var(--gray-900);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idx .marg{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--gray-600);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.idx .marg.tied{color:var(--warning)}
+.idx .marg.thin{color:var(--blue-700)}
+.idx .arw{color:var(--gray-300);font-size:13px}
+.idx a:hover .arw{color:var(--gray-600)}
+
+/* ── POSITION DETAIL ── */
+.pos-block{border-top:1px solid var(--gray-200);padding-top:15px;margin-top:26px;scroll-margin-top:14px}
+.pos-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.pos-head h3{font-size:16px;font-weight:600;color:var(--gray-900);letter-spacing:-.01em}
+.pos-head .tot{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.row{display:grid;grid-template-columns:18px 1fr auto;gap:11px;align-items:baseline;padding:10px 0 9px;border-bottom:1px solid var(--gray-100)}
+.row .rk{font-family:var(--font-mono);font-size:12px;color:var(--gray-300);font-variant-numeric:tabular-nums}
+.row .nm{font-size:14px;font-weight:500;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .fig{text-align:right;white-space:nowrap}
+.row .fig .pc{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--gray-800);font-variant-numeric:tabular-nums}
+.row .fig .ct{font-size:11px;color:var(--gray-400);margin-left:7px;font-variant-numeric:tabular-nums}
+.row .track{grid-column:2/4;height:2px;background:var(--gray-100);border-radius:1px;overflow:hidden;margin-top:7px}
+.row .track i{display:block;height:100%;background:var(--gray-300)}
+
+/* The leader is the only thing that gets the accent. */
+.row.lead .rk{color:var(--blue-600)}
+.row.lead .nm{font-weight:600;color:var(--gray-900)}
+.row.lead .fig .pc{color:var(--blue-700);font-size:16px}
+.row.lead .track i{background:var(--blue-600)}
+.row.tie .rk,.row.tie .fig .pc{color:var(--warning)}
+.row.tie .track i{background:var(--warning)}
+
+.more{display:block;width:100%;text-align:left;background:none;border:0;
+  font-family:var(--font-sans);font-size:12px;font-weight:600;color:var(--blue-700);
+  padding:10px 0 0;cursor:pointer}
+.more:hover{text-decoration:underline}
+.tie-note{display:flex;gap:8px;background:var(--warning-light);border:1px solid rgb(217 119 6/.28);
+  border-radius:8px;padding:9px 11px;margin-top:11px;font-size:12px;line-height:17px;color:#92400E}
+
+.foot{border-top:1px solid var(--gray-200);margin-top:30px;padding-top:14px;
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--gray-400)}
+
+/* Wide layout: index becomes a sticky side column */
+.vb.wide .cols{display:grid;grid-template-columns:290px 1fr;gap:40px;align-items:start;margin-top:8px}
+.vb.wide .cols .left{position:sticky;top:14px}
+
+/* ── Spec list ── */
+.spec{width:100%;border-collapse:collapse;margin-top:16px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden;background:var(--white)}
+.spec th{background:var(--gray-100);text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-600);padding:8px 14px;border-bottom:1px solid var(--gray-200)}
+.spec td{padding:9px 14px;font-size:12px;line-height:18px;border-bottom:1px solid var(--gray-100);vertical-align:top}
+.spec tr:last-child td{border-bottom:none}
+.spec td:first-child{font-weight:600;color:var(--gray-900);width:210px}
+.no{color:var(--danger);font-weight:600}
+.yes{color:var(--success);font-weight:600}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Results page — redesign proposal</h1>
+  <p class="sub">Built to stay legible at 4 positions or 20, and at 2 candidates or 30.</p>
+
+  <div class="note">
+    <b>For approval — not implemented.</b> Use the controls to change the shape of the election and watch the
+    layout hold. The left frame is 390px (iPhone); the right is desktop.
+  </div>
+
+  <div class="rail">
+    <span class="lbl">Positions</span>
+    <button class="tgl" data-p="3">3</button>
+    <button class="tgl on" data-p="6">6</button>
+    <button class="tgl" data-p="14">14</button>
+    <span class="sep"></span>
+    <span class="lbl">Candidates each</span>
+    <button class="tgl" data-c="2">2</button>
+    <button class="tgl on" data-c="5">5</button>
+    <button class="tgl" data-c="12">12</button>
+    <span class="sep"></span>
+    <span class="lbl">State</span>
+    <button class="tgl on" data-s="live">Live</button>
+    <button class="tgl" data-s="final">Final</button>
+    <span class="sep"></span>
+    <button class="tgl" id="tieBtn">Force a tie</button>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="frame">
+        <div class="frame-cap">Mobile · 390px</div>
+        <div class="scroll"><div class="vb" id="mobile"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="frame">
+        <div class="frame-cap">Desktop</div>
+        <div class="scroll"><div class="vb wide" id="desk"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="font-size:19px;font-weight:600;color:var(--gray-900);margin-top:44px">What changed, and why</h2>
+  <table class="spec">
+    <tr><th>Decision</th><th>Reasoning</th></tr>
+    <tr>
+      <td>A leaderboard index</td>
+      <td>The current page gives every position an equal-weight card, so with 14 positions you scroll a wall of boxes to answer "who won?". The index is one constant-height row per position — leader plus <em>margin over second</em> — so the whole election reads in a single glance and the answer doesn't degrade as the ballot grows. On desktop it becomes a sticky side column; on mobile it sits above the detail and each row jumps to its section.</td>
+    </tr>
+    <tr>
+      <td>Margin, not just totals</td>
+      <td>"+112" is the number that tells you whether a race is decided. A close race (under 5%) is marked in blue, a tie in amber. No other product screen surfaces this.</td>
+    </tr>
+    <tr>
+      <td>Top two, then "show all"</td>
+      <td>With 12 candidates per position the tail is noise. Two rows show the contest; the rest are one tap away. Fixes the vertical explosion without hiding anything.</td>
+    </tr>
+    <tr>
+      <td>Hierarchy from type, not colour</td>
+      <td>The leader is larger and heavier; everyone else is one flat weight. Blue appears only on the leader's figure and bar. Removes the badge-on-every-row pattern.</td>
+    </tr>
+    <tr>
+      <td>Rules instead of nested cards</td>
+      <td>Position → winner-strip → candidate-card was three levels of box. Hairlines and whitespace do the same grouping with far less furniture, and it reads like a results sheet rather than a dashboard.</td>
+    </tr>
+    <tr>
+      <td>No horizontal scroll</td>
+      <td>Every row is a 3-column grid that reflows; nothing is a table. At 390px the layout is the same layout, not a squeezed one.</td>
+    </tr>
+  </table>
+
+  <h2 style="font-size:19px;font-weight:600;color:var(--gray-900);margin-top:36px">Avoiding the vibe-coded tells</h2>
+  <table class="spec">
+    <tr><th>Known tell</th><th>This design</th></tr>
+    <tr><td>Purple/indigo gradients</td><td><span class="yes">Absent.</span> One accent (<code>blue-600</code>), flat fills only — no gradient anywhere.</td></tr>
+    <tr><td>Aurora / glow backgrounds</td><td><span class="yes">Absent.</span> Flat white. <b>Note:</b> this conflicts with the <code>ribbon</code> background just approved for Results — see below.</td></tr>
+    <tr><td>Glass panels, heavy blur</td><td><span class="yes">Absent.</span> No translucency.</td></tr>
+    <tr><td>Nested cards</td><td><span class="yes">Absent.</span> Zero cards in the results body; grouping is by rule and space.</td></tr>
+    <tr><td>Coloured left-border stripe</td><td><span class="yes">Absent.</span></td></tr>
+    <tr><td>Badge on every row</td><td><span class="yes">Absent.</span> One status pill in the masthead; ties get a single explanatory note.</td></tr>
+    <tr><td>Over-padded centred cards</td><td><span class="yes">Absent.</span> Left-aligned, dense, document-like.</td></tr>
+    <tr><td>Rounded corners everywhere</td><td><span class="yes">Minimal.</span> Radii only on the status pill and tie note.</td></tr>
+    <tr><td>Weak hierarchy</td><td><span class="yes">Addressed.</span> Three deliberate levels: tallies → leaders → detail.</td></tr>
+    <tr><td>Inter + Lucide defaults</td><td><span class="no">Retained.</span> These are the project's existing tokens; changing them would break consistency with the other 28 screens. The clichés above are what actually read as AI-generated — the typeface alone does not.</td></tr>
+  </table>
+
+  <div class="note" style="margin-top:28px">
+    <b>One conflict worth your call.</b> You approved the <code>ribbon</code> background (corner washes, diagonal
+    seam, drifting motes) for Results in the last round. Soft ambient washes behind a results page are close to the
+    "aurora background" tell, and they compete with the thin rules this layout depends on. My recommendation is to
+    drop Results to a plain white field and keep <code>ribbon</code> on Landing and Legal. The frames above show it
+    plain. Say if you'd rather keep the wash.
+  </div>
+</div>
+
+<script>
+const FIRST=["Amaka","Musa","Chidi","Ngozi","Tunde","Zainab","Emeka","Fatima","Segun","Ifeoma","Bello","Adaeze","Kunle","Halima","Obinna","Yusuf","Chioma","Damilola"];
+const LAST=["Obi","Bello","Eze","Adeyemi","Okonkwo","Ibrahim","Nwosu","Sani","Balogun","Uche","Lawal","Okafor","Ade","Musa","Umar","Danladi"];
+const POSITIONS=["President","Vice President","General Secretary","Treasurer","Financial Secretary","Public Relations Officer","Welfare Director","Sports Director","Academic Secretary","Social Director","Assistant Secretary","Auditor","Legal Adviser","Director of Socials"];
+
+let cfg={positions:6,cands:5,state:"live",tie:false};
+const state={expanded:new Set()};
+
+// Deterministic pseudo-random so both frames render identical data.
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)%4294967296;return s/4294967296}}
+
+function build(){
+  const r=rng(7);
+  const out=[];
+  for(let p=0;p<cfg.positions;p++){
+    const cands=[];
+    for(let c=0;c<cfg.cands;c++){
+      cands.push({name:`${FIRST[(p*3+c)%FIRST.length]} ${LAST[(p*5+c)%LAST.length]}`,votes:Math.floor(r()*400)+18});
+    }
+    cands.sort((a,b)=>b.votes-a.votes);
+    if(cfg.tie&&p===2&&cands.length>1)cands[1].votes=cands[0].votes;
+    out.push({position:POSITIONS[p],candidates:cands});
+  }
+  return out;
+}
+
+const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+
+function render(host,wide){
+  const data=build();
+  const totalVotes=data.reduce((s,p)=>s+p.candidates.reduce((a,c)=>a+c.votes,0),0);
+  const registered=1204, cast=Math.min(registered,Math.round(totalVotes/Math.max(1,cfg.positions)));
+  const turnout=Math.round(cast/registered*100);
+  const live=cfg.state==="live";
+  const uid=wide?"d":"m";
+
+  const index=data.map((p,i)=>{
+    const[a,b]=p.candidates; const tied=b&&a.votes===b.votes;
+    const tot=p.candidates.reduce((s,c)=>s+c.votes,0);
+    const margin=b?a.votes-b.votes:a.votes;
+    const thin=!tied&&tot>0&&(margin/tot)<0.05;
+    const val=tied?`tied`:`+${margin}`;
+    return `<a href="#${uid}-p${i}" data-jump="${uid}-p${i}">
+      <span><span class="pos">${esc(p.position)}</span><span class="who">${tied?"Tied — "+p.candidates.filter(c=>c.votes===a.votes).length+" candidates":esc(a.name)}</span></span>
+      <span class="marg ${tied?"tied":thin?"thin":""}">${val}</span>
+      <span class="arw">›</span></a>`;
+  }).join("");
+
+  const blocks=data.map((p,i)=>{
+    const tot=p.candidates.reduce((s,c)=>s+c.votes,0);
+    const top=p.candidates[0].votes;
+    const tiedCount=p.candidates.filter(c=>c.votes===top).length;
+    const tied=tiedCount>1;
+    const key=`${uid}-${i}`;
+    const open=state.expanded.has(key);
+    const shown=open?p.candidates:p.candidates.slice(0,2);
+    const rows=shown.map((c,ci)=>{
+      const pc=tot?Math.round(c.votes/tot*100):0;
+      const isLead=c.votes===top&&!tied;
+      const isTie=c.votes===top&&tied;
+      return `<div class="row ${isLead?"lead":""} ${isTie?"tie":""}">
+        <span class="rk">${ci+1}</span>
+        <span class="nm">${esc(c.name)}</span>
+        <span class="fig"><span class="pc">${pc}%</span><span class="ct">${c.votes}</span></span>
+        <span class="track"><i style="width:${pc}%"></i></span>
+      </div>`;
+    }).join("");
+    const hidden=p.candidates.length-shown.length;
+    return `<section class="pos-block" id="${uid}-p${i}">
+      <div class="pos-head"><h3>${esc(p.position)}</h3><span class="tot">${tot} votes</span></div>
+      ${tied?`<div class="tie-note"><span>&#9878;</span><span><b>${tiedCount}-way tie</b> on ${top} votes. A commission decision is required before this seat is declared.</span></div>`:""}
+      ${rows}
+      ${hidden>0?`<button class="more" data-exp="${key}">Show all ${p.candidates.length} candidates</button>`
+        :(open&&p.candidates.length>2?`<button class="more" data-exp="${key}">Show fewer</button>`:"")}
+    </section>`;
+  }).join("");
+
+  const mast=`
+    <p class="eyebrow">Faculty of Engineering Students' Association</p>
+    <div class="mast">
+      <h2>Student Union Election 2026</h2>
+      <span class="status ${live?"":"final"}"><span class="dot"></span>${live?"Live":"Final"}</span>
+    </div>
+    <p class="meta">${live?"Updated 14:02:11 · refreshes automatically":"Declared 14 March 2026 · 18:40"}</p>
+    <div class="tally">
+      <div class="t"><div class="n">${registered.toLocaleString()}</div><div class="k">Registered</div></div>
+      <div class="t"><div class="n">${cast.toLocaleString()}</div><div class="k">Votes cast</div></div>
+      <div class="t"><div class="n">${turnout}%</div><div class="k">Turnout</div></div>
+      <div class="t"><div class="n">${cfg.positions}</div><div class="k">Positions</div></div>
+    </div>
+    <div class="turnout">
+      <div class="bar"><i style="width:${turnout}%"></i></div>
+      <div class="cap"><span>${cast.toLocaleString()} of ${registered.toLocaleString()} voters</span><span>${turnout}%</span></div>
+    </div>`;
+
+  const idxBlock=`<div class="srule"><span>Leading</span> <span class="hint">margin over second</span></div><nav class="idx">${index}</nav>`;
+  const detailBlock=`<div class="srule"><span>Full breakdown</span></div>${blocks}`;
+  const foot=`<div class="foot"><span>Virtual Ballot · every ballot is hash-chained and publicly verifiable</span><span>Download PDF</span></div>`;
+
+  host.innerHTML = wide
+    ? mast+`<div class="cols"><div class="left">${idxBlock}</div><div>${detailBlock}${foot}</div></div>`
+    : mast+idxBlock+detailBlock+foot;
+}
+
+function renderAll(){render(document.getElementById("mobile"),false);render(document.getElementById("desk"),true);}
+
+document.querySelector(".rail").addEventListener("click",e=>{
+  const b=e.target.closest(".tgl"); if(!b)return;
+  if(b.id==="tieBtn"){cfg.tie=!cfg.tie;b.classList.toggle("on",cfg.tie);}
+  else{
+    const grp=b.dataset.p?"p":b.dataset.c?"c":"s";
+    document.querySelectorAll(`.tgl[data-${grp}]`).forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    if(grp==="p")cfg.positions=+b.dataset.p;
+    if(grp==="c")cfg.cands=+b.dataset.c;
+    if(grp==="s")cfg.state=b.dataset.s;
+  }
+  state.expanded.clear();
+  renderAll();
+});
+
+document.addEventListener("click",e=>{
+  const m=e.target.closest("[data-exp]");
+  if(m){state.expanded.has(m.dataset.exp)?state.expanded.delete(m.dataset.exp):state.expanded.add(m.dataset.exp);renderAll();return;}
+  const j=e.target.closest("[data-jump]");
+  if(j){e.preventDefault();const t=document.getElementById(j.dataset.jump);
+    if(t)t.scrollIntoView({behavior:"smooth",block:"start"});}
+});
+
+renderAll();
+</script>
+</body>
+</html>

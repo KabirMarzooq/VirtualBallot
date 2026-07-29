@@ -47,19 +47,22 @@
 }
 
 /* ── Dot grid ─────────────────────────────────────────────────────────────
-   Present on every variant — the motif established on the registration
-   screen, now carried across the product.                                */
+   Present on every variant — the motif from the original auth mockups.
+   Those were tuned for a dark field (blue-500 @ .14 on gray-900); on the
+   light field a pale dot at that strength disappears, so the light variants
+   use a deeper green at a higher opacity to keep the same visual presence.
+   Same 1px dot, same 28px pitch.                                          */
 .vb-dots::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, var(--blue-200) 1px, transparent 1px);
+  background-image: radial-gradient(circle, var(--oxford-300) 1px, transparent 1px);
   background-size: 28px 28px;
-  opacity: 0.35;
+  opacity: 0.5;
 }
 .vb-page--auth-dark .vb-dots::before {
-  background-image: radial-gradient(circle, var(--blue-500) 1px, transparent 1px);
-  opacity: 0.14;
+  background-image: radial-gradient(circle, var(--oxford-300) 1px, transparent 1px);
+  opacity: 0.16;
 }
 
 /* ── Centre glow (auth variants) ─────────────────────────────────────── */
@@ -74,7 +77,7 @@
   transform: translate(-50%, -50%);
 }
 .vb-page--auth-dark .vb-glow {
-  background: radial-gradient(circle, rgb(37 99 235 / 0.16) 0%, transparent 70%);
+  background: radial-gradient(circle, rgb(55 99 78 / 0.28) 0%, transparent 70%);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -166,7 +169,7 @@
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(37 99 235 / 0.10) 0%, transparent 68%);
+  background: radial-gradient(circle, rgb(31 70 54 / 0.12) 0%, transparent 68%);
   left: var(--mx, 50%);
   top:  var(--my, 42%);
   transform: translate(-50%, -50%);
@@ -204,7 +207,7 @@
 .vb-seam {
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 38%, rgb(191 219 254 / 0.30) 50%, transparent 62%);
+  background: linear-gradient(115deg, transparent 38%, rgb(194 214 201 / 0.45) 50%, transparent 62%);
 }
 
 /* Drifting motes */

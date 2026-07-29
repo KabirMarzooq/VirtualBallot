@@ -59,6 +59,9 @@ export default function VotersTab() {
   const voterUrl = `${window.location.origin}/vote/${orgSlug}`;
   const observerUrl = `${window.location.origin}/observer/login?slug=${orgSlug}`;
 
+  // Display-only shortening — the clipboard always gets the full URL above.
+  const displayUrl = (u) => u.replace(/^https?:\/\//, "");
+
   const handleCopy = () => {
     navigator.clipboard.writeText(voterUrl).then(() => {
       setCopied(true);
@@ -419,6 +422,10 @@ Your code: ${a.reviewCode}`;
             </p>
           ) : (
             <>
+              {/* Scrolls horizontally on narrow screens rather than crushing
+                  five columns into ~340px. */}
+              <div className="overflow-x-auto">
+              <div className="min-w-[680px]">
               <div className="grid grid-cols-12 gap-2 px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-y border-slate-100">
                 <span className="col-span-3">Reviewer</span>
                 <span className="col-span-2">Code</span>
@@ -493,6 +500,8 @@ Your code: ${a.reviewCode}`;
                   </div>
                 ))}
               </div>
+              </div>
+              </div>
 
               {/* Panel actions */}
               <div className="flex flex-wrap gap-3 px-5 py-4 border-t border-slate-100">
@@ -531,6 +540,8 @@ Your code: ${a.reviewCode}`;
                 <Flag className="w-3.5 h-3.5" /> Flagged entries ·{" "}
                 {unresolvedFlags.length} to resolve
               </div>
+              <div className="overflow-x-auto">
+              <div className="min-w-[560px]">
               <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] border-b border-slate-100">
                 <span className="col-span-3">Matric</span>
                 <span className="col-span-3">Raised by</span>
@@ -563,6 +574,8 @@ Your code: ${a.reviewCode}`;
                   </div>
                 </div>
               ))}
+              </div>
+              </div>
             </div>
           )}
 
@@ -593,21 +606,26 @@ Your code: ${a.reviewCode}`;
         </div>
       )}
 
-      {/* ── Share links ─────────────────────────────────────────────────────── */}
+      {/* ── Share links ─────────────────────────────────────────────────────────
+          The displayed URL drops the protocol and truncates so the copy button
+          always stays on screen; the clipboard still receives the full URL. */}
       <div className="grid sm:grid-cols-2 gap-3">
         <div className="flex items-center gap-3 bg-white border border-blue-200 rounded-xl px-4 py-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-[0.1em] mb-0.5">
               Voter URL
             </p>
-            <p className="font-mono text-[11px] text-slate-800 truncate">
-              {voterUrl}
+            <p
+              title={voterUrl}
+              className="font-mono text-[11px] text-slate-800 truncate"
+            >
+              {displayUrl(voterUrl)}
             </p>
           </div>
           <button
             onClick={handleCopy}
-            title="Copy the voter URL"
-            className={`text-xs font-semibold min-h-[36px] px-3 rounded-lg transition-all cursor-pointer shrink-0 ${
+            title={`Copy the full voter URL — ${voterUrl}`}
+            className={`text-xs font-semibold min-h-[36px] px-3 rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap min-w-[84px] ${
               copied
                 ? "bg-green-50 text-green-600 border border-green-200"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -621,14 +639,17 @@ Your code: ${a.reviewCode}`;
             <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.1em] mb-0.5">
               Observer URL
             </p>
-            <p className="font-mono text-[11px] text-slate-800 truncate">
-              {observerUrl}
+            <p
+              title={observerUrl}
+              className="font-mono text-[11px] text-slate-800 truncate"
+            >
+              {displayUrl(observerUrl)}
             </p>
           </div>
           <button
             onClick={handleCopyObs}
-            title="Copy the observer URL"
-            className={`text-xs font-semibold min-h-[36px] px-3 rounded-lg transition-all cursor-pointer shrink-0 ${
+            title={`Copy the full observer URL — ${observerUrl}`}
+            className={`text-xs font-semibold min-h-[36px] px-3 rounded-lg transition-all cursor-pointer shrink-0 whitespace-nowrap min-w-[84px] ${
               copiedObs
                 ? "bg-green-50 text-green-600 border border-green-200"
                 : "bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:text-slate-800"
@@ -854,6 +875,8 @@ Your code: ${a.reviewCode}`;
             </div>
           </div>
 
+          <div className="overflow-x-auto">
+          <div className="min-w-[620px]">
           <div className="grid grid-cols-12 gap-2 px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
             <span className="col-span-3">Matric</span>
             <span className="col-span-4">Name</span>
@@ -905,6 +928,8 @@ Your code: ${a.reviewCode}`;
                 </div>
               ))
             )}
+          </div>
+          </div>
           </div>
           <p className="px-5 py-2 border-t border-slate-100 text-[11px] text-slate-400">
             Showing {filtered.length} of {voters.length}

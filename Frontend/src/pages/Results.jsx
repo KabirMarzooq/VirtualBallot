@@ -1,100 +1,140 @@
 import { useEffect, useState } from "react";
 import { fetchPublicResults } from "../api";
-import { BarChart3, FileDown, Trophy } from "lucide-react";
+import { BarChart3, FileDown, Scale } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { getPositions, getTurnout } from "../utils";
 import VBLoader from "../components/ui/VBLoader";
 import VotePulse from "../components/results/VotePulse";
 import { useSlug } from "../context/SlugContext";
-import PageBackground from "../components/layout/PageBackground";
 
-function downloadCategoryPDF(position, displayCandidates, branding, turnout) {
-  const pcs = displayCandidates
+/* ────────────────────────────────────────────────────────────────────────
+   Shared shaping — the page, the PDF and the History report all read the
+   same structure, so a position always means the same thing everywhere.
+   ──────────────────────────────────────────────────────────────────────── */
+export function shapePosition(position, allCandidates) {
+  const pcs = allCandidates
     .filter((c) => c.position === position)
     .sort((a, b) => b.votes - a.votes);
-  const tot = pcs.reduce((s, c) => s + c.votes, 0);
+  const total = pcs.reduce((s, c) => s + c.votes, 0);
   const topVotes = pcs[0]?.votes ?? 0;
   const tiedGroup = topVotes > 0 ? pcs.filter((c) => c.votes === topVotes) : [];
   const tied = tiedGroup.length > 1;
-  const winner = tot > 0 && !tied ? pcs[0] : null;
-  const date = new Date().toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const margin = pcs.length > 1 ? topVotes - pcs[1].votes : topVotes;
+  return {
+    position,
+    candidates: pcs,
+    total,
+    topVotes,
+    tiedGroup,
+    tied,
+    margin,
+    // A race inside 5% of the total is worth flagging as still open.
+    close: !tied && total > 0 && margin / total < 0.05,
+    leader: tied ? null : pcs[0] ?? null,
+  };
+}
 
-  const rows = pcs
-    .map((c, i) => {
-      const pct = tot === 0 ? 0 : Math.round((c.votes / tot) * 100);
-      return `<tr style="background:${
-        i === 0 && tot > 0 ? "#eff6ff" : "white"
-      }">
-      <td style="padding:12px 16px;font-weight:${i === 0 ? "700" : "400"}">${
-        i === 0 && tot > 0 ? "🏆 " : ""
-      }${c.name}</td>
-      <td style="padding:12px 16px;text-align:center;font-weight:700;color:${
-        i === 0 && tot > 0 ? "#1d4ed8" : "#374151"
-      }">${c.votes}</td>
-      <td style="padding:12px 16px;text-align:center;font-weight:700">${pct}%</td>
-      <td style="padding:12px 16px"><div style="background:#e2e8f0;border-radius:4px;height:10px"><div style="background:${
-        i === 0 && tot > 0 ? "#2563eb" : "#64748b"
-      };height:10px;width:${pct}%;border-radius:4px"></div></div></td>
-    </tr>`;
+const pctOf = (votes, total) => (total === 0 ? 0 : Math.round((votes / total) * 100));
+
+/* ── Printable results document ─────────────────────────────────────────
+   Mirrors the on-screen hierarchy: summary, then leaders, then the full
+   breakdown. Flat rules and a single ink colour — no gradients or fills
+   that cost toner and add nothing.                                       */
+export function buildResultsDocument({ title, subtitle, meta, blocks, stats }) {
+  const leaders = blocks
+    .map((b) => {
+      const val = b.tied
+        ? `Tied &mdash; ${b.tiedGroup.length} candidates`
+        : b.leader?.name ?? "&mdash;";
+      const m = b.tied ? "tied" : `+${b.margin}`;
+      return `<tr>
+        <td class="pos">${b.position}</td>
+        <td class="who">${val}</td>
+        <td class="num">${m}</td>
+      </tr>`;
     })
     .join("");
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${position} Results</title>
-  <style>body{font-family:Georgia,serif;margin:0;padding:40px;background:#f8fafc}
-  .page{max-width:740px;margin:0 auto;background:white;padding:48px;border-radius:8px}
-  .header{border-bottom:4px double #1e293b;padding-bottom:20px;margin-bottom:28px}
-  h1{font-size:26px;font-weight:900;margin:0 0 4px;text-transform:uppercase;letter-spacing:.05em}
-  h2{font-size:20px;font-weight:700;color:#1d4ed8;margin:0 0 16px}
-  .meta{font-size:11px;color:#94a3b8;font-family:monospace;display:flex;gap:20px;margin-top:8px}
-  .winner-box{background:linear-gradient(135deg,#1d4ed8,#4338ca);color:white;border-radius:12px;padding:28px;margin-bottom:32px;display:flex;align-items:center;gap:20px}
-  .winner-img{width:72px;height:72px;border-radius:12px;border:3px solid rgba(255,255,255,.3);object-fit:cover}
-  table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0}
-  th{background:#f1f5f9;padding:10px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;text-align:left;font-family:Arial;color:#64748b;border-bottom:2px solid #e2e8f0}
-  td{border-bottom:1px solid #f1f5f9;font-family:Arial;color:#374151}
-  .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;font-family:monospace;display:flex;justify-content:space-between}</style>
-  </head><body><div class="page">
-  <div class="header">
-    <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#64748b;font-family:Arial">${
-      branding.institutionName || "Electoral Commission"
-    } · Official Results</div>
-    <h1>${branding.electionName || "Election Results"}</h1>
-    <h2>${position}</h2>
-    <div class="meta"><span>Generated: ${date}</span><span>Total votes: ${tot}</span><span>Turnout: ${turnout}%</span></div>
-  </div>
-  ${
-    winner
-      ? `<div class="winner-box"><span style="font-size:28px">🏆</span>
-    <img class="winner-img" src="${winner.image}" alt="${winner.name}" />
-    <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:rgba(255,255,255,.6);font-family:Arial;margin-bottom:4px">Elected ${position}</div>
-    <div style="font-size:24px;font-weight:900;margin-bottom:4px">${
-      winner.name
-    }</div>
-    <div style="font-size:14px;color:rgba(255,255,255,.7);font-family:Arial">${Math.round(
-      (winner.votes / tot) * 100
-    )}% of votes · ${winner.votes} vote${
-          winner.votes !== 1 ? "s" : ""
-        }</div></div></div>`
-      : tied
-      ? `<div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:20px;margin-bottom:24px">
-    <div style="font-size:13px;font-weight:900;color:#92400e;margin-bottom:8px">⚖️ TIE — Commission Decision Required</div>
-    <div style="font-size:12px;color:#78350f;font-family:Arial">The following candidates are tied with ${
-      pcs[0].votes
-    } votes each: ${tiedGroup.map((c) => c.name).join(", ")}</div>
-    </div>`
-      : ""
-  }
-  <table><thead><tr><th>Candidate</th><th style="text-align:center">Votes</th><th style="text-align:center">Share</th><th>Distribution</th></tr></thead>
-  <tbody>${rows}</tbody></table>
-  <div class="footer"><span>Virtual Ballot · Secure Election Platform</span><span>Official election record</span></div>
-  </div></body></html>`;
+  const breakdown = blocks
+    .map((b) => {
+      const rows = b.candidates
+        .map((c, i) => {
+          const pct = pctOf(c.votes, b.total);
+          const lead = c.votes === b.topVotes && b.total > 0;
+          return `<tr class="${lead ? "lead" : ""}">
+            <td class="rk">${i + 1}</td>
+            <td class="nm">${c.name}</td>
+            <td class="num">${c.votes}</td>
+            <td class="num">${pct}%</td>
+            <td class="bar"><span style="width:${pct}%"></span></td>
+          </tr>`;
+        })
+        .join("");
+      return `<section>
+        <h3>${b.position}<em>${b.total} vote${b.total !== 1 ? "s" : ""}</em></h3>
+        ${b.tied ? `<p class="tie">Tie &mdash; ${b.tiedGroup.map((c) => c.name).join(", ")} each have ${b.topVotes} votes. A commission decision is required.</p>` : ""}
+        <table class="rows">${rows}</table>
+      </section>`;
+    })
+    .join("");
 
+  const statCells = stats
+    .map((s) => `<div><b>${s.value}</b><span>${s.label}</span></div>`)
+    .join("");
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+<style>
+  @media print{body{margin:0;padding:24px}}
+  body{font-family:Georgia,'Times New Roman',serif;margin:0;padding:40px;background:#F7F8F6;color:#2A312B}
+  .page{max-width:760px;margin:0 auto;background:#fff;padding:48px 52px 40px}
+  .eyebrow{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#565E57}
+  h1{font-size:27px;font-weight:700;margin:6px 0 2px;letter-spacing:-.01em;color:#161B17}
+  .sub{font-family:Arial,sans-serif;font-size:12px;color:#565E57}
+  .meta{font-family:Arial,sans-serif;font-size:11px;color:#8A928A;margin-top:6px}
+  .stats{display:flex;gap:32px;border-top:1px solid #DFE2DC;margin-top:20px;padding-top:16px}
+  .stats div b{display:block;font-family:'Courier New',monospace;font-size:21px;color:#161B17}
+  .stats div span{display:block;font-family:Arial,sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8A928A;margin-top:3px}
+  h2{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#161B17;
+     border-bottom:1px solid #DFE2DC;padding-bottom:6px;margin:34px 0 0}
+  table{width:100%;border-collapse:collapse}
+  .lead-table td{padding:9px 0;border-bottom:1px solid #EDEFEB;font-family:Arial,sans-serif;font-size:12px}
+  .lead-table .pos{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8A928A;width:34%}
+  .lead-table .who{font-weight:700;color:#161B17}
+  .num{text-align:right;font-family:'Courier New',monospace;font-size:12px;color:#565E57;white-space:nowrap}
+  section{margin-top:26px;break-inside:avoid}
+  section h3{font-size:15px;font-weight:700;color:#161B17;margin:0 0 2px;
+     display:flex;justify-content:space-between;align-items:baseline}
+  section h3 em{font-family:'Courier New',monospace;font-size:10px;font-style:normal;color:#8A928A}
+  .tie{font-family:Arial,sans-serif;font-size:11px;color:#7A5F25;background:#FAF6EB;
+     border:1px solid #E6D5A8;padding:7px 10px;margin:8px 0 4px}
+  .rows td{padding:7px 0;border-bottom:1px solid #EDEFEB;font-family:Arial,sans-serif;font-size:12px;vertical-align:middle}
+  .rows .rk{width:20px;font-family:'Courier New',monospace;color:#C4C9C0}
+  .rows .nm{color:#3D453E}
+  .rows tr.lead .nm{font-weight:700;color:#161B17}
+  .rows tr.lead .num{color:#1F4636;font-weight:700}
+  .rows .bar{width:120px;padding-left:14px}
+  .rows .bar span{display:block;height:3px;background:#C4C9C0}
+  .rows tr.lead .bar span{background:#1F4636}
+  .foot{border-top:1px solid #DFE2DC;margin-top:34px;padding-top:12px;
+     font-family:Arial,sans-serif;font-size:9.5px;color:#8A928A;display:flex;justify-content:space-between}
+</style></head><body><div class="page">
+  <p class="eyebrow">${subtitle}</p>
+  <h1>${title}</h1>
+  <p class="meta">${meta}</p>
+  <div class="stats">${statCells}</div>
+  <h2>Leading</h2>
+  <table class="lead-table">${leaders}</table>
+  <h2>Full breakdown</h2>
+  ${breakdown}
+  <div class="foot">
+    <span>Virtual Ballot &middot; every ballot is hash-chained and publicly verifiable</span>
+    <span>Generated ${new Date().toLocaleString("en-GB")}</span>
+  </div>
+</div></body></html>`;
+}
+
+export function printDocument(html) {
   const w = window.open("", "_blank");
   if (!w) return;
   w.document.write(html);
@@ -117,6 +157,7 @@ export default function ResultsPage() {
   const [loadingResults, setLoadingResults] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isStale, setIsStale] = useState(false);
+  const [expanded, setExpanded] = useState(() => new Set());
   const slug = useSlug();
 
   useEffect(() => {
@@ -143,7 +184,7 @@ export default function ResultsPage() {
     };
 
     load();
-    // Poll every 30s — keeps live results fresh and recovers automatically after an outage
+    // Poll every 30s — keeps live results fresh and recovers after an outage
     const interval = setInterval(load, 30_000);
     return () => clearInterval(interval);
   }, [slug]);
@@ -168,8 +209,11 @@ export default function ResultsPage() {
     resultsData?.published ??
     (electionConfig.isPublished || electionConfig.status === "ENDED");
   const positions = getPositions(displayCandidates);
-  const { total, accredited, voted } = displayStats;
+  const { total, voted } = displayStats;
   const pct = total > 0 ? Math.round((voted / total) * 100) : 0;
+  const isLive = electionConfig.status === "ACTIVE" && isPublished;
+
+  const blocks = positions.map((p) => shapePosition(p, displayCandidates));
 
   const handleHome = () => {
     setCurrentUser(null);
@@ -177,67 +221,136 @@ export default function ResultsPage() {
     navigate(`/vote/${slug}`);
   };
 
-  const isLive = electionConfig.status === "ACTIVE" && isPublished;
+  const toggle = (position) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(position) ? next.delete(position) : next.add(position);
+      return next;
+    });
+
+  const downloadAll = () =>
+    printDocument(
+      buildResultsDocument({
+        title: branding.electionName || "Election Results",
+        subtitle: `${branding.institutionName || "Electoral Commission"} · Official Results`,
+        meta: isLive
+          ? `Provisional count · generated ${new Date().toLocaleString("en-GB")}`
+          : "Final declared result",
+        blocks,
+        stats: [
+          { label: "Registered", value: total },
+          { label: "Votes cast", value: voted },
+          { label: "Turnout", value: `${pct}%` },
+          { label: "Positions", value: positions.length },
+        ],
+      })
+    );
 
   return (
-    <PageBackground variant="ribbon" contentClassName="min-h-screen text-slate-800">
-      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+    <div className="min-h-screen bg-white text-slate-800">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Stale-connection banner */}
         {isStale && lastUpdated && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 mb-4">
-            <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse shrink-0" />
-            <p className="text-xs leading-4 font-medium text-amber-800">
+          <div className="flex items-center gap-2 border border-amber-200 bg-amber-50 rounded-lg px-4 py-2.5 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+            <p className="text-xs leading-4 text-amber-800">
               Connection lost — showing results from{" "}
               {lastUpdated.toLocaleTimeString("en-GB", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
-              . This page refreshes automatically when back online.
+              . This page reconnects automatically.
             </p>
           </div>
         )}
 
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-6">
-          <div>
-            {branding.institutionName && (
-              <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-[0.1em]">
-                {branding.institutionName}
-              </p>
-            )}
-            <h1 className="text-2xl leading-8 font-semibold text-slate-900 flex items-center gap-3 flex-wrap mt-1">
-              {branding.electionName
-                ? `${branding.electionName} — Results`
-                : "Final Results"}
-              {isLive && (
-                <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[10px] font-semibold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  Live
-                </span>
-              )}
-            </h1>
-            <p className="text-[13px] leading-5 text-slate-600 mt-1">
-              Official vote counts and statistics
-            </p>
-          </div>
-          <button
-            onClick={handleHome}
-            title="Return to voter home"
-            className="min-h-[44px] px-4 text-[13px] font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:border-slate-400 hover:text-slate-800 shrink-0 transition-all cursor-pointer"
+        {/* ── Masthead ── */}
+        {branding.institutionName && (
+          <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-slate-400">
+            {branding.institutionName}
+          </p>
+        )}
+        <div className="flex items-start justify-between gap-4 mt-1.5">
+          <h1 className="text-[26px] sm:text-[32px] leading-[1.15] font-semibold tracking-[-0.02em] text-slate-900">
+            {branding.electionName || "Election Results"}
+          </h1>
+          <span
+            className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] border rounded-full px-2.5 py-1 shrink-0 ${
+              isLive
+                ? "border-slate-300 text-slate-600"
+                : "border-slate-800 text-slate-900"
+            }`}
           >
-            ← Home
-          </button>
-        </header>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isLive ? "bg-green-600 animate-pulse" : "bg-slate-900"
+              }`}
+            />
+            {isLive ? "Live" : "Final"}
+          </span>
+        </div>
+        <p className="text-xs text-slate-400 mt-1.5">
+          {isLive
+            ? `Updated ${lastUpdated ? lastUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"} · refreshes automatically`
+            : "Official declared result"}
+        </p>
 
         {loadingResults ? (
           <div className="flex justify-center py-32">
             <VBLoader size="lg" label="Loading results..." />
           </div>
-        ) : isPublished ? (
+        ) : !isPublished ? (
+          <div className="border-t border-slate-200 mt-6 py-20 text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+            <h2 className="text-[17px] font-semibold text-slate-900">
+              Counting in progress
+            </h2>
+            <p className="text-[13px] leading-5 text-slate-600 mt-1">
+              Results appear here once the commission broadcasts them.
+            </p>
+            <p className="text-[11px] text-slate-400 mt-3">
+              This page checks for updates every 30 seconds.
+            </p>
+          </div>
+        ) : (
           <>
-            {/* Live pulse */}
+            {/* ── Tallies ── */}
+            <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-slate-200 mt-5 pt-4">
+              {[
+                { label: "Registered", value: total.toLocaleString() },
+                { label: "Votes cast", value: voted.toLocaleString() },
+                { label: "Turnout", value: `${pct}%` },
+                { label: "Positions", value: positions.length },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="font-mono text-[22px] leading-none font-semibold text-slate-900 tabular-nums">
+                    {s.value}
+                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400 mt-1.5">
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <div className="h-[3px] bg-slate-200 rounded-sm overflow-hidden">
+                <div
+                  className="h-full bg-slate-900 transition-all duration-1000"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[11px] text-slate-400 mt-1.5">
+                <span>
+                  {voted.toLocaleString()} of {total.toLocaleString()} voters
+                </span>
+                <span>{pct}%</span>
+              </div>
+            </div>
+
             {isLive && (
-              <div className="mb-6">
+              <div className="mt-7">
                 <VotePulse
                   electionId={electionId}
                   initialCandidates={displayCandidates}
@@ -245,279 +358,200 @@ export default function ResultsPage() {
               </div>
             )}
 
-            {/* Stat tiles */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              {[
-                { label: "Registered", value: total, hero: false },
-                { label: "Accredited", value: accredited ?? 0, hero: false },
-                { label: "Votes cast", value: voted, hero: true },
-                { label: "Turnout", value: `${pct}%`, hero: false },
-              ].map(({ label, value, hero }) => (
-                <div
-                  key={label}
-                  className={`rounded-xl border p-4 ${
-                    hero
-                      ? "bg-blue-600 border-blue-600"
-                      : "bg-white border-slate-200"
-                  }`}
-                >
-                  <p
-                    className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
-                      hero ? "text-blue-100" : "text-slate-600"
-                    }`}
-                  >
-                    {label}
-                  </p>
-                  <p
-                    className={`text-[28px] leading-9 font-semibold tabular-nums mt-1 ${
-                      hero ? "text-white" : "text-slate-900"
-                    }`}
-                  >
-                    {value}
-                  </p>
+            <div className="lg:grid lg:grid-cols-[264px_1fr] lg:gap-12 lg:items-start">
+              {/* ── Leading index ──
+                  One constant-height row per position, so the whole election
+                  stays scannable however many seats are contested. */}
+              <div className="lg:sticky lg:top-6">
+                <div className="flex items-center gap-3 mt-8 mb-0.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.11em] text-slate-900">
+                    Leading
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    margin over second
+                  </span>
+                  <span className="flex-1 h-px bg-slate-200" />
                 </div>
-              ))}
-            </div>
-
-            {/* Participation bar */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-              <div className="flex justify-between items-baseline mb-2">
-                <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em]">
-                  Participation
-                </p>
-                <p className="text-xs font-mono font-semibold text-slate-800 tabular-nums">
-                  {voted} of {total} voters
-                </p>
-              </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-600 rounded-full transition-all duration-1000"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Per-position results */}
-            <div className="space-y-6">
-              {positions.map((position) => {
-                const pcs = displayCandidates
-                  .filter((c) => c.position === position)
-                  .sort((a, b) => b.votes - a.votes);
-                const tot = pcs.reduce((s, c) => s + c.votes, 0);
-                const topVotes = pcs[0]?.votes ?? 0;
-                const tiedGroup =
-                  topVotes > 0 ? pcs.filter((c) => c.votes === topVotes) : [];
-                const tied = tiedGroup.length > 1;
-                const winner = tot > 0 && !tied ? pcs[0] : null;
-                const winnerPct = winner
-                  ? Math.round((winner.votes / tot) * 100)
-                  : 0;
-
-                return (
-                  <div
-                    key={position}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6"
-                  >
-                    {/* Position header */}
-                    <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em]">
-                          Position
-                        </p>
-                        <h3 className="text-lg leading-6 font-semibold text-slate-900 mt-0.5">
-                          {position}
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full">
-                          {tot} vote{tot !== 1 ? "s" : ""}
+                <nav className="border-t border-slate-200 mt-2.5">
+                  {blocks.map((b) => (
+                    <a
+                      key={b.position}
+                      href={`#pos-${encodeURIComponent(b.position)}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document
+                          .getElementById(`pos-${b.position}`)
+                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className="grid grid-cols-[1fr_auto_auto] gap-3 items-center py-2.5 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                          {b.position}
                         </span>
-                        <button
-                          onClick={() =>
-                            downloadCategoryPDF(
-                              position,
-                              displayCandidates,
-                              branding,
-                              pct
-                            )
-                          }
-                          title={`Download PDF results for ${position}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold min-h-[36px] px-3 rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800 transition-all cursor-pointer"
-                        >
-                          <FileDown className="w-3.5 h-3.5" /> PDF
-                        </button>
-                      </div>
-                    </div>
+                        <span className="block text-sm font-semibold text-slate-900 truncate mt-0.5">
+                          {b.tied
+                            ? `Tied — ${b.tiedGroup.length} candidates`
+                            : b.leader?.name ?? "No votes yet"}
+                        </span>
+                      </span>
+                      <span
+                        className={`font-mono text-xs font-semibold tabular-nums whitespace-nowrap ${
+                          b.tied
+                            ? "text-amber-600"
+                            : b.close
+                            ? "text-blue-700"
+                            : "text-slate-600"
+                        }`}
+                      >
+                        {b.tied ? "tied" : `+${b.margin}`}
+                      </span>
+                      <span className="text-slate-300 text-[13px]">›</span>
+                    </a>
+                  ))}
+                </nav>
+              </div>
 
-                    {/* Winner strip */}
-                    {winner && (
-                      <div className="flex items-center gap-4 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                        <div className="relative shrink-0">
-                          <img
-                            src={winner.image}
-                            alt={winner.name}
-                            className="w-14 h-14 rounded-xl object-cover bg-slate-200 block"
-                          />
-                          <span className="absolute -right-1.5 -bottom-1.5 w-[22px] h-[22px] bg-blue-600 border-2 border-blue-50 rounded-full flex items-center justify-center text-white">
-                            <Trophy className="w-3 h-3" strokeWidth={2.4} />
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-[0.1em]">
-                            Elected {position}
+              {/* ── Full breakdown ── */}
+              <div>
+                <div className="flex items-center gap-3 mt-8 mb-0.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.11em] text-slate-900">
+                    Full breakdown
+                  </span>
+                  <span className="flex-1 h-px bg-slate-200" />
+                  <button
+                    onClick={downloadAll}
+                    title="Download the full results document"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 hover:underline cursor-pointer whitespace-nowrap"
+                  >
+                    <FileDown className="w-3 h-3" /> Download
+                  </button>
+                </div>
+
+                {blocks.map((b) => {
+                  const open = expanded.has(b.position);
+                  const shown = open ? b.candidates : b.candidates.slice(0, 2);
+                  const hidden = b.candidates.length - shown.length;
+                  return (
+                    <section
+                      key={b.position}
+                      id={`pos-${b.position}`}
+                      className="border-t border-slate-200 pt-4 mt-7 scroll-mt-4"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h2 className="text-base font-semibold text-slate-900 tracking-[-0.01em]">
+                          {b.position}
+                        </h2>
+                        <span className="font-mono text-[11px] text-slate-400 tabular-nums whitespace-nowrap">
+                          {b.total} vote{b.total !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      {b.tied && (
+                        <div className="flex gap-2 border border-amber-200 bg-amber-50 rounded-lg px-3 py-2.5 mt-3">
+                          <Scale className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          <p className="text-xs leading-[17px] text-amber-800">
+                            <b className="font-semibold">
+                              {b.tiedGroup.length}-way tie
+                            </b>{" "}
+                            on {b.topVotes} votes. A commission decision is
+                            required before this seat is declared.
                           </p>
-                          <h4 className="text-lg leading-6 font-semibold text-slate-900 truncate mt-0.5">
-                            {winner.name}
-                          </h4>
-                          <p className="text-xs text-slate-600 mt-0.5">
-                            {winnerPct}% of votes · {winner.votes} vote
-                            {winner.votes !== 1 ? "s" : ""}
-                          </p>
                         </div>
-                        {/* Vote-share arc */}
-                        <div className="relative w-[52px] h-[52px] shrink-0 hidden sm:block">
-                          <svg
-                            viewBox="0 0 36 36"
-                            className="w-[52px] h-[52px] -rotate-90"
-                          >
-                            <circle
-                              cx="18"
-                              cy="18"
-                              r="15.9"
-                              fill="none"
-                              stroke="#DBEAFE"
-                              strokeWidth="3"
-                            />
-                            <circle
-                              cx="18"
-                              cy="18"
-                              r="15.9"
-                              fill="none"
-                              stroke="#2563EB"
-                              strokeWidth="3"
-                              strokeDasharray={`${winnerPct} 100`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-blue-700 tabular-nums">
-                            {winnerPct}%
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Tie panel */}
-                    {tied && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                        <p className="text-[11px] font-semibold text-amber-800 uppercase tracking-[0.08em] flex items-center gap-1.5 mb-3">
-                          ⚖️ Tied — commission decision required
-                        </p>
-                        <div className="grid sm:grid-cols-2 gap-2">
-                          {tiedGroup.map((c) => (
-                            <div
-                              key={c.id}
-                              className="flex items-center gap-2.5 bg-white border border-amber-200 rounded-lg px-3 py-2"
-                            >
-                              <img
-                                src={c.image}
-                                alt={c.name}
-                                className="w-9 h-9 rounded-lg object-cover bg-slate-200 shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <p className="text-[13px] font-semibold text-slate-800 truncate">
-                                  {c.name}
-                                </p>
-                                <p className="text-[11px] text-amber-800">
-                                  {c.votes} votes ·{" "}
-                                  {Math.round((c.votes / tot) * 100)}%
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Candidate rows */}
-                    <div>
-                      {pcs.map((c, i) => {
-                        const cpct =
-                          tot === 0 ? 0 : Math.round((c.votes / tot) * 100);
-                        const isWinner = tot > 0 && !tied && i === 0;
-                        const isTieCandidate = tied && c.votes === topVotes;
+                      {shown.map((c, i) => {
+                        const cpct = pctOf(c.votes, b.total);
+                        const isLead = c.votes === b.topVotes && !b.tied && b.total > 0;
+                        const isTied = c.votes === b.topVotes && b.tied;
                         return (
                           <div
                             key={c.id}
-                            className="p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                            className="grid grid-cols-[18px_1fr_auto] gap-x-3 items-baseline py-2.5 border-b border-slate-100"
                           >
-                            <div className="flex items-center gap-3 mb-2">
-                              <img
-                                src={c.image}
-                                alt={c.name}
-                                className="w-9 h-9 rounded-lg object-cover bg-slate-200 shrink-0"
-                              />
-                              <div className="flex-1 min-w-0 flex items-center gap-2">
-                                <span className="text-sm font-semibold text-slate-800 truncate">
-                                  {c.name}
-                                </span>
-                                {isWinner && (
-                                  <span className="text-[9px] font-semibold px-2 py-0.5 bg-blue-600 text-white rounded-full uppercase tracking-[0.06em] shrink-0">
-                                    Winner
-                                  </span>
-                                )}
-                                {isTieCandidate && (
-                                  <span className="text-[9px] font-semibold px-2 py-0.5 bg-amber-600 text-white rounded-full uppercase tracking-[0.06em] shrink-0">
-                                    Tied
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-right shrink-0">
-                                <p className="text-xl leading-6 font-semibold text-slate-900 tabular-nums">
-                                  {cpct}%
-                                </p>
-                                <p className="text-[11px] text-slate-600">
-                                  {c.votes} vote{c.votes !== 1 ? "s" : ""}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden sm:ml-12">
-                              <div
-                                className={`h-full rounded-full transition-all duration-1000 ${
-                                  isWinner
+                            <span
+                              className={`font-mono text-xs tabular-nums ${
+                                isLead
+                                  ? "text-blue-600"
+                                  : isTied
+                                  ? "text-amber-600"
+                                  : "text-slate-300"
+                              }`}
+                            >
+                              {i + 1}
+                            </span>
+                            <span
+                              className={`truncate ${
+                                isLead
+                                  ? "text-[15px] font-semibold text-slate-900"
+                                  : "text-sm font-medium text-slate-800"
+                              }`}
+                            >
+                              {c.name}
+                            </span>
+                            <span className="text-right whitespace-nowrap">
+                              <span
+                                className={`font-mono font-semibold tabular-nums ${
+                                  isLead
+                                    ? "text-base text-blue-700"
+                                    : isTied
+                                    ? "text-sm text-amber-600"
+                                    : "text-sm text-slate-800"
+                                }`}
+                              >
+                                {cpct}%
+                              </span>
+                              <span className="text-[11px] text-slate-400 ml-2 tabular-nums">
+                                {c.votes}
+                              </span>
+                            </span>
+                            <span className="col-start-2 col-span-2 h-0.5 bg-slate-100 rounded-sm overflow-hidden mt-1.5">
+                              <span
+                                className={`block h-full transition-all duration-700 ${
+                                  isLead
                                     ? "bg-blue-600"
-                                    : isTieCandidate
+                                    : isTied
                                     ? "bg-amber-600"
-                                    : "bg-slate-400"
+                                    : "bg-slate-300"
                                 }`}
                                 style={{ width: `${cpct}%` }}
                               />
-                            </div>
+                            </span>
                           </div>
                         );
                       })}
-                    </div>
-                  </div>
-                );
-              })}
+
+                      {(hidden > 0 || open) && b.candidates.length > 2 && (
+                        <button
+                          onClick={() => toggle(b.position)}
+                          className="text-xs font-semibold text-blue-700 hover:underline pt-2.5 cursor-pointer"
+                        >
+                          {hidden > 0
+                            ? `Show all ${b.candidates.length} candidates`
+                            : "Show fewer"}
+                        </button>
+                      )}
+                    </section>
+                  );
+                })}
+
+                <div className="flex flex-wrap justify-between gap-3 border-t border-slate-200 mt-9 pt-4 text-[11px] text-slate-400">
+                  <span>
+                    Virtual Ballot · every ballot is hash-chained and publicly
+                    verifiable
+                  </span>
+                  <button
+                    onClick={handleHome}
+                    className="font-semibold text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
+                  >
+                    ← Back to voter home
+                  </button>
+                </div>
+              </div>
             </div>
           </>
-        ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl py-16 px-6 text-center">
-            <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
-              <BarChart3 className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Counting in progress
-            </h3>
-            <p className="text-[13px] leading-5 text-slate-600 mt-1">
-              Results will appear here once the commission broadcasts them.
-            </p>
-            <p className="text-[11px] text-slate-400 mt-3">
-              This page checks for updates every 30 seconds.
-            </p>
-          </div>
         )}
       </div>
-    </PageBackground>
+    </div>
   );
 }

@@ -239,6 +239,8 @@ export default function RepReviewPage() {
 
               {/* Voter table */}
               <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mt-3">
+                <div className="overflow-x-auto">
+                <div className="min-w-[520px]">
                 <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
                   <span className="col-span-1">#</span>
                   <span className="col-span-4">Matric</span>
@@ -341,6 +343,8 @@ export default function RepReviewPage() {
                       );
                     })
                   )}
+                </div>
+                </div>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 border-t border-slate-100 text-[11px] text-slate-600">
                   {voters.length} voter{voters.length !== 1 ? "s" : ""} on the

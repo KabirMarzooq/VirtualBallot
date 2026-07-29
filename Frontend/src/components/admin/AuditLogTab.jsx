@@ -158,6 +158,8 @@ export default function AuditLogTab() {
 
       {/* Table */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+        <div className="min-w-[640px]">
         <div className="grid grid-cols-12 gap-2 px-5 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
           <span className="col-span-1">#</span>
           <span className="col-span-2">Type</span>
@@ -213,6 +215,8 @@ export default function AuditLogTab() {
             })
           )}
           <div ref={bottomRef} />
+        </div>
+        </div>
         </div>
         <div className="px-5 py-2 border-t border-slate-100 flex justify-between items-center text-[11px] text-slate-400">
           <span>

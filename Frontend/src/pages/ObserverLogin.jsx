@@ -47,7 +47,7 @@ export default function ObserverLoginPage() {
           }`}
         >
           {/* Crest */}
-          <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white shadow-[0_4px_12px_rgba(37,99,235,0.35)]">
+          <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white shadow-[0_4px_12px_rgba(31,70,54,0.35)]">
             <Telescope className="w-7 h-7" />
           </div>
           <h1 className="text-[22px] leading-7 font-semibold text-white text-center mt-4">

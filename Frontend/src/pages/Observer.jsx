@@ -156,9 +156,9 @@ export default function ObserverPage() {
   return (
     <PageBackground variant="spotlight" contentClassName="min-h-screen">
       {/* ── Dark observer header ─────────────────────────────────────────── */}
-      <div className="bg-slate-900">
+      <div className="bg-oxford-900">
         <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3 flex-wrap">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
+          <div className="w-9 h-9 bg-brass-500 rounded-xl flex items-center justify-center text-oxford-900 shrink-0">
             <Telescope className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -177,7 +177,7 @@ export default function ObserverPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-slate-400/10 border border-slate-700 rounded-lg px-3 py-1.5">
+            <div className="flex items-center gap-2 bg-slate-400/10 border border-oxford-800 rounded-lg px-3 py-1.5">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
                   statusDot[electionConfig.status] ?? "bg-slate-500"

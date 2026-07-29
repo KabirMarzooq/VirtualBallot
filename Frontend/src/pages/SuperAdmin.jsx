@@ -243,9 +243,9 @@ export default function SuperAdminPage() {
       contentClassName="min-h-screen text-slate-800"
     >
       {/* Header (dark) */}
-      <div className="bg-slate-900">
+      <div className="bg-oxford-900">
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
+          <div className="w-9 h-9 bg-brass-500 rounded-xl flex items-center justify-center text-oxford-900 shrink-0">
             <Terminal className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -260,7 +260,7 @@ export default function SuperAdminPage() {
             <button
               onClick={loadOverview}
               title="Refresh platform data"
-              className="w-9 h-9 rounded-lg border border-slate-700 bg-slate-400/5 text-slate-400 hover:text-white hover:bg-slate-400/10 flex items-center justify-center transition-all cursor-pointer"
+              className="w-9 h-9 rounded-lg border border-oxford-800 bg-slate-400/5 text-slate-400 hover:text-white hover:bg-slate-400/10 flex items-center justify-center transition-all cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -510,6 +510,8 @@ export default function SuperAdminPage() {
 
                 {/* Orgs table */}
                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                  <div className="min-w-[880px]">
                   <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
                     <span className="col-span-3">Organization</span>
                     <span className="col-span-2">Admin email</span>
@@ -630,6 +632,8 @@ export default function SuperAdminPage() {
                         </div>
                       ))
                     )}
+                  </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -825,6 +829,8 @@ export default function SuperAdminPage() {
 
                 {/* Invoices table */}
                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                  <div className="min-w-[820px]">
                   <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
                     <span className="col-span-2">Org</span>
                     <span className="col-span-3">Voter / candidate</span>
@@ -897,6 +903,8 @@ export default function SuperAdminPage() {
                       ))
                     )}
                   </div>
+                  </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -956,6 +964,8 @@ export default function SuperAdminPage() {
 
                 {/* Logs table */}
                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                  <div className="min-w-[780px]">
                   <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] bg-slate-50 border-b border-slate-100">
                     <span className="col-span-2">Type</span>
                     <span className="col-span-2">Org</span>
@@ -1011,6 +1021,8 @@ export default function SuperAdminPage() {
                         );
                       })
                     )}
+                  </div>
+                  </div>
                   </div>
                   {/* Pagination */}
                   {logTotal > 50 && (

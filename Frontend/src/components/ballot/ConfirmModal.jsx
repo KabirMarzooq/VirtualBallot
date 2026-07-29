@@ -170,7 +170,7 @@ export default function ConfirmModal() {
                   >
                     <path
                       d="M4 10l5 5L16 6"
-                      stroke="#1e293b"
+                      stroke="#2A312B"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
