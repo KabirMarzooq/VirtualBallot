@@ -86,38 +86,38 @@ export function buildResultsDocument({ title, subtitle, meta, blocks, stats }) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
 <style>
   @media print{body{margin:0;padding:24px}}
-  body{font-family:Georgia,'Times New Roman',serif;margin:0;padding:40px;background:#F7F8F6;color:#2A312B}
+  body{font-family:Georgia,'Times New Roman',serif;margin:0;padding:40px;background:#FAFAFA;color:#27272A}
   .page{max-width:760px;margin:0 auto;background:#fff;padding:48px 52px 40px}
-  .eyebrow{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#565E57}
-  h1{font-size:27px;font-weight:700;margin:6px 0 2px;letter-spacing:-.01em;color:#161B17}
-  .sub{font-family:Arial,sans-serif;font-size:12px;color:#565E57}
-  .meta{font-family:Arial,sans-serif;font-size:11px;color:#8A928A;margin-top:6px}
-  .stats{display:flex;gap:32px;border-top:1px solid #DFE2DC;margin-top:20px;padding-top:16px}
-  .stats div b{display:block;font-family:'Courier New',monospace;font-size:21px;color:#161B17}
-  .stats div span{display:block;font-family:Arial,sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8A928A;margin-top:3px}
-  h2{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#161B17;
-     border-bottom:1px solid #DFE2DC;padding-bottom:6px;margin:34px 0 0}
+  .eyebrow{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#52525B}
+  h1{font-size:27px;font-weight:700;margin:6px 0 2px;letter-spacing:-.01em;color:#18181B}
+  .sub{font-family:Arial,sans-serif;font-size:12px;color:#52525B}
+  .meta{font-family:Arial,sans-serif;font-size:11px;color:#A1A1AA;margin-top:6px}
+  .stats{display:flex;gap:32px;border-top:1px solid #E4E4E7;margin-top:20px;padding-top:16px}
+  .stats div b{display:block;font-family:'Courier New',monospace;font-size:21px;color:#18181B}
+  .stats div span{display:block;font-family:Arial,sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#A1A1AA;margin-top:3px}
+  h2{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#18181B;
+     border-bottom:1px solid #E4E4E7;padding-bottom:6px;margin:34px 0 0}
   table{width:100%;border-collapse:collapse}
-  .lead-table td{padding:9px 0;border-bottom:1px solid #EDEFEB;font-family:Arial,sans-serif;font-size:12px}
-  .lead-table .pos{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8A928A;width:34%}
-  .lead-table .who{font-weight:700;color:#161B17}
-  .num{text-align:right;font-family:'Courier New',monospace;font-size:12px;color:#565E57;white-space:nowrap}
+  .lead-table td{padding:9px 0;border-bottom:1px solid #F4F4F5;font-family:Arial,sans-serif;font-size:12px}
+  .lead-table .pos{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#A1A1AA;width:34%}
+  .lead-table .who{font-weight:700;color:#18181B}
+  .num{text-align:right;font-family:'Courier New',monospace;font-size:12px;color:#52525B;white-space:nowrap}
   section{margin-top:26px;break-inside:avoid}
-  section h3{font-size:15px;font-weight:700;color:#161B17;margin:0 0 2px;
+  section h3{font-size:15px;font-weight:700;color:#18181B;margin:0 0 2px;
      display:flex;justify-content:space-between;align-items:baseline}
-  section h3 em{font-family:'Courier New',monospace;font-size:10px;font-style:normal;color:#8A928A}
-  .tie{font-family:Arial,sans-serif;font-size:11px;color:#7A5F25;background:#FAF6EB;
-     border:1px solid #E6D5A8;padding:7px 10px;margin:8px 0 4px}
-  .rows td{padding:7px 0;border-bottom:1px solid #EDEFEB;font-family:Arial,sans-serif;font-size:12px;vertical-align:middle}
-  .rows .rk{width:20px;font-family:'Courier New',monospace;color:#C4C9C0}
-  .rows .nm{color:#3D453E}
-  .rows tr.lead .nm{font-weight:700;color:#161B17}
+  section h3 em{font-family:'Courier New',monospace;font-size:10px;font-style:normal;color:#A1A1AA}
+  .tie{font-family:Arial,sans-serif;font-size:11px;color:#92400E;background:#FFFBEB;
+     border:1px solid #FDE68A;padding:7px 10px;margin:8px 0 4px}
+  .rows td{padding:7px 0;border-bottom:1px solid #F4F4F5;font-family:Arial,sans-serif;font-size:12px;vertical-align:middle}
+  .rows .rk{width:20px;font-family:'Courier New',monospace;color:#D4D4D8}
+  .rows .nm{color:#3F3F46}
+  .rows tr.lead .nm{font-weight:700;color:#18181B}
   .rows tr.lead .num{color:#1F4636;font-weight:700}
   .rows .bar{width:120px;padding-left:14px}
-  .rows .bar span{display:block;height:3px;background:#C4C9C0}
+  .rows .bar span{display:block;height:3px;background:#D4D4D8}
   .rows tr.lead .bar span{background:#1F4636}
-  .foot{border-top:1px solid #DFE2DC;margin-top:34px;padding-top:12px;
-     font-family:Arial,sans-serif;font-size:9.5px;color:#8A928A;display:flex;justify-content:space-between}
+  .foot{border-top:1px solid #E4E4E7;margin-top:34px;padding-top:12px;
+     font-family:Arial,sans-serif;font-size:9.5px;color:#A1A1AA;display:flex;justify-content:space-between}
 </style></head><body><div class="page">
   <p class="eyebrow">${subtitle}</p>
   <h1>${title}</h1>
@@ -337,7 +337,7 @@ export default function ResultsPage() {
             <div className="mt-4">
               <div className="h-[3px] bg-slate-200 rounded-sm overflow-hidden">
                 <div
-                  className="h-full bg-slate-900 transition-all duration-1000"
+                  className="h-full bg-blue-600 transition-all duration-1000"
                   style={{ width: `${pct}%` }}
                 />
               </div>

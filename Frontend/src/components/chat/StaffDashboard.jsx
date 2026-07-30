@@ -35,7 +35,7 @@ import MobileNoticeBanner from "../ui/MobileNoticeBanner";
 // Status badge palette for the election picker (sits in the dark top bar).
 const STATUS_BADGE = {
   ACTIVE: "bg-green-500/15 text-green-400 border border-green-500/25",
-  ENDED: "bg-oxford-800 text-slate-300",
+  ENDED: "bg-slate-200 text-slate-700",
   NOT_STARTED: "bg-amber-500/15 text-amber-400 border border-amber-500/25",
 };
 
@@ -129,7 +129,7 @@ function StaffLogin({ onLoggedIn }) {
     <AuthBackground variant="dark">
       <form
         onSubmit={submit}
-        className="w-full max-w-[360px] bg-oxford-800 border border-oxford-800 rounded-2xl shadow-2xl p-8 sm:px-7"
+        className="w-full max-w-[360px] bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 sm:px-7"
       >
         <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white shadow-[0_4px_12px_rgba(31,70,54,0.35)]">
           <Headset className="w-7 h-7" />
@@ -150,7 +150,7 @@ function StaffLogin({ onLoggedIn }) {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError(""); }}
             autoFocus
-            className="w-full min-h-[48px] text-sm text-white bg-oxford-900 border border-slate-600 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
+            className="w-full min-h-[48px] text-sm text-white bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
             placeholder="you@org.com"
           />
         </div>
@@ -163,7 +163,7 @@ function StaffLogin({ onLoggedIn }) {
             type="password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(""); }}
-            className="w-full min-h-[48px] text-sm text-white bg-oxford-900 border border-slate-600 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
+            className="w-full min-h-[48px] text-sm text-white bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
             placeholder="••••••••"
           />
         </div>
@@ -177,7 +177,7 @@ function StaffLogin({ onLoggedIn }) {
         <button
           type="submit"
           disabled={!email.trim() || !password || loading}
-          className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-500 disabled:bg-oxford-800 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+          className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log in"}
         </button>
@@ -504,16 +504,16 @@ function Dashboard({ onLogout }) {
       variant="spotlight"
       contentClassName="h-screen flex flex-col text-slate-800 overflow-hidden"
     >
-      {/* Top bar (dark) */}
-      <header className="flex items-center gap-3 px-5 py-2.5 bg-oxford-900 shrink-0">
+      {/* Top bar */}
+      <header className="flex items-center gap-3 px-5 py-2.5 bg-white border-b border-slate-200 shrink-0">
         <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
           <Headset className="w-5 h-5" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-[14px] leading-4 font-semibold text-white">
+          <h1 className="text-[14px] leading-4 font-semibold text-slate-900">
             Support Console
           </h1>
-          <p className="text-[11px] text-slate-400 truncate">{staffName}</p>
+          <p className="text-[11px] text-slate-500 truncate">{staffName}</p>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
@@ -525,7 +525,7 @@ function Dashboard({ onLogout }) {
                   value={electionId}
                   onChange={(e) => selectElection(e.target.value)}
                   title="Choose the election to support"
-                  className="appearance-none bg-slate-400/10 border border-oxford-800 text-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold outline-none focus:border-blue-500 cursor-pointer max-w-[220px] truncate"
+                  className="appearance-none bg-white border border-slate-300 text-slate-900 rounded-lg pl-3 pr-8 py-2 text-xs font-semibold outline-none focus:border-blue-500 cursor-pointer max-w-[220px] truncate"
                 >
                   {!electionId && <option value="">Select an election…</option>}
                   {elections.map((el) => (
@@ -540,7 +540,7 @@ function Dashboard({ onLogout }) {
                 <span
                   className={`text-[9px] font-semibold uppercase tracking-[0.06em] px-2 py-1 rounded-full ${
                     STATUS_BADGE[selectedElection.status] ||
-                    "bg-oxford-800 text-slate-300"
+                    "bg-slate-200 text-slate-700"
                   }`}
                 >
                   {selectedElection.status?.replace("_", " ")}
@@ -554,7 +554,7 @@ function Dashboard({ onLogout }) {
           <button
             onClick={onLogout}
             title="Log out"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-400/10 cursor-pointer transition-all"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-all"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -958,7 +958,7 @@ function Dashboard({ onLogout }) {
       {transcript && (
         <div
           onClick={() => setTranscript(null)}
-          className="fixed inset-0 z-50 bg-oxford-900/60 backdrop-blur-sm flex items-center justify-center p-4 vb-fade"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 vb-fade"
         >
           <div
             onClick={(e) => e.stopPropagation()}

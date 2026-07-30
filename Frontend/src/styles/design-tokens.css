@@ -1,30 +1,30 @@
 /* ════════════════════════════════════════════════════════════════════════
    VIRTUAL BALLOT — DESIGN TOKENS
-   Single source of truth for the Oxford Green UI system.
+   Single source of truth for the Deep Green & Paper UI system.
 
    The variable names below keep their original `--blue-*` / `--gray-*`
    spelling so nothing downstream had to change, but the VALUES are now
-   Oxford Green and warm sage-grey. The same remap is applied to Tailwind's
-   `blue` and `slate` ramps in tailwind.config.js, so utilities and these
-   variables stay 1:1.
+   Oxford deep green and zinc. The same remap is applied to Tailwind's `blue`
+   and `slate` ramps in tailwind.config.js, so utilities and these variables
+   stay 1:1.
 
-   ⚠️  `--blue-*` is green. `--oxford-*` and `--sage-*` are correctly-named
-   aliases — prefer those in new code.
+   ⚠️  `--blue-*` is deep green. `--oxford-*` and `--zinc-*` are
+   correctly-named aliases — prefer those in new code.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Brand — Oxford Green */
-  --oxford-50:  #F2F7F3;
-  --oxford-100: #DFEBE3;
-  --oxford-200: #C2D6C9;
-  --oxford-300: #8FB3A0;
-  --oxford-400: #5C8A70;
-  --oxford-500: #37634E;
-  --oxford-600: #1F4636;   /* primary action */
-  --oxford-700: #163227;   /* primary action hover */
-  --oxford-900: #0D1F18;
+  /* Brand — Oxford deep green on paper surfaces. */
+  --oxford-50: #f2f7f3;
+  --oxford-100: #dfebe3;
+  --oxford-200: #c2d6c9;
+  --oxford-300: #8fb3a0;
+  --oxford-400: #5c8a70;
+  --oxford-500: #37634e; /* focus border */
+  --oxford-600: #1f4636; /* primary action */
+  --oxford-700: #163227; /* hover / pressed */
+  --oxford-900: #14261e;
 
   /* Legacy names — same values, kept so existing rules keep working */
-  --blue-50:  var(--oxford-50);
+  --blue-50: var(--oxford-50);
   --blue-100: var(--oxford-100);
   --blue-200: var(--oxford-200);
   --blue-300: var(--oxford-300);
@@ -32,61 +32,57 @@
   --blue-600: var(--oxford-600);
   --blue-700: var(--oxford-700);
 
-  /* Accent — muted brass, used sparingly (crest, active markers) */
-  --brass-100: #F3EAD1;
-  --brass-200: #E6D5A8;
-  --brass-500: #B08D3F;
-  --brass-600: #96762F;
+  /* Surfaces — zinc */
+  --white: #ffffff;
+  --zinc-50: #fafafa;
+  --zinc-100: #f4f4f5;
+  --zinc-200: #e4e4e7;
+  --zinc-300: #d4d4d8;
+  --zinc-400: #a1a1aa;
+  --zinc-500: #71717a;
+  --zinc-600: #52525b;
+  --zinc-700: #3f3f46;
+  --zinc-800: #27272a;
+  --zinc-900: #18181b;
 
-  /* Surfaces — warm sage-grey */
-  --white:    #FFFFFF;
-  --sage-50:  #F7F8F6;
-  --sage-100: #EDEFEB;
-  --sage-200: #DFE2DC;
-  --sage-300: #C4C9C0;
-  --sage-400: #8A928A;
-  --sage-600: #565E57;
-  --sage-800: #2A312B;
-  --sage-900: #161B17;
-
-  --gray-50:  var(--sage-50);   /* page background */
-  --gray-100: var(--sage-100);  /* secondary surface */
-  --gray-200: var(--sage-200);  /* borders */
-  --gray-300: var(--sage-300);  /* strong border */
-  --gray-400: var(--sage-400);  /* muted text (meta only) */
-  --gray-600: var(--sage-600);  /* secondary text */
-  --gray-800: var(--sage-800);  /* primary text */
-  --gray-900: var(--sage-900);  /* heading text */
+  --gray-50: var(--zinc-50); /* page background */
+  --gray-100: var(--zinc-100); /* secondary surface */
+  --gray-200: var(--zinc-200); /* borders */
+  --gray-300: var(--zinc-300); /* strong border */
+  --gray-400: var(--zinc-400); /* muted text (meta only) */
+  --gray-600: var(--zinc-600); /* secondary text */
+  --gray-800: var(--zinc-800); /* primary text */
+  --gray-900: var(--zinc-900); /* heading text */
 
   /* Semantic — unchanged in meaning. Success green is deliberately much
-     lighter and more saturated than the Oxford chrome so the two read
-     as different things. */
-  --success-light: #F0FDF4;
-  --success:       #16A34A;
-  --warning-light: #FFFBEB;
-  --warning:       #D97706;
-  --danger-light:  #FEF2F2;
-  --danger:        #DC2626;
+     lighter and more saturated than the Oxford chrome so the two read as
+     different things: chrome vs. signal. */
+  --success-light: #f0fdf4;
+  --success: #16a34a;
+  --warning-light: #fffbeb;
+  --warning: #d97706;
+  --danger-light: #fef2f2;
+  --danger: #dc2626;
 
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
   /* Radii */
-  --radius-sm:  6px;
-  --radius:     8px;
-  --radius-lg:  12px;
-  --radius-xl:  16px;
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-2xl: 20px;
 
   /* Shadows */
-  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow:     0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 
   /* Transitions */
   --transition-fast: all 0.12s ease;
-  --transition:      all 0.18s ease;
+  --transition: all 0.18s ease;
   --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

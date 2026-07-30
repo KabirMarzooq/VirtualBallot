@@ -183,7 +183,7 @@ export default function StaffTab() {
         <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-4">
           Add Staff Member
         </p>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className={fieldLabel}>Full name</label>
             <input

@@ -270,7 +270,7 @@ export default function AdminPage() {
       return (
         <span
           className={`ml-auto font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-            active ? "bg-white/20 text-white" : "bg-blue-600 text-white"
+            active ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-700"
           }`}
         >
           {votedCount}
@@ -280,7 +280,7 @@ export default function AdminPage() {
       return (
         <span
           className={`ml-auto font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-            active ? "bg-white/20 text-white" : "bg-oxford-800 text-slate-300"
+            active ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-700"
           }`}
         >
           {activityLog.length}
@@ -295,34 +295,34 @@ export default function AdminPage() {
       contentClassName="min-h-screen flex flex-col lg:flex-row"
     >
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[232px] bg-oxford-900 flex-col shrink-0 sticky top-0 h-screen">
+      <aside className="hidden lg:flex w-[232px] bg-white border-r border-slate-200 flex-col shrink-0 sticky top-0 h-screen">
         {/* Brand */}
         <div className="flex items-center gap-3 px-4 py-5">
-          <div className="w-9 h-9 bg-brass-500 rounded-xl flex items-center justify-center text-oxford-900 shrink-0">
+          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
             <ShieldAlert className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] leading-4 font-semibold text-white truncate">
+            <p className="text-[13px] leading-4 font-semibold text-slate-900 truncate">
               {branding?.institutionName || "Admin Console"}
             </p>
-            <p className="text-[11px] leading-4 text-slate-400 truncate">
+            <p className="text-[11px] leading-4 text-slate-500 truncate">
               {branding?.electionName || "Virtual Ballot"}
             </p>
           </div>
         </div>
 
         {/* Status chip */}
-        <div className="mx-4 mb-2 flex items-center gap-2 bg-slate-400/10 border border-oxford-800 rounded-lg px-3 py-2">
+        <div className="mx-4 mb-2 flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2">
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
-              statusDots[electionConfig.status] ?? "bg-slate-500"
+              statusDots[electionConfig.status] ?? "bg-slate-400"
             }`}
           />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-300">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600">
             {electionConfig.status.replace("_", " ")}
           </span>
           {electionConfig.status === "ACTIVE" && timeLeft && (
-            <span className="ml-auto font-mono text-[11px] font-semibold text-blue-400">
+            <span className="ml-auto font-mono text-[11px] font-semibold text-blue-700">
               {timeLeft}
             </span>
           )}
@@ -351,8 +351,8 @@ export default function AdminPage() {
                       title={t.label}
                       className={`w-full flex items-center gap-2.5 min-h-[40px] px-3 my-px rounded-lg text-[13px] transition-all cursor-pointer ${
                         active
-                          ? "bg-oxford-800 text-white font-semibold"
-                          : "text-slate-400 font-medium hover:text-slate-200 hover:bg-slate-400/10"
+                          ? "bg-blue-50 text-blue-700 font-semibold"
+                          : "text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
@@ -367,17 +367,17 @@ export default function AdminPage() {
         </nav>
 
         {/* Foot: admin identity + sign out */}
-        <div className="px-4 py-3 border-t border-oxford-800 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-oxford-800 text-slate-300 text-xs font-semibold flex items-center justify-center shrink-0">
+        <div className="px-4 py-3 border-t border-slate-200 flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold flex items-center justify-center shrink-0">
             {initials}
           </div>
-          <p className="flex-1 min-w-0 text-[11px] text-slate-400 truncate">
+          <p className="flex-1 min-w-0 text-[11px] text-slate-500 truncate">
             {currentUser?.email || "Admin"}
           </p>
           <button
             onClick={handleLogout}
             title="Sign out of the commission console"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-400/10 transition-all cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -385,23 +385,23 @@ export default function AdminPage() {
       </aside>
 
       {/* ── Mobile top bar + tab strip ──────────────────────────────────── */}
-      <div className="lg:hidden bg-oxford-900">
+      <div className="lg:hidden bg-white border-b border-slate-200">
         <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-8 h-8 bg-brass-500 rounded-lg flex items-center justify-center text-oxford-900 shrink-0">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
             <ShieldAlert className="w-4 h-4" />
           </div>
-          <p className="flex-1 min-w-0 text-[13px] font-semibold text-white truncate">
+          <p className="flex-1 min-w-0 text-[13px] font-semibold text-slate-900 truncate">
             {branding?.institutionName || "Admin Console"}
           </p>
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
-              statusDots[electionConfig.status] ?? "bg-slate-500"
+              statusDots[electionConfig.status] ?? "bg-slate-400"
             }`}
           />
           <button
             onClick={handleLogout}
             title="Sign out of the commission console"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -417,7 +417,7 @@ export default function AdminPage() {
                 className={`shrink-0 min-h-[36px] px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   active
                     ? "bg-blue-600 text-white"
-                    : "text-slate-400 hover:text-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {t.label}

@@ -242,17 +242,17 @@ export default function SuperAdminPage() {
       variant="spotlight"
       contentClassName="min-h-screen text-slate-800"
     >
-      {/* Header (dark) */}
-      <div className="bg-oxford-900">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3">
-          <div className="w-9 h-9 bg-brass-500 rounded-xl flex items-center justify-center text-oxford-900 shrink-0">
+          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
             <Terminal className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-[14px] leading-4 font-semibold text-white">
+            <h1 className="text-[14px] leading-4 font-semibold text-slate-900">
               Platform Console
             </h1>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               Virtual Ballot — Super Admin
             </p>
           </div>
@@ -260,14 +260,14 @@ export default function SuperAdminPage() {
             <button
               onClick={loadOverview}
               title="Refresh platform data"
-              className="w-9 h-9 rounded-lg border border-oxford-800 bg-slate-400/5 text-slate-400 hover:text-white hover:bg-slate-400/10 flex items-center justify-center transition-all cursor-pointer"
+              className="w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
             <button
               onClick={handleLogout}
               title="Sign out of the platform console"
-              className="inline-flex items-center gap-2 min-h-[36px] px-3 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-400/10 rounded-lg transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 min-h-[36px] px-3 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
             >
               <LogOut className="w-4 h-4" /> Sign out
             </button>
@@ -384,7 +384,7 @@ export default function SuperAdminPage() {
                   </div>
                 )}
 
-                <div className="grid lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Recent orgs */}
                   <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                     <div className="px-4 py-3 border-b border-slate-100">

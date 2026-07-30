@@ -340,7 +340,7 @@ export default function PaidBallotPage() {
           <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-3">
             Choose your candidate
           </p>
-          <div className="grid sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {candidates.map((c) => {
               const selected = chosen?.id === c.id;
               return (

@@ -280,7 +280,7 @@ export default function OverviewTab({ onSwitchTab }) {
 
       {/* Live tally per position */}
       {candidates.some((c) => c.votes > 0) && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {positions.map((pos) => {
             const pcs = candidates
               .filter((c) => c.position === pos)

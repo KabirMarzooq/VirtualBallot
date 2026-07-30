@@ -256,7 +256,7 @@ export default function LegalPage({ doc = "terms" }) {
           <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-3">
             Contents
           </p>
-          <ol className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+          <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
             {data.sections.map((s) => (
               <li key={s.h}>
                 <a

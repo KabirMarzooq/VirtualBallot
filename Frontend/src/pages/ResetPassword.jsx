@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
             <button
               onClick={() => navigate("/admin/forgot-password")}
               title="Request a new password reset link"
-              className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-lg flex items-center justify-center transition-all cursor-pointer"
+              className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg flex items-center justify-center transition-all cursor-pointer"
             >
               Request a new link
             </button>
@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
               <button
                 onClick={() => navigate("/admin/login")}
                 title="Sign in with your new password"
-                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 Go to login →
               </button>
@@ -171,7 +171,7 @@ export default function ResetPasswordPage() {
                 onClick={submit}
                 disabled={!password || !confirmPassword || pwMismatch || loading}
                 title="Save your new admin password"
-                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 {loading ? (
                   <VBLoader size="sm" />

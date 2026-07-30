@@ -101,7 +101,7 @@ export default function ConfirmModal() {
         </div>
 
         {/* Header strip */}
-        <div className="bg-slate-900 px-6 py-2 flex items-center justify-between relative z-10">
+        <div className="bg-blue-600 px-6 py-2 flex items-center justify-between relative z-10">
           <div className="flex items-center gap-2">
             {branding.logoUrl ? (
               <img
@@ -170,7 +170,7 @@ export default function ConfirmModal() {
                   >
                     <path
                       d="M4 10l5 5L16 6"
-                      stroke="#2A312B"
+                      stroke="#27272A"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -190,7 +190,7 @@ export default function ConfirmModal() {
                     {candidate?.position}
                   </p>
                 </div>
-                <span className="inline-block text-[9px] bg-slate-900 text-white px-2 py-0.5 tracking-widest uppercase font-sans">
+                <span className="inline-block text-[9px] bg-blue-600 text-white px-2 py-0.5 tracking-widest uppercase font-sans">
                   Selected
                 </span>
               </div>

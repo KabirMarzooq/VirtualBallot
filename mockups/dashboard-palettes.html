@@ -10,8 +10,12 @@
 <style>
 :root{
   --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
-  --gray-50:#F8FAFC;--gray-100:#F1F5F9;--gray-200:#E2E8F0;--gray-300:#CBD5E1;
-  --gray-400:#94A3B8;--gray-600:#475569;--gray-800:#1E293B;--gray-900:#0F172A;
+  /* This page's own chrome follows the adopted Deep Green & Paper ramps.
+     The four option blocks below keep their own hardcoded values so the
+     comparison stays an honest record of what was compared. */
+  --gray-50:#FAFAFA;--gray-100:#F4F4F5;--gray-200:#E4E4E7;--gray-300:#D4D4D8;
+  --gray-400:#A1A1AA;--gray-500:#71717A;--gray-600:#52525B;--gray-800:#27272A;--gray-900:#18181B;
+  --green-600:#1F4636;--green-50:#F2F7F3;--green-200:#C2D6C9;--green-700:#163227;
   --warning-light:#FFFBEB;
 }
 *{box-sizing:border-box;margin:0}
@@ -27,6 +31,8 @@ body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-80
 .tag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
 .tag.cur{background:var(--gray-200);color:var(--gray-600)}
 .tag.rec{background:#DCFCE7;color:#15803D}
+.tag.adopted{background:var(--green-600);color:#fff}
+.tag.prev{background:var(--gray-200);color:var(--gray-600)}
 .opt p.why{font-size:13px;line-height:20px;color:var(--gray-600);margin-top:7px;max-width:74ch}
 .swatches{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
 .sw{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:5px 10px 5px 6px;font-family:var(--font-mono);font-size:10px;color:var(--gray-600)}
@@ -158,21 +164,26 @@ body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-80
 <body>
 <div class="sheet">
   <h1>Admin dashboard — palette options</h1>
-  <p class="sub">Same layout, same information, four different colour treatments.</p>
+  <p class="sub">Same layout, same information, four different colour treatments. The shipped system is a hybrid — see the note.</p>
 
   <div class="note">
-    <b>For approval — nothing implemented.</b> The thing reading as "vibe coded" is almost certainly
-    <b>A</b>: a near-black navy sidebar with a saturated <code>blue-600</code> active state. That exact pairing is
-    the default look of nearly every AI-generated admin template, which is why it feels generic even though nothing
-    is technically wrong with it. Each option below changes <em>only</em> the chrome — sidebar, accent and surface
-    tints. Layout, spacing and type stay identical, so whichever you pick is a token swap, not a rebuild.
+    <b>Decided — the product ships C's chrome carrying D's colour: <em>Deep Green &amp; Paper</em>.</b>
+    It started on <b>A</b> (navy sidebar, saturated <code>blue-600</code> active state — the default look of nearly
+    every AI-generated admin template), briefly moved to <b>D · Oxford Green</b> in full, and settled on the hybrid:
+    <b>C's white rail</b> separated by a hairline, with <b>D's Oxford deep green</b> as the brand and primary action
+    colour instead of C's near-black ink. Neither pure option was right — D's dark rail reintroduced the hard seam
+    against the light content that C was chosen to fix, and C's ink chrome left the product with no brand colour at
+    all. The result is live across Admin, Observer, SuperAdmin and the staff console, and the ramps are
+    product-wide in <code>tailwind.config.js</code> and <code>design-tokens.css</code> — not just console chrome.
+    A, B and the pure D are kept below as the record of what was compared.
   </div>
 
   <!-- A -->
   <div class="opt a">
-    <div class="opt-head"><h2>A · Navy &amp; Blue</h2><span class="tag cur">Current</span></div>
-    <p class="why">What's live today. The sidebar and the accent are both blue, so the active nav item doesn't
-      separate from its background, and the whole console reads as one saturated block. This is the pairing to move away from.</p>
+    <div class="opt-head"><h2>A · Navy &amp; Blue</h2><span class="tag prev">Superseded</span></div>
+    <p class="why">The original system. The sidebar and the accent are both blue, so the active nav item doesn't
+      separate from its background, and the whole console reads as one saturated block. This is the pairing that was
+      moved away from.</p>
     <div class="swatches">
       <span class="sw"><i style="background:#0F172A"></i>#0F172A sidebar</span>
       <span class="sw"><i style="background:#2563EB"></i>#2563EB accent</span>
@@ -253,7 +264,7 @@ body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-80
 
   <!-- C -->
   <div class="opt c">
-    <div class="opt-head"><h2>C · Paper &amp; Ink</h2><span class="tag rec">Recommended</span></div>
+    <div class="opt-head"><h2>C · Paper &amp; Ink</h2><span class="tag adopted">Chrome adopted</span></div>
     <p class="why">Drops the dark sidebar entirely. A white rail separated by a hairline, near-black type, and a
       light grey active state — no accent colour in the chrome at all. This is the furthest from the AI-template
       look, it makes the console feel like an instrument rather than a product landing page, and it lets the
@@ -299,7 +310,7 @@ body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-80
 
   <!-- D -->
   <div class="opt d">
-    <div class="opt-head"><h2>D · Oxford Green</h2></div>
+    <div class="opt-head"><h2>D · Oxford Green</h2><span class="tag adopted">Colour adopted</span></div>
     <p class="why">Deep green with a muted brass accent — an institutional, electoral-commission register. The most
       distinctive of the four and the best fit if you want the product to feel official rather than start-up. The
       trade-off is that it is a strong opinion, and green already carries "approved" meaning elsewhere in the UI,
@@ -342,11 +353,12 @@ body{font-family:var(--font-sans);background:var(--gray-100);color:var(--gray-80
 
   <table class="spec">
     <tr><th>Concern</th><th>Detail</th></tr>
-    <tr><td>Scope of change</td><td>Sidebar background, active-nav treatment, accent, canvas tint and border greys. Roughly 20 token values — no layout or spacing changes anywhere.</td></tr>
-    <tr><td>Blue elsewhere</td><td>B, C and D all reduce or remove blue from the <em>chrome</em>. Blue stays as the primary action colour on buttons and links across the rest of the product, so the auth screens and voter-facing pages are unaffected.</td></tr>
-    <tr><td>Status colours</td><td>Green/amber/red keep their current meanings in every option. D is the one to watch, since its chrome green sits near the "approved" green.</td></tr>
-    <tr><td>Contrast</td><td>Every sidebar/label pairing above clears 4.5:1 for body text and 3:1 for the muted group labels. C has the highest text contrast of the four.</td></tr>
-    <tr><td>If you pick one</td><td>I'd apply it to Admin, Observer, SuperAdmin and the staff console together, since they share the shell — doing one alone would look like a bug.</td></tr>
+    <tr><td>What shipped</td><td><b>Deep Green &amp; Paper.</b> C's white rail, hairline rules and <code>#FAFAFA</code> canvas, with D's Oxford green as the brand and primary action colour. Crests, primary buttons, hero KPI tiles, active nav and the leader bars are <code>#1F4636</code>; the active nav sits on a <code>#F2F7F3</code> green tint rather than C's grey.</td></tr>
+    <tr><td>Scope as shipped</td><td>Wider than the chrome. <code>tailwind.config.js</code> remaps the <code>blue</code> ramp to Oxford green and <code>slate</code> to zinc, <code>design-tokens.css</code> follows, and the background system, print templates and favicons were recoloured to match. No layout or spacing changes anywhere.</td></tr>
+    <tr><td>Accent elsewhere</td><td>Deep green is the primary action colour product-wide — buttons, links, selection, focus rings — so the auth screens and voter-facing pages follow the same system. The old <code>blue-600</code> class name survives as a compatibility shim that renders green.</td></tr>
+    <tr><td>Status colours</td><td>Green/amber/red keep their meanings. The collision risk D carried is handled by distance, not avoidance: chrome green is dark and desaturated (<code>#1F4636</code>), success green is light and saturated (<code>#16A34A</code>), so the two never read as the same signal.</td></tr>
+    <tr><td>Contrast</td><td>Every sidebar/label pairing above clears 4.5:1 for body text and 3:1 for the muted group labels. The shipped hybrid inherits C's contrast, since the rail and type are unchanged from C.</td></tr>
+    <tr><td>Applied to</td><td>Admin, Observer, SuperAdmin and the staff console together, since they share the shell — doing one alone would look like a bug.</td></tr>
   </table>
 </div>
 </body>

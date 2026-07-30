@@ -155,39 +155,39 @@ export default function ObserverPage() {
 
   return (
     <PageBackground variant="spotlight" contentClassName="min-h-screen">
-      {/* ── Dark observer header ─────────────────────────────────────────── */}
-      <div className="bg-oxford-900">
+      {/* ── Observer header ──────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3 flex-wrap">
-          <div className="w-9 h-9 bg-brass-500 rounded-xl flex items-center justify-center text-oxford-900 shrink-0">
+          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
             <Telescope className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] leading-4 font-semibold text-white flex items-center gap-2 flex-wrap">
+            <p className="text-[13px] leading-4 font-semibold text-slate-900 flex items-center gap-2 flex-wrap">
               <span className="truncate">
                 {branding?.electionName || "Election"} — Observer
               </span>
-              <span className="text-[9px] font-semibold uppercase tracking-[0.06em] bg-blue-500/15 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded-full shrink-0">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.06em] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
                 Read-only
               </span>
             </p>
-            <p className="text-[11px] leading-4 text-slate-400 truncate">
+            <p className="text-[11px] leading-4 text-slate-500 truncate">
               {branding?.institutionName || "Virtual Ballot"} · no actions
               permitted from this view
             </p>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-slate-400/10 border border-oxford-800 rounded-lg px-3 py-1.5">
+            <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
-                  statusDot[electionConfig.status] ?? "bg-slate-500"
+                  statusDot[electionConfig.status] ?? "bg-slate-400"
                 }`}
               />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-300">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-600">
                 {electionConfig.status.replace("_", " ")}
               </span>
               {electionConfig.status === "ACTIVE" && timeLeft && (
-                <span className="font-mono text-[11px] font-semibold text-blue-400">
+                <span className="font-mono text-[11px] font-semibold text-blue-700">
                   {timeLeft}
                 </span>
               )}
@@ -200,7 +200,7 @@ export default function ObserverPage() {
                 navigate(`/observer/login?slug=${slug}`);
               }}
               title="Exit observer mode"
-              className="inline-flex items-center gap-2 min-h-[36px] px-3 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-400/10 rounded-lg transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 min-h-[36px] px-3 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Exit</span>

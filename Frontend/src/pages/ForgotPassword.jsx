@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                 onClick={submit}
                 disabled={!email.trim() || loading}
                 title="Email me a password reset link"
-                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 {loading ? <VBLoader size="sm" /> : "Send reset link"}
               </button>

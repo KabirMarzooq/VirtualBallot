@@ -65,7 +65,7 @@ const STEPS = [
 ];
 
 const dotGrid = (size = "28px") => ({
-  backgroundImage: "radial-gradient(circle, #8FB3A0 1px, transparent 1px)",
+  backgroundImage: "radial-gradient(circle, #A1A1AA 1px, transparent 1px)",
   backgroundSize: `${size} ${size}`,
 });
 
@@ -109,7 +109,7 @@ export default function LandingPage() {
         <div
           className="absolute w-[640px] h-[640px] rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           style={{
-            background: "radial-gradient(circle, #F2F7F3 0%, transparent 70%)",
+            background: "radial-gradient(circle, #F4F4F5 0%, transparent 70%)",
           }}
         />
         <div className="vb-rings" aria-hidden="true">
@@ -172,7 +172,7 @@ export default function LandingPage() {
               associations, and community organizations.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
@@ -204,7 +204,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Closed */}
             <div className="bg-white border border-slate-200 rounded-2xl p-8">
               <div className="w-11 h-11 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4">
@@ -292,7 +292,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white border border-slate-200 rounded-2xl p-7 hover:border-blue-200 hover:shadow-md transition-all">
               <div className="w-11 h-11 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4">
                 <Telescope className="w-5 h-5" />
@@ -376,7 +376,7 @@ export default function LandingPage() {
               No technical setup. No IT department. Just a browser.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {STEPS.map(({ n, title, desc }) => (
               <div key={n}>
                 <div className="font-mono text-[40px] leading-none font-semibold text-blue-100 mb-3">

@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
 :root {
-  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-400:#60A5FA; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
-  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-700:#334155; --gray-800:#1E293B; --gray-900:#0F172A;
+  --blue-50:#F2F7F3; --blue-100:#DFEBE3; --blue-200:#C2D6C9; --blue-400:#5C8A70; --blue-500:#37634E; --blue-600:#1F4636; --blue-700:#163227;
+  --white:#FFF; --gray-50:#FAFAFA; --gray-100:#F4F4F5; --gray-200:#E4E4E7; --gray-300:#D4D4D8; --gray-400:#A1A1AA; --gray-500:#71717A; --gray-600:#52525B; --gray-700:#3F3F46; --gray-800:#27272A; --gray-900:#18181B;
   --success-light:#F0FDF4; --success:#16A34A; --success-border:#BBF7D0;
   --warning-light:#FFFBEB; --warning:#D97706; --warning-border:#FDE68A; --warning-ink:#92400E;
   --danger-light:#FEF2F2; --danger:#DC2626; --danger-border:#FECACA;
@@ -29,18 +29,18 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 
 /* ── Console shell ── */
 .console{width:1080px;max-width:100%;height:660px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-xl);overflow:hidden;display:flex;flex-direction:column}
-.topbar{background:var(--gray-900);display:flex;align-items:center;gap:12px;padding:10px 20px;flex-shrink:0}
+.topbar{background:#fff;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:12px;padding:10px 20px;flex-shrink:0}
 .crest{width:36px;height:36px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
-.topbar .tt{font-size:14px;font-weight:600;color:#fff;line-height:16px}
-.topbar .ts{font-size:11px;color:var(--gray-400)}
+.topbar .tt{font-size:14px;font-weight:600;color:var(--gray-900);line-height:16px}
+.topbar .ts{font-size:11px;color:var(--gray-500)}
 .picker{margin-left:auto;display:flex;align-items:center;gap:8px}
 .selwrap{position:relative}
-.selwrap select{appearance:none;background:rgba(148,163,184,.08);border:1px solid var(--gray-700);color:#fff;border-radius:var(--radius);font-size:12px;font-weight:600;padding:8px 30px 8px 12px;outline:none;cursor:pointer;max-width:220px}
+.selwrap select{appearance:none;background:#fff;border:1px solid var(--gray-300);color:var(--gray-900);border-radius:var(--radius);font-size:12px;font-weight:600;padding:8px 30px 8px 12px;outline:none;cursor:pointer;max-width:220px}
 .selwrap svg{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none}
 .statuspill{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:999px}
-.statuspill.active{background:rgba(34,197,94,.18);color:#4ADE80}
-.outbtn{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--gray-400);background:none;border:none;cursor:pointer;transition:var(--transition-fast)}
-.outbtn:hover{color:#fff;background:rgba(148,163,184,.12)}
+.statuspill.active{background:#F0FDF4;color:#15803D}
+.outbtn{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--gray-500);background:none;border:none;cursor:pointer;transition:var(--transition-fast)}
+.outbtn:hover{color:var(--gray-900);background:var(--gray-100)}
 
 .body{flex:1;display:flex;min-height:0}
 
@@ -137,8 +137,8 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 /* login */
 .loginscreen{width:420px;max-width:100%;min-height:520px;background:var(--gray-900);border-radius:var(--radius-xl);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:32px 20px}
 .loginscreen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--blue-500) 1px,transparent 1px);background-size:28px 28px;opacity:.14}
-.loginscreen::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.16) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%)}
-.ring{position:absolute;border-radius:50%;border:1px solid rgba(59,130,246,.25);top:50%;left:50%;animation:re 4s ease-out infinite}
+.loginscreen::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(31,70,54,.16) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%)}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(55,99,78,.25);top:50%;left:50%;animation:re 4s ease-out infinite}
 .r1{width:220px;height:220px}.r2{width:380px;height:380px;animation-delay:1.3s}.r3{width:540px;height:540px;animation-delay:2.6s}
 @keyframes re{0%{opacity:.5;transform:translate(-50%,-50%) scale(.85)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
 .logincard{position:relative;z-index:1;width:100%;max-width:340px;background:var(--gray-800);border:1px solid var(--gray-700);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);padding:32px 28px}
@@ -148,7 +148,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .lfield{margin-top:20px}
 .lfield label{display:block;font-size:13px;font-weight:500;color:var(--gray-300);margin-bottom:8px}
 .lin{width:100%;min-height:48px;font-size:14px;color:#fff;background:var(--gray-900);border:1px solid var(--gray-600);border-radius:var(--radius);padding:12px 16px;outline:none}
-.lin.foc{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.lin.foc{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(55,99,78,.25)}
 .lbtn{width:100%;margin-top:20px;min-height:48px;background:var(--blue-600);color:#fff;font-size:14px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer}
 
 /* transcript modal */
@@ -167,7 +167,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 <body>
 <div class="sheet">
   <h1>Staff Support Console — Live Chat</h1>
-  <p class="sub">Joins the dark-header / light-content staff family (admin, observer) · urgent stays red (a real alert), waiting amber, claimed/resolved/online green, blue for claim/send/your-messages/selection · login joins the dark rings auth family · transcript modal on the token system</p>
+  <p class="sub">Joins the white-header / light-content staff family (admin, observer) · urgent stays red (a real alert), waiting amber, claimed/resolved/online green, deep green for claim/send/your-messages/selection · login joins the dark rings auth family · transcript modal on the token system</p>
 
   <div class="grid">
 

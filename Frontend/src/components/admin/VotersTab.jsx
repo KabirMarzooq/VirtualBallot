@@ -609,7 +609,7 @@ Your code: ${a.reviewCode}`;
       {/* ── Share links ─────────────────────────────────────────────────────────
           The displayed URL drops the protocol and truncates so the copy button
           always stays on screen; the clipboard still receives the full URL. */}
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="flex items-center gap-3 bg-white border border-blue-200 rounded-xl px-4 py-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-[0.1em] mb-0.5">

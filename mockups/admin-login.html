@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
 :root {
-  --blue-50:#EFF6FF; --blue-100:#DBEAFE; --blue-200:#BFDBFE; --blue-400:#60A5FA; --blue-500:#3B82F6; --blue-600:#2563EB; --blue-700:#1D4ED8;
-  --white:#FFF; --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0; --gray-300:#CBD5E1; --gray-400:#94A3B8; --gray-600:#475569; --gray-700:#334155; --gray-800:#1E293B; --gray-900:#0F172A;
+  --blue-50:#F2F7F3; --blue-100:#DFEBE3; --blue-200:#C2D6C9; --blue-400:#5C8A70; --blue-500:#37634E; --blue-600:#1F4636; --blue-700:#163227;
+  --white:#FFF; --gray-50:#FAFAFA; --gray-100:#F4F4F5; --gray-200:#E4E4E7; --gray-300:#D4D4D8; --gray-400:#A1A1AA; --gray-500:#71717A; --gray-600:#52525B; --gray-700:#3F3F46; --gray-800:#27272A; --gray-900:#18181B;
   --success:#16A34A; --success-dark-text:#4ADE80; --danger:#DC2626; --danger-dark-text:#F87171;
   --font-sans:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
   --radius:8px; --radius-lg:12px; --radius-xl:16px;
@@ -33,9 +33,9 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
   background-size:28px 28px;opacity:.14;pointer-events:none}
 .screen::after{ /* center glow */
   content:'';position:absolute;width:520px;height:520px;border-radius:50%;
-  background:radial-gradient(circle,rgba(37,99,235,.16) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(31,70,54,.16) 0%,transparent 70%);
   top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
-.ring{position:absolute;border-radius:50%;border:1px solid rgba(59,130,246,.25);top:50%;left:50%;animation:ring-expand 4s ease-out infinite;pointer-events:none}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(55,99,78,.25);top:50%;left:50%;animation:ring-expand 4s ease-out infinite;pointer-events:none}
 .r1{width:220px;height:220px}
 .r2{width:380px;height:380px;animation-delay:1.3s}
 .r3{width:540px;height:540px;animation-delay:2.6s}
@@ -58,7 +58,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .card.is-shake{animation:shake .35s ease}
 @keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
 
-.crest{width:56px;height:56px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.crest{width:56px;height:56px;background:var(--blue-600);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#fff;box-shadow:0 4px 12px rgba(31,70,54,.35)}
 .h-title{font-size:22px;line-height:28px;font-weight:600;color:#fff;text-align:center;margin-top:16px}
 .h-sub{font-size:13px;line-height:20px;color:var(--gray-400);text-align:center;margin-top:4px}
 
@@ -69,7 +69,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 .input{width:100%;min-height:48px;font-family:var(--font-sans);font-size:14px;color:#fff;background:var(--gray-900);border:1px solid var(--gray-600);border-radius:var(--radius);padding:12px 16px 12px 40px;outline:none;transition:var(--transition-fast)}
 .input::placeholder{color:var(--gray-600)}
 .input.no-icon{padding-left:16px}
-.input.is-focus,.input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.input.is-focus,.input:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(55,99,78,.25)}
 .input.pw{font-family:var(--font-mono);letter-spacing:.3em}
 .input.is-error{border-color:var(--danger);color:var(--danger-dark-text)}
 .err{font-size:11px;line-height:16px;font-weight:500;color:var(--danger-dark-text);margin-top:8px}
@@ -93,7 +93,7 @@ body{font-family:var(--font-sans);background:var(--gray-50);color:var(--gray-800
 <body>
 <div class="sheet">
   <h1>Screen 8 — Admin Login (Commission Portal)</h1>
-  <p class="sub">Dark theme per brief, on the same approved background pattern (dot grid + glow + rings) re-tuned for the dark field · email + password (matches current auth flow) · vb-shake replaces the old bounce on error · 420px field, 360px card</p>
+  <p class="sub">Dark Commission theme per brief, on the same approved background pattern (dot grid + glow + rings) re-tuned for the dark field · email + password (matches current auth flow) · vb-shake replaces the old bounce on error · 420px field, 360px card</p>
 
   <div class="grid">
 

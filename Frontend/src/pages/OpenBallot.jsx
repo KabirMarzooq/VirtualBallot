@@ -293,7 +293,7 @@ export default function OpenBallotPage() {
                     </span>
                   )}
                 </div>
-                <div className="grid sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {posCandidates.map((c) => {
                     const selected = ballot[pos] === c.id;
                     return (

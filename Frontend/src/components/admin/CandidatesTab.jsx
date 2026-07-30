@@ -129,7 +129,7 @@ export default function CandidatesTab() {
     "w-full min-h-[44px] text-[13px] text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-all";
 
   return (
-    <div className="grid lg:grid-cols-[360px_1fr] gap-4 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 items-start">
       {/* ── Add form ─────────────────────────────────────────────────────── */}
       <div className="bg-white border border-slate-200 rounded-xl p-5">
         <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mb-4">
@@ -476,7 +476,7 @@ export default function CandidatesTab() {
                     </span>
                     <span className="flex-1 h-px bg-slate-200" />
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {candidates
                       .filter((c) => c.position === p)
                       .map((c) => (

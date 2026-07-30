@@ -266,7 +266,7 @@ export default function ElectionTab() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-[1fr_320px] gap-4 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start">
         {/* ── Left column: state card + settings ───────────────────────── */}
         <div className="space-y-3">
           {electionConfig.status === "NOT_STARTED" && (

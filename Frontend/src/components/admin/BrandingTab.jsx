@@ -184,7 +184,7 @@ export default function BrandingTab() {
     "text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] flex items-center gap-2 mb-4";
 
   return (
-    <div className="grid lg:grid-cols-2 gap-4 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
       {/* ════════ LEFT — Election type + cost ════════ */}
       <div className="space-y-4">
         {/* Election type */}
@@ -198,7 +198,7 @@ export default function BrandingTab() {
               </LockChip>
             )}
           </p>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Choice
               on={electionConfig.votingMode === "CLOSED"}
               disabled={locked || savingType}
@@ -229,7 +229,7 @@ export default function BrandingTab() {
                 <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-[0.08em] mt-4 mb-2">
                   Vote protection
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Choice
                     on={electionConfig.fraudTier === "DEVICE"}
                     disabled={locked || savingType}
@@ -255,7 +255,7 @@ export default function BrandingTab() {
             <p className={cardLabel}>
               Voting cost {locked && <LockChip>Locked</LockChip>}
             </p>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Choice
                 on={electionConfig.voteType === "STANDARD"}
                 disabled={locked || savingType}
@@ -278,7 +278,7 @@ export default function BrandingTab() {
                 <PaymentSetup />
 
                 {/* Pricing model */}
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Choice
                     on={electionConfig.pricingModel === "FIXED"}
                     disabled={locked || savingType}
@@ -454,7 +454,7 @@ export default function BrandingTab() {
             <span className="font-mono font-semibold text-slate-800">0000</span>{" "}
             — change it before the election.
           </p>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
                 New PIN
@@ -523,7 +523,7 @@ export default function BrandingTab() {
             className="p-8 flex justify-center bg-white"
             style={{
               backgroundImage:
-                "radial-gradient(circle, #8FB3A0 1px, transparent 1px)",
+                "radial-gradient(circle, #A1A1AA 1px, transparent 1px)",
               backgroundSize: "20px 20px",
             }}
           >
