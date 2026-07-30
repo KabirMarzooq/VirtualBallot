@@ -34,21 +34,21 @@ export default function ResetPasswordPage() {
   const pwMatch = !!confirmPassword && password === confirmPassword;
 
   const pwInput =
-    "w-full min-h-[48px] text-sm font-mono tracking-[0.3em] text-white bg-slate-900 border rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 transition-all";
+    "w-full min-h-[48px] text-sm font-mono tracking-[0.3em] text-slate-800 bg-white border rounded-lg px-4 py-3 outline-none placeholder:text-slate-400 transition-all";
 
   if (!token) {
     return (
-      <AuthBackground variant="dark">
-        <div className="w-full max-w-[360px]">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 sm:px-7 text-center">
-            <div className="bg-amber-800/15 border border-amber-600/35 rounded-xl p-4">
-              <div className="w-10 h-10 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center mx-auto mb-2.5">
+      <AuthBackground>
+        <div className="w-full max-w-[360px] text-slate-800">
+          <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7 text-center">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-2.5">
                 <AlertTriangle className="w-5 h-5" />
               </div>
-              <p className="text-[13px] leading-5 font-semibold text-white">
+              <p className="text-[13px] leading-5 font-semibold text-slate-900">
                 Invalid reset link
               </p>
-              <p className="text-[11px] leading-4 text-slate-400 mt-1">
+              <p className="text-[11px] leading-4 text-slate-600 mt-1">
                 This link is missing its reset token — it may have been
                 truncated by your email app. Request a fresh one below.
               </p>
@@ -56,15 +56,15 @@ export default function ResetPasswordPage() {
             <button
               onClick={() => navigate("/admin/forgot-password")}
               title="Request a new password reset link"
-              className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg flex items-center justify-center transition-all cursor-pointer"
+              className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center transition-all cursor-pointer"
             >
               Request a new link
             </button>
-            <div className="mt-5 pt-4 border-t border-slate-700">
+            <div className="mt-5 pt-4 border-t border-slate-200">
               <button
                 onClick={() => navigate("/admin/login")}
                 title="Back to the commission login"
-                className="min-h-[44px] px-4 text-[11px] font-semibold text-slate-400 hover:text-slate-300 hover:bg-slate-400/10 rounded-lg transition-all cursor-pointer"
+                className="min-h-[44px] px-4 text-[11px] font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
               >
                 ← Back to login
               </button>
@@ -76,26 +76,26 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthBackground variant="dark">
-      <div className="w-full max-w-[360px]">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 sm:px-7">
-          <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white shadow-[0_4px_12px_rgba(31,70,54,0.35)]">
+    <AuthBackground>
+      <div className="w-full max-w-[360px] text-slate-800">
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7">
+          <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
             <Lock className="w-7 h-7" />
           </div>
-          <h1 className="text-[22px] leading-7 font-semibold text-white text-center mt-4">
+          <h1 className="text-[22px] leading-7 font-semibold text-slate-900 text-center mt-4">
             New password
           </h1>
 
           {done ? (
             <>
-              <div className="bg-green-800/20 border border-green-600/40 rounded-xl p-4 mt-5 text-center">
-                <div className="w-10 h-10 rounded-full bg-green-600/20 text-green-400 flex items-center justify-center mx-auto mb-2.5">
+              <div className="bg-green-50 border border-green-600/30 rounded-xl p-4 mt-5 text-center">
+                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-2.5">
                   <Check className="w-5 h-5" strokeWidth={2.4} />
                 </div>
-                <p className="text-[13px] leading-5 font-semibold text-green-400">
+                <p className="text-[13px] leading-5 font-semibold text-green-600">
                   Password updated
                 </p>
-                <p className="text-[11px] leading-4 text-slate-400 mt-1">
+                <p className="text-[11px] leading-4 text-slate-600 mt-1">
                   Your admin password has been changed. Sign in with the new
                   one.
                 </p>
@@ -103,19 +103,19 @@ export default function ResetPasswordPage() {
               <button
                 onClick={() => navigate("/admin/login")}
                 title="Sign in with your new password"
-                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 Go to login →
               </button>
             </>
           ) : (
             <>
-              <p className="text-[13px] leading-5 text-slate-400 text-center mt-1">
+              <p className="text-[13px] leading-5 text-slate-600 text-center mt-1">
                 Choose a strong password for your admin account
               </p>
 
               <div className="mt-5">
-                <label className="block text-[13px] leading-5 font-medium text-slate-300 mb-2">
+                <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
                   New password
                 </label>
                 <input
@@ -125,7 +125,7 @@ export default function ResetPasswordPage() {
                   onKeyDown={(e) => e.key === "Enter" && submit()}
                   placeholder="••••••••"
                   autoFocus
-                  className={`${pwInput} border-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25`}
+                  className={`${pwInput} border-slate-300 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100`}
                 />
                 <p className="text-[11px] leading-4 text-slate-400 mt-2">
                   Minimum 8 characters.
@@ -133,7 +133,7 @@ export default function ResetPasswordPage() {
               </div>
 
               <div className="mt-4">
-                <label className="block text-[13px] leading-5 font-medium text-slate-300 mb-2">
+                <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
                   Confirm password
                 </label>
                 <input
@@ -144,24 +144,24 @@ export default function ResetPasswordPage() {
                   placeholder="••••••••"
                   className={`${pwInput} ${
                     pwMismatch || error
-                      ? "border-red-500 text-red-400"
+                      ? "border-red-500 text-red-600"
                       : pwMatch
                       ? "border-green-600"
-                      : "border-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25"
+                      : "border-slate-300 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100"
                   }`}
                 />
                 {pwMismatch && (
-                  <p className="text-[11px] leading-4 font-medium text-red-400 mt-2">
+                  <p className="text-[11px] leading-4 font-medium text-red-600 mt-2">
                     Passwords don't match yet.
                   </p>
                 )}
                 {pwMatch && !error && (
-                  <p className="text-[11px] leading-4 font-medium text-green-400 mt-2">
+                  <p className="text-[11px] leading-4 font-medium text-green-600 mt-2">
                     ✓ Passwords match
                   </p>
                 )}
                 {error && (
-                  <p className="text-[11px] leading-4 font-medium text-red-400 mt-2 text-center">
+                  <p className="text-[11px] leading-4 font-medium text-red-600 mt-2 text-center">
                     {error}
                   </p>
                 )}
@@ -171,7 +171,7 @@ export default function ResetPasswordPage() {
                 onClick={submit}
                 disabled={!password || !confirmPassword || pwMismatch || loading}
                 title="Save your new admin password"
-                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 {loading ? (
                   <VBLoader size="sm" />
@@ -182,11 +182,11 @@ export default function ResetPasswordPage() {
                 )}
               </button>
 
-              <div className="mt-5 pt-4 border-t border-slate-700 text-center">
+              <div className="mt-5 pt-4 border-t border-slate-200 text-center">
                 <button
                   onClick={() => navigate("/admin/forgot-password")}
                   title="Request a fresh reset link"
-                  className="min-h-[44px] px-4 text-[11px] font-semibold text-slate-400 hover:text-slate-300 hover:bg-slate-400/10 rounded-lg transition-all cursor-pointer"
+                  className="min-h-[44px] px-4 text-[11px] font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
                 >
                   Request a new reset link
                 </button>

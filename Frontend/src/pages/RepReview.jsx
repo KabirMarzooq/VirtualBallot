@@ -9,6 +9,7 @@ import {
   submitRepReview,
   submitRepApproval,
   submitRepFlag,
+  fetchElection,
 } from "../api";
 
 export default function RepReviewPage() {
@@ -19,6 +20,7 @@ export default function RepReviewPage() {
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [branding, setBranding] = useState(null);
 
   const [approval, setApproval] = useState(null);
   const [voters, setVoters] = useState([]);
@@ -54,6 +56,9 @@ export default function RepReviewPage() {
       setVoters(data.voters);
       setAlreadyApproved(data.alreadyApproved);
       setStep(2);
+      fetchElection(foundSlug)
+        .then((d) => setBranding(d.branding))
+        .catch(() => setBranding(null));
     } catch {
       setError("Invalid or expired review code — check the invite you received.");
     } finally {
@@ -212,9 +217,18 @@ export default function RepReviewPage() {
           {/* ── Step 2: voter list review ──────────────────────────────────── */}
           {step === 2 && approval && (
             <>
-              <div className="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
-                <ClipboardList className="w-5 h-5" />
-              </div>
+              {branding?.logoUrl ? (
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.institutionName || "Logo"}
+                  className="w-11 h-11 rounded-xl object-cover mx-auto shadow-sm"
+                  onError={(e) => { e.target.style.display = "none"; }}
+                />
+              ) : (
+                <div className="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
+                  <ClipboardList className="w-5 h-5" />
+                </div>
+              )}
               <div className="text-center mt-3">
                 <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-[0.15em]">
                   Reviewing as

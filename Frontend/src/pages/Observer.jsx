@@ -158,9 +158,18 @@ export default function ObserverPage() {
       {/* ── Observer header ──────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 md:px-6 py-3 flex-wrap">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
-            <Telescope className="w-4 h-4" />
-          </div>
+          {branding?.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.institutionName || "Logo"}
+              className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-sm"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
+              <Telescope className="w-4 h-4" />
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-[13px] leading-4 font-semibold text-slate-900 flex items-center gap-2 flex-wrap">
               <span className="truncate">

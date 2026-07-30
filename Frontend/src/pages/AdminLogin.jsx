@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldAlert, Lock, Telescope, Mail, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthBackground from "../components/layout/AuthBackground";
 import VBLoader from "../components/ui/VBLoader";
-import { adminLogin, fetchAdminOverview } from "../api";
+import { adminLogin, fetchAdminOverview, fetchElection } from "../api";
 import { isValidEmail } from "../utils";
 
 export default function AdminLoginPage() {
@@ -31,6 +31,19 @@ export default function AdminLoginPage() {
 
   const location = useLocation();
   const justRegistered = location.state?.registered;
+  const knownSlug = location.state?.slug;
+
+  // If we arrived from Organization registration, we already know the org —
+  // fetch its (possibly already-branded) logo instead of showing a generic crest.
+  const [orgBranding, setOrgBranding] = useState(null);
+  useEffect(() => {
+    if (!knownSlug) return;
+    let active = true;
+    fetchElection(knownSlug)
+      .then((data) => active && setOrgBranding(data.branding))
+      .catch(() => active && setOrgBranding(null));
+    return () => { active = false; };
+  }, [knownSlug]);
 
   const submit = async () => {
     if (!email || !password) return;
@@ -153,9 +166,18 @@ export default function AdminLoginPage() {
             </div>
             {location.state?.slug && (
               <div className="flex items-center gap-3 bg-white border border-green-600/30 rounded-lg px-3 py-2 mt-2.5">
-                <span className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                  VB
-                </span>
+                {orgBranding?.logoUrl ? (
+                  <img
+                    src={orgBranding.logoUrl}
+                    alt={orgBranding.institutionName || "Logo"}
+                    className="w-8 h-8 rounded-lg object-cover shrink-0"
+                    onError={(e) => { e.target.style.display = "none"; }}
+                  />
+                ) : (
+                  <span className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                    VB
+                  </span>
+                )}
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-[0.1em]">
                     Your voter URL
@@ -175,9 +197,18 @@ export default function AdminLoginPage() {
           }`}
         >
           {/* Crest */}
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
+          {orgBranding?.logoUrl ? (
+            <img
+              src={orgBranding.logoUrl}
+              alt={orgBranding.institutionName || "Logo"}
+              className="w-12 h-12 rounded-xl object-cover mx-auto shadow-sm"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+          )}
           <h1 className="text-[22px] leading-7 font-semibold text-slate-900 text-center mt-3.5">
             Commission Portal
           </h1>

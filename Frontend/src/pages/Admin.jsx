@@ -298,9 +298,18 @@ export default function AdminPage() {
       <aside className="hidden lg:flex w-[232px] bg-white border-r border-slate-200 flex-col shrink-0 sticky top-0 h-screen">
         {/* Brand */}
         <div className="flex items-center gap-3 px-4 py-5">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
-            <ShieldAlert className="w-4 h-4" />
-          </div>
+          {branding?.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.institutionName || "Logo"}
+              className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-sm"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-[13px] leading-4 font-semibold text-slate-900 truncate">
               {branding?.institutionName || "Admin Console"}
@@ -387,9 +396,18 @@ export default function AdminPage() {
       {/* ── Mobile top bar + tab strip ──────────────────────────────────── */}
       <div className="lg:hidden bg-white border-b border-slate-200">
         <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
-            <ShieldAlert className="w-4 h-4" />
-          </div>
+          {branding?.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.institutionName || "Logo"}
+              className="w-8 h-8 rounded-lg object-cover shrink-0 shadow-sm"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+          )}
           <p className="flex-1 min-w-0 text-[13px] font-semibold text-slate-900 truncate">
             {branding?.institutionName || "Admin Console"}
           </p>

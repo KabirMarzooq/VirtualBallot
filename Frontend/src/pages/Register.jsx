@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -9,9 +9,11 @@ import { useSlug } from "../context/SlugContext";
 import { isValidEmail } from "../utils";
 
 export default function RegisterPage() {
-  const { electionConfig, showAlert } = useApp();
+  const { electionConfig, branding, showAlert, loadElectionForSlug } = useApp();
   const navigate = useNavigate();
   const slug = useSlug();
+
+  useEffect(() => { if (slug) loadElectionForSlug(slug); }, [slug]);
 
   const [step, setStep]           = useState(1);
   const [loading, setLoading]     = useState(false);
@@ -134,9 +136,18 @@ export default function RegisterPage() {
         <div className="bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7">
           {/* Header */}
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto">
-              <span className="text-lg font-bold text-white tracking-tight">VB</span>
-            </div>
+            {branding?.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt={branding.institutionName || "Logo"}
+                className="w-12 h-12 rounded-xl object-cover mx-auto shadow-sm"
+                onError={(e) => { e.target.style.display = "none"; }}
+              />
+            ) : (
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto">
+                <span className="text-lg font-bold text-white tracking-tight">VB</span>
+              </div>
+            )}
             <h1 className="text-xl font-semibold text-slate-900 mt-4">
               {step === 2 && firstName ? `Almost there, ${firstName}` : "Activate your account"}
             </h1>

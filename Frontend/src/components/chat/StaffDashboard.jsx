@@ -27,6 +27,7 @@ import {
   replyChat,
   getCannedReplies,
   getChatTranscript,
+  fetchElection,
 } from "../../api";
 import AuthBackground from "../layout/AuthBackground";
 import PageBackground from "../layout/PageBackground";
@@ -50,6 +51,7 @@ const SS = {
   id: "vb_staff_id",
   name: "vb_staff_name",
   org: "vb_staff_org",
+  orgSlug: "vb_staff_org_slug",
 };
 
 function timeAgo(iso) {
@@ -117,6 +119,7 @@ function StaffLogin({ onLoggedIn }) {
       sessionStorage.setItem(SS.id, data.staff.id);
       sessionStorage.setItem(SS.name, data.staff.name);
       sessionStorage.setItem(SS.org, data.staff.orgId);
+      sessionStorage.setItem(SS.orgSlug, data.staff.orgSlug || "");
       onLoggedIn();
     } catch (err) {
       setError(err.message || "Login failed");
@@ -126,23 +129,23 @@ function StaffLogin({ onLoggedIn }) {
   };
 
   return (
-    <AuthBackground variant="dark">
+    <AuthBackground>
       <form
         onSubmit={submit}
-        className="w-full max-w-[360px] bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 sm:px-7"
+        className="w-full max-w-[360px] text-slate-800 bg-white border border-blue-200 rounded-2xl shadow-lg p-8 sm:px-7"
       >
-        <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white shadow-[0_4px_12px_rgba(31,70,54,0.35)]">
+        <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto text-white">
           <Headset className="w-7 h-7" />
         </div>
-        <h1 className="text-[22px] leading-7 font-semibold text-white text-center mt-4">
+        <h1 className="text-[22px] leading-7 font-semibold text-slate-900 text-center mt-4">
           Support Console
         </h1>
-        <p className="text-[13px] leading-5 text-slate-400 text-center mt-1">
+        <p className="text-[13px] leading-5 text-slate-600 text-center mt-1">
           Sign in to answer live voter chats
         </p>
 
         <div className="mt-5">
-          <label className="block text-[13px] leading-5 font-medium text-slate-300 mb-2">
+          <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
             Email
           </label>
           <input
@@ -150,26 +153,26 @@ function StaffLogin({ onLoggedIn }) {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError(""); }}
             autoFocus
-            className="w-full min-h-[48px] text-sm text-white bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
+            className="w-full min-h-[48px] text-sm text-slate-800 bg-white border border-slate-300 rounded-lg px-4 py-3 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
             placeholder="you@org.com"
           />
         </div>
 
         <div className="mt-4">
-          <label className="block text-[13px] leading-5 font-medium text-slate-300 mb-2">
+          <label className="block text-[13px] leading-5 font-medium text-slate-600 mb-2">
             Password
           </label>
           <input
             type="password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(""); }}
-            className="w-full min-h-[48px] text-sm text-white bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 outline-none placeholder:text-slate-600 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/25 transition-all"
+            className="w-full min-h-[48px] text-sm text-slate-800 bg-white border border-slate-300 rounded-lg px-4 py-3 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-[3px] focus:ring-blue-100 transition-all"
             placeholder="••••••••"
           />
         </div>
 
         {error && (
-          <p className="text-[11px] leading-4 font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg py-2 px-3 mt-4">
+          <p className="text-[11px] leading-4 font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 px-3 mt-4">
             {error}
           </p>
         )}
@@ -177,7 +180,7 @@ function StaffLogin({ onLoggedIn }) {
         <button
           type="submit"
           disabled={!email.trim() || !password || loading}
-          className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+          className="w-full mt-5 min-h-[48px] bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log in"}
         </button>
@@ -194,6 +197,17 @@ function Dashboard({ onLogout }) {
   const staffId = sessionStorage.getItem(SS.id);
   const staffName = sessionStorage.getItem(SS.name);
   const orgId = sessionStorage.getItem(SS.org);
+  const orgSlug = sessionStorage.getItem(SS.orgSlug);
+
+  const [branding, setBranding] = useState(null);
+  useEffect(() => {
+    if (!orgSlug) return;
+    let active = true;
+    fetchElection(orgSlug)
+      .then((data) => active && setBranding(data.branding))
+      .catch(() => active && setBranding(null));
+    return () => { active = false; };
+  }, [orgSlug]);
 
   const initialElection =
     new URLSearchParams(window.location.search).get("electionId") || "";
@@ -506,9 +520,18 @@ function Dashboard({ onLogout }) {
     >
       {/* Top bar */}
       <header className="flex items-center gap-3 px-5 py-2.5 bg-white border-b border-slate-200 shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
-          <Headset className="w-5 h-5" />
-        </div>
+        {branding?.logoUrl ? (
+          <img
+            src={branding.logoUrl}
+            alt={branding.institutionName || "Logo"}
+            className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-sm"
+            onError={(e) => { e.target.style.display = "none"; }}
+          />
+        ) : (
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
+            <Headset className="w-5 h-5" />
+          </div>
+        )}
         <div className="min-w-0">
           <h1 className="text-[14px] leading-4 font-semibold text-slate-900">
             Support Console
